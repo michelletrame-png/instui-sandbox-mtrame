@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__figma__get_figma_data"
+      "mcp__figma__get_figma_data",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

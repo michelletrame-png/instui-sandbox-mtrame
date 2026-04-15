@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { InstUISettingsProvider } from '@instructure/ui/latest'
 import { canvas, canvasHighContrast, dark, light } from '@instructure/ui-themes'
-import { Showcase } from './references/Showcase'
+import { View } from '@instructure/ui-view/latest'
+import { Heading } from '@instructure/ui-heading/latest'
+import { Text } from '@instructure/ui-text/latest'
+import { Button } from '@instructure/ui-buttons/latest'
+import { Flex } from '@instructure/ui-flex/latest'
+import { CanvasPage } from './CanvasPage'
 
 const THEMES = {
   light: { label: 'Light', theme: light },
@@ -13,26 +18,14 @@ const THEMES = {
 type ThemeKey = keyof typeof THEMES
 
 export default function App() {
-  const [themeKey, setThemeKey] = useState<ThemeKey>('light')
-
-  const themeNames = Object.values(THEMES).map((t) => t.label)
-  const themeName = THEMES[themeKey].label
+  const [themeKey] = useState<ThemeKey>('light')
 
   const currentTheme = THEMES[themeKey].theme
-  const pageBackground = (currentTheme as any).newTheme?.semantics?.color?.background?.page ?? '#ffffff'
-
   return (
     <InstUISettingsProvider theme={currentTheme}>
-      <div style={{ backgroundColor: pageBackground, minHeight: '100vh' }}>
-      <Showcase
-        themeName={themeName}
-        themeNames={themeNames}
-        onThemeChange={(name) => {
-          const entry = Object.entries(THEMES).find(([, t]) => t.label === name)
-          if (entry) setThemeKey(entry[0] as ThemeKey)
-        }}
-      />
-      </div>
+      <View as="div" height="100vh" overflowX="hidden" overflowY="hidden" background="secondary">
+        <CanvasPage/>
+      </View>
     </InstUISettingsProvider>
   )
 }

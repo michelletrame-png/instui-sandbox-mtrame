@@ -1,104 +1,64 @@
-# Flex / Flex.Item — Full Prop Reference
+# Flex — Full Prop Reference
 
-Package: `@instructure/ui-flex` (v11.x)
-Import: `import { Flex } from '@instructure/ui'`
+`import { Flex } from '@instructure/ui-flex/latest'`
+
+Use `Flex.Item` for direct children that need individual grow/shrink/align behavior. Plain markup children are valid but won't support those per-item controls.
 
 ---
 
 ## Flex Props
 
-| Prop | Type | Default | Notes |
+| Prop | Type | Default | Description |
 |---|---|---|---|
-| `as` | HTML element | `"div"` | Semantic element for the container |
-| `direction` | `"row" \| "column" \| "row-reverse" \| "column-reverse"` | `"row"` | |
-| `gap` | spacing token | — | Space between all items. **Preferred over item margins in v11.** |
-| `alignItems` | `"center" \| "start" \| "end" \| "stretch" \| "baseline"` | `"stretch"` | Cross-axis alignment |
-| `justifyItems` | `"start" \| "end" \| "center" \| "space-between" \| "space-around"` | `"start"` | Main-axis distribution |
-| `wrap` | `"wrap" \| "no-wrap" \| "wrap-reverse"` | `"no-wrap"` | Whether items wrap |
-| `display` | `"flex" \| "inline-flex"` | `"flex"` | |
-| `padding` | spacing token | — | Flex container can also accept View spacing props |
-| `margin` | spacing token or `"0 auto"` | — | |
-| `width` | CSS string | — | |
-| `height` | CSS string | — | |
-| `maxWidth` | CSS string | — | |
-| `minWidth` | CSS string | — | |
-| `elementRef` | callback ref | — | |
-| `withVisualDebug` | boolean | false | Color outlines for debugging |
+| `as` | `AsElementType` | `'div'` | HTML element to render. |
+| `elementRef` | `(el: Element \| null) => void` | — | Ref callback. |
+| `children` | `Renderable` | — | Should be `Flex.Item` elements (or any markup). |
+| `display` | `'flex' \| 'inline-flex'` | `'flex'` | CSS display value. |
+| `direction` | `'row' \| 'column' \| 'row-reverse' \| 'column-reverse'` | `'row'` | Flex direction. |
+| `alignItems` | `'center' \| 'start' \| 'end' \| 'stretch'` | `'stretch'` | Cross-axis alignment for all items. Overridden per-item by `Flex.Item align`. |
+| `justifyItems` | `'center' \| 'start' \| 'end' \| 'space-around' \| 'space-between'` | `'start'` | Main-axis distribution of items. |
+| `wrap` | `'wrap' \| 'no-wrap' \| 'wrap-reverse'` | `'no-wrap'` | Flex wrap behavior. |
+| `gap` | `Spacing` | — | Spacing between items. Single token only (not shorthand). |
+| `margin` | `Spacing` | — | CSS shorthand using spacing tokens. |
+| `padding` | `Spacing` | — | CSS shorthand using spacing tokens. |
+| `width` | `string \| number` | — | CSS width. |
+| `height` | `string \| number` | — | CSS height. |
+| `textAlign` | `'start' \| 'center' \| 'end'` | — | Text alignment within the flex container. |
+| `withVisualDebug` | `boolean` | `false` | Renders dotted outlines around all children. |
+| `themeOverride` | `object \| fn` | — | Component token overrides. |
 
 ---
 
 ## Flex.Item Props
 
-| Prop | Type | Default | Notes |
+| Prop | Type | Default | Description |
 |---|---|---|---|
-| `as` | HTML element | `"div"` | |
-| `shouldGrow` | boolean | false | `flex-grow: 1` — fills remaining space |
-| `shouldShrink` | boolean | false | `flex-shrink: 1` — shrinks below natural size |
-| `size` | CSS string | — | `flex-basis` — e.g. `"200px"`, `"25%"`, `"auto"` |
-| `align` | `"center" \| "start" \| "end" \| "stretch" \| "baseline"` | — | Overrides container `alignItems` for this item |
-| `padding` | spacing token | — | |
-| `margin` | spacing token | — | Avoid when `gap` on container covers it |
-| `overflowX` | `"auto" \| "hidden" \| "visible"` | — | Needed when item has truncated text |
-| `overflowY` | same | — | |
-| `elementRef` | callback ref | — | |
+| `as` | `AsElementType` | `'div'` | HTML element to render. |
+| `elementRef` | `(el: Element \| null) => void` | — | Ref callback. |
+| `children` | `React.ReactNode` | — | Content. |
+| `shouldGrow` | `boolean` | `false` | Sets `flex-grow: 1` — item expands to fill remaining space. |
+| `shouldShrink` | `boolean` | `false` | Sets `flex-shrink: 1` — item can shrink below its `size`. Pair with `shouldGrow` when overflow matters. |
+| `size` | `string` | — | Base size: CSS width in `row` direction, CSS height in `column` direction (sets `flex-basis`). |
+| `align` | `'center' \| 'start' \| 'end' \| 'stretch'` | — | Overrides parent `alignItems` for this item only (`align-self`). |
+| `order` | `number` | — | CSS `order` property — changes visual order without reordering the DOM. |
+| `margin` | `Spacing` | — | Margin for this item. |
+| `padding` | `Spacing` | — | Padding for this item. |
+| `overflowX` | `'auto' \| 'hidden' \| 'visible'` | — | Horizontal overflow on this item. |
+| `overflowY` | `'auto' \| 'hidden' \| 'visible'` | — | Vertical overflow. Use `overflowY="auto"` for scrollable panels. |
+| `textAlign` | `'start' \| 'center' \| 'end'` | — | Text alignment. |
+| `withVisualDebug` | `boolean` | `false` | Dashed outline on this item. |
+| `themeOverride` | `object \| fn` | — | Component token overrides. |
 
 ---
 
-## Common Patterns
+## shouldGrow / shouldShrink Decision Guide
 
-### Centered Content, Fixed Sidebar
+| Scenario | shouldGrow | shouldShrink |
+|---|---|---|
+| Fixed-size sidebar, content fills rest | `false` / `false` on sidebar, `true` / `true` on content | |
+| All items share space equally | `true` on each | optional |
+| Item must not overflow its container | pair with `true` | always set both together |
+| Fixed-width header/footer in column | `false` / `false` | |
+| Item fills all remaining vertical space | `true` | set if content could overflow |
 
-```tsx
-<Flex height="100vh">
-  <Flex.Item size="260px" shouldShrink={false}>
-    <Nav />
-  </Flex.Item>
-  <Flex.Item shouldGrow shouldShrink overflowY="auto">
-    <View as="main" padding="large">{content}</View>
-  </Flex.Item>
-</Flex>
-```
-
-### Aligned Actions Row
-
-```tsx
-<Flex gap="small" alignItems="center" justifyItems="end">
-  <Flex.Item><Button>Secondary</Button></Flex.Item>
-  <Flex.Item><Button color="primary">Primary</Button></Flex.Item>
-</Flex>
-```
-
-### Stretchy Middle Column
-
-```tsx
-<Flex gap="medium" alignItems="start">
-  <Flex.Item size="180px">Left panel</Flex.Item>
-  <Flex.Item shouldGrow shouldShrink overflowX="hidden">
-    Main content — fills all remaining width
-  </Flex.Item>
-  <Flex.Item size="240px">Right panel</Flex.Item>
-</Flex>
-```
-
-### Vertical Stack with Dividers
-
-```tsx
-<Flex direction="column" gap="medium">
-  <Flex.Item>
-    <View borderWidth="0 0 small" borderColor="default" padding="0 0 medium">
-      Section 1
-    </View>
-  </Flex.Item>
-  <Flex.Item>Section 2</Flex.Item>
-</Flex>
-```
-
----
-
-## gap Token Values
-
-`gap` accepts the same tokens as all spacing props:
-
-`"none"` `"xxx-small"` `"xx-small"` `"x-small"` `"small"` `"medium-small"` `"medium"` `"large"` `"x-large"` `"xx-large"`
-
-Use `gap="x-small"` for tight toolbars, `gap="small"` for form fields, `gap="medium"` for card grids, `gap="large"` for page sections.
+**Rule of thumb:** when you set `shouldGrow`, also set `shouldShrink` if the item's content might be taller/wider than the remaining space.

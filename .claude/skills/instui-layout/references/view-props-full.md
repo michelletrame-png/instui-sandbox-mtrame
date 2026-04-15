@@ -1,147 +1,89 @@
 # View — Full Prop Reference
 
-Package: `@instructure/ui-view` (v11.x)
-Import: `import { View } from '@instructure/ui'`
+`import { View } from '@instructure/ui-view/latest'`
 
-## All Props
+## Core / Element
 
-### Structural
-
-| Prop | Type | Default | Notes |
+| Prop | Type | Default | Description |
 |---|---|---|---|
-| `as` | HTML element string | `"span"` | **Always set explicitly.** Use semantic elements. |
-| `display` | `"auto" \| "block" \| "inline-block" \| "inline" \| "flex" \| "inline-flex" \| "contents" \| "inherit" \| "initial" \| "revert" \| "revert-layer" \| "unset"` | `"auto"` | |
-| `position` | `"static" \| "relative" \| "absolute" \| "fixed" \| "sticky"` | `"static"` | |
-| `width` | CSS string | — | e.g. `"100%"`, `"300px"`, `"fit-content"` |
-| `height` | CSS string | — | |
-| `minWidth` | CSS string | — | |
-| `minHeight` | CSS string | — | |
-| `maxWidth` | CSS string | — | |
-| `maxHeight` | CSS string | — | |
+| `as` | `AsElementType` | `'span'` | HTML element to render. Use `'div'` for block-level containers. |
+| `elementRef` | `(el: HTMLElement \| null) => void` | — | Ref callback for the root element. |
+| `children` | `React.ReactNode` | — | Content. |
 
-### Spacing (token strings)
+## Display & Layout
 
-All accept spacing tokens: `"none"` `"xxx-small"` `"xx-small"` `"x-small"` `"small"` `"medium-small"` `"medium"` `"large"` `"x-large"` `"xx-large"` — plus CSS shorthand with tokens.
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `display` | `'auto' \| 'inline' \| 'block' \| 'inline-block' \| 'flex' \| 'inline-flex' \| 'contents' \| 'inherit' \| 'initial' \| 'revert' \| 'revert-layer' \| 'unset'` | `'auto'` | CSS display property. |
+| `width` | `string \| number` | — | CSS width. Accepts `'100%'`, `'100vw'`, `300`, etc. |
+| `height` | `string \| number` | — | CSS height. Accepts `'100%'`, `'100vh'`, etc. |
+| `minWidth` | `string \| number` | — | CSS min-width. |
+| `maxWidth` | `string \| number` | — | CSS max-width. |
+| `minHeight` | `string \| number` | — | CSS min-height. |
+| `maxHeight` | `string \| number` | — | CSS max-height. |
+| `overflowX` | `'auto' \| 'hidden' \| 'visible'` | — | Horizontal overflow. |
+| `overflowY` | `'auto' \| 'hidden' \| 'visible'` | — | Vertical overflow. |
+| `overscrollBehavior` | `'auto' \| 'contain' \| 'none'` | — | CSS overscroll-behavior. |
 
-| Prop | Notes |
-|---|---|
-| `padding` | All sides, or shorthand |
-| `margin` | All sides, shorthand, or `"0 auto"` for centering |
-| `insetBlockStart` | Logical CSS (top in LTR) |
-| `insetBlockEnd` | Logical CSS (bottom in LTR) |
-| `insetInlineStart` | Logical CSS (left in LTR) |
-| `insetInlineEnd` | Logical CSS (right in LTR) |
+## Spacing
 
-### Background
-
-| Value | Description |
-|---|---|
-| `"primary"` | Default page/card background |
-| `"secondary"` | Slightly muted, secondary panels |
-| `"primary-inverse"` | Dark/inverted (nav, overlay) |
-| `"secondary-inverse"` | Darker inverted surface |
-| `"brand"` | Brand-colored surface |
-| `"info"` | Info tint |
-| `"alert"` | Warning/alert tint |
-| `"success"` | Success tint |
-| `"danger"` | Danger/error tint |
-| `"transparent"` | Explicit transparent |
-
-### Borders
-
-| Prop | Values |
-|---|---|
-| `borderWidth` | `"none"` `"small"` `"medium"` `"large"` — shorthand supported |
-| `borderColor` | `"primary"` `"secondary"` `"brand"` `"info"` `"success"` `"warning"` `"alert"` `"danger"` `"transparent"` — **`"default"` and `"inverse"` do not exist and render black** |
-| `borderRadius` | `"none"` `"small"` `"medium"` `"large"` `"circle"` `"pill"` — or raw CSS string (see below) |
-| `borderStyle` | (defaults to solid; rarely need to override) |
-
-#### borderRadius Named Tokens → Resolved Values (all themes)
-
-The named tokens resolve via `sharedTokens.legacy` and are **identical across canvas, light, and dark themes**:
-
-| Prop value | px | rem |
+| Prop | Type | Description |
 |---|---|---|
-| `"none"` | 0px | 0 |
-| `"small"` | **2px** | 0.125rem |
-| `"medium"` | **4px** | 0.25rem |
-| `"large"` | **8px** | 0.5rem |
-| `"circle"` | 50% | — |
-| `"pill"` | 999em | — |
+| `padding` | `Spacing` | CSS shorthand using spacing tokens. |
+| `margin` | `Spacing` | CSS shorthand using spacing tokens. |
 
-#### Translating Figma border radius values (light/dark themes)
+## Background & Visual
 
-The new `light`/`dark` themes define larger semantic border radius values for containers and cards that **have no named View prop token**. The `borderRadius` prop accepts raw CSS pass-throughs, so use rem values directly:
-
-| Figma design value | Semantic token | `borderRadius` prop to use |
+| Prop | Type | Description |
 |---|---|---|
-| 2px | `borderRadius.xs` | `"small"` |
-| 4px | `borderRadius.sm` | `"medium"` |
-| 8px | `borderRadius.md` / `container.sm` | `"large"` |
-| 12px | `borderRadius.lg` / `card.sm` | `"0.75rem"` |
-| 16px | `borderRadius.xl` / `container.md` | `"1rem"` |
-| 24px | `borderRadius.xxl` / `container.lg` | `"1.5rem"` |
-| 32px | `borderRadius.container.xl` | `"2rem"` |
+| `background` | `'transparent' \| 'primary' \| 'secondary' \| 'primary-inverse' \| 'brand' \| 'info' \| 'alert' \| 'success' \| 'danger' \| 'warning'` | Semantic background color via theme tokens. |
+| `shadow` | `'resting' \| 'above' \| 'topmost'` | Box shadow via theme tokens. `resting` = card elevation, `above` = dropdown/overlay, `topmost` = modal. |
+| `withVisualDebug` | `boolean` | Renders a dotted outline for debugging layout. |
 
-```tsx
-// Card with 12px radius (common in light/dark theme Figma designs)
-<View as="div" background="primary" borderRadius="0.75rem" shadow="resting">
+## Border
 
-// Modal/container with 16px radius
-<View as="div" background="primary" borderRadius="1rem">
-```
+| Prop | Type | Description |
+|---|---|---|
+| `borderWidth` | `BorderWidth` | CSS shorthand: accepts `'0'`, `'small'`, `'medium'`, `'large'` or combinations like `'small 0'`. |
+| `borderColor` | `'primary' \| 'secondary' \| 'brand' \| 'info' \| 'success' \| 'warning' \| 'alert' \| 'danger' \| 'transparent'` | Semantic border color. |
+| `borderRadius` | `BorderRadii` | Token (`'small' \| 'medium' \| 'large' \| 'circle' \| 'pill'`) or raw CSS length (`'1.5rem'`). Accepts shorthand for individual corners. |
 
-### Shadow
+## Text
 
-| Value | Use |
-|---|---|
-| `"none"` | No shadow |
-| `"resting"` | Cards at rest |
-| `"above"` | Modals, dropdowns |
-| `"topmost"` | Tooltips, popovers |
+| Prop | Type | Description |
+|---|---|---|
+| `textAlign` | `'start' \| 'center' \| 'end'` | Logical text alignment (maps to CSS `text-align`). |
 
-### Overflow
+## Positioning
 
-| Prop | Values |
-|---|---|
-| `overflowX` | `"auto" \| "hidden" \| "visible" \| "scroll"` |
-| `overflowY` | same |
+| Prop | Type | Description |
+|---|---|---|
+| `position` | `'static' \| 'relative' \| 'absolute' \| 'fixed' \| 'sticky'` | CSS position. |
+| `insetBlockStart` | `string` | CSS `top` (logical — RTL-aware). |
+| `insetBlockEnd` | `string` | CSS `bottom`. |
+| `insetInlineStart` | `string` | CSS `left` in LTR, `right` in RTL. |
+| `insetInlineEnd` | `string` | CSS `right` in LTR, `left` in RTL. |
+| `stacking` | `Stacking` | z-index token: `'deepest' \| 'below' \| 'resting' \| 'above' \| 'topmost'`. |
 
-### Focus / Accessibility
+## Focus / Interaction
 
-| Prop | Notes |
-|---|---|
-| `withFocusOutline` | Shows focus ring; use when View is interactive |
-| `focusColor` | `"info" \| "inverse" \| "error"` |
-| `focusPosition` | `"offset" \| "inset"` |
-| `shouldAnimateFocus` | boolean |
-| `tabIndex` | number |
-| `role` | ARIA role string |
+| Prop | Type | Description |
+|---|---|---|
+| `withFocusOutline` | `boolean` | Shows a focus ring (for keyboard-focusable containers). |
+| `focusPosition` | `'offset' \| 'inset'` | Whether the focus ring sits outside or inside the element. |
+| `focusColor` | `'info' \| 'inverse' \| 'success' \| 'danger'` | Focus ring color token. |
+| `focusWithin` | `boolean` | Shows focus ring when any descendant is focused (not just the View itself). |
+| `shouldAnimateFocus` | `boolean` | Animates the focus ring transition. |
+| `cursor` | `string` | CSS cursor value. |
 
-### Ref / Debug
+## Internationalization
 
-| Prop | Notes |
-|---|---|
-| `elementRef` | Callback ref `(el) => void` |
-| `withVisualDebug` | Shows colored outlines for debugging layout |
+| Prop | Type | Description |
+|---|---|---|
+| `dir` | `'ltr' \| 'rtl'` | Text direction override for this subtree. |
 
----
+## Theming
 
-## Shorthand Margin Centering
-
-```tsx
-// Horizontally center a fixed/max-width container
-<View as="div" maxWidth="960px" margin="0 auto" padding="large">
-  {content}
-</View>
-```
-
-## Full-Bleed Section
-
-```tsx
-<View as="section" background="secondary" padding="x-large large">
-  <View as="div" maxWidth="1200px" margin="0 auto">
-    {content}
-  </View>
-</View>
-```
+| Prop | Type | Description |
+|---|---|---|
+| `themeOverride` | `object \| (componentTheme, theme) => object` | Override View's component tokens. See instui-theming skill for full usage. |
