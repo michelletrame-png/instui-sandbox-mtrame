@@ -1,4 +1,5 @@
-import { lazy, ComponentType } from 'react'
+import { lazy } from 'react'
+import type { ComponentType } from 'react'
 
 export type PrototypeStatus = 'WIP' | 'In Review' | 'Archived' | 'Complete' | 'Reference'
 

@@ -8,6 +8,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Inclusive+Sans:ital@0;1&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        var p = new URLSearchParams(window.location.search).get('p');
+        if (p) {
+          var q = new URLSearchParams(window.location.search).get('q');
+          window.history.replaceState(
+            null, null,
+            window.location.pathname + '/' + decodeURIComponent(p) +
+            (q ? '?' + decodeURIComponent(q) : '') +
+            window.location.hash
+          );
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
