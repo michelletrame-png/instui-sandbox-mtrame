@@ -10,11 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@instructure/ui": "^11.7.1",
-    "@instructure/ui-icons": "^11.7.1",
-    "@instructure/ui-themes": "^11.7.1",
+    "@instructure/ui": "^11.7.2",
+    "@instructure/ui-icons": "^11.7.2",
+    "@instructure/ui-themes": "^11.7.2",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

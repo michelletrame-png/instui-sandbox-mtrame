@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link as RouterLink } from 'react-router-dom'
+import { useComputedTheme } from '@instructure/emotion'
 // Import v2 (rebrand) components via /latest entry point
 import { View } from '@instructure/ui-view/latest'
 import { Text } from '@instructure/ui-text/latest'
@@ -38,23 +40,28 @@ import {
 type ShowcaseProps = {
   themeName: string
   themeNames: string[]
-  onThemeChange: (name: any) => void
+  onThemeChange: (name: string) => void
 }
 
 export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps) {
   const [numberVal, setNumberVal] = useState(0)
-
-  const isRebrand = !themeName.includes('Legacy')
-  const isDark = themeName.includes('Dark')
-  const cardRadius = isRebrand ? '1rem' : '0.25rem'
-  const strokeMuted = isDark ? '#3F515E' : (themeName.includes('High Contrast') ? '#9EA6AD' : '#E8EAEC')
+  const { sharedTokens } = useComputedTheme()
+  const strokeMuted = sharedTokens.stroke.mutedColor
+  const cardRadius = sharedTokens.borderRadius.card.md
 
   return (
-    <View as="div" padding="large" minHeight="100vh">
+    <View
+      as="div"
+      padding="large"
+      minHeight="100vh"
+      background="secondary"
+      themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
+    >
 
       {/* Header */}
       <Flex justifyItems="space-between" alignItems="start" margin="0 0 large 0">
         <Flex.Item shouldShrink>
+          <Link as={RouterLink} to="/" margin="0 0 small 0" display="block">← Back</Link>
           <Heading level="h1" margin="0 0 small 0">Theme showcase</Heading>
           <Text color="secondary" size="large">
             Here, you can view all the available themes in one place.
@@ -64,7 +71,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
           <SimpleSelect
             renderLabel=""
             value={themeName}
-            onChange={(_e, { value }) => onThemeChange(value)}
+            onChange={(_e, { value }) => onThemeChange(value as string)}
             width="15rem"
           >
             {themeNames.map((name) => (
@@ -100,7 +107,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
           <Flex direction="column" gap="large">
 
             {/* Card: Create Account */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Create an account</Heading>
                 <Text color="secondary" size="small">
@@ -123,7 +130,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: Settings */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Settings</Heading>
                 <Text color="secondary" size="small">
@@ -136,7 +143,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: File Upload */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">File upload</Heading>
                 <Text color="secondary" size="small">
@@ -163,7 +170,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
           <Flex direction="column" gap="large">
 
             {/* Card: Login */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Login</Heading>
                 <Text color="secondary" size="small">
@@ -177,9 +184,9 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: Panda Card */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
-                <div style={{ borderRadius: 8, overflow: 'hidden', border: `1px solid ${strokeMuted}` }}>
+                <div style={{ borderRadius: sharedTokens.borderRadius.card.nestedContainer.sm, overflow: 'hidden', border: `1px solid ${strokeMuted}` }}>
                   <img src="/Panda.png" alt="Panda" style={{ width: '105%', height: 220, objectFit: 'cover', display: 'block', marginLeft: '-2.5%' }} />
                 </div>
                 <Heading level="h3" margin="x-small 0 0 0">Card title</Heading>
@@ -199,7 +206,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: FAQ */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">FAQ</Heading>
                 <Text color="secondary" size="small">
@@ -227,7 +234,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
           <Flex direction="column" gap="large">
 
             {/* Card: Switch Themes (Radio) */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Switch themes</Heading>
                 <Text color="secondary" size="small">
@@ -242,7 +249,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: Switch Themes (Inputs) */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Switch themes</Heading>
                 <Text color="secondary" size="small">
@@ -263,7 +270,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: Users */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="medium">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
               <Flex direction="column" gap="small">
                 <Heading level="h3">Users</Heading>
                 <Text color="secondary" size="small">
@@ -295,7 +302,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             </View>
 
             {/* Card: Spinner */}
-            <View as="div" background="primary" shadow="resting" borderRadius={cardRadius} padding="large" textAlign="center">
+            <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="large" textAlign="center">
               <Spinner renderTitle="Loading" size="large" />
             </View>
           </Flex>
