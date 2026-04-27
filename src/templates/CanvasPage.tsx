@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
-import { Link as RouterLink } from 'react-router-dom'
-import { Link } from '@instructure/ui-link/latest'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
@@ -15,7 +13,7 @@ import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
 import { Tray } from '@instructure/ui-tray/latest'
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
-import CanvasLogo from './assets/Canvas.svg'
+import CanvasLogo from '../assets/Canvas.svg'
 import {
   SettingsInstUIIcon,
   LayoutDashboardInstUIIcon,
@@ -61,8 +59,12 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
     </Breadcrumb>
   )
 
-  const showcaseLink = (
-    <Link as={RouterLink} to="/showcase">View component showcase</Link>
+  const loremContent = (
+    <Flex direction="column" gap="small">
+      <Text size="content">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</Text>
+      <Text size="content">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Text>
+      <Text size="content">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</Text>
+    </Flex>
   )
 
   /* ── Mobile layout ── */
@@ -216,7 +218,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
               <Flex direction="column" gap="xx-small">
                 <Heading level="h2" variant="titleCardRegular" margin="0">Content area</Heading>
                 <Text size="content" color="secondary">Short card description</Text>
-                {showcaseLink}
+                {loremContent}
               </Flex>
             </View>
 
@@ -313,7 +315,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
                     <Flex direction="column" gap="xx-small">
                       <Heading level="h2" variant="titleCardLarge" margin="0">Content area</Heading>
                       <Text size="content" color="secondary">Short card description</Text>
-                      {showcaseLink}
+                      {loremContent}
                     </Flex>
                   </View>
                 </Tabs.Panel>

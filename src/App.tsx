@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { InstUISettingsProvider } from '@instructure/ui/latest'
 import { canvas, canvasHighContrast, dark, light } from '@instructure/ui-themes'
 import { useComputedTheme } from '@instructure/emotion'
-import { CanvasPage } from './CanvasPage'
+import { Spinner } from '@instructure/ui-spinner/latest'
+import { Flex } from '@instructure/ui-flex/latest'
+import { Home } from './Home'
 import { Showcase } from './references/Showcase'
+import { prototypes } from './prototypes/registry'
 
 function ScrollbarStyle() {
   const { sharedTokens } = useComputedTheme()
@@ -39,20 +42,14 @@ export default function App() {
 
   const currentTheme = THEMES[themeKey].theme
   const themeNames = Object.keys(THEMES) as ThemeKey[]
+  const isDark = themeKey === 'dark'
+  const onToggleTheme = () => setThemeKey(prev => prev === 'dark' ? 'light' : 'dark')
 
   return (
     <InstUISettingsProvider theme={currentTheme}>
       <ScrollbarStyle />
       <Routes>
-        <Route
-          path="/"
-          element={
-            <CanvasPage
-              isDark={themeKey === 'dark'}
-              onToggleTheme={() => setThemeKey(prev => prev === 'dark' ? 'light' : 'dark')}
-            />
-          }
-        />
+        <Route path="/" element={<Home />} />
         <Route
           path="/showcase"
           element={
@@ -63,6 +60,21 @@ export default function App() {
             />
           }
         />
+        {prototypes.map(p => (
+          <Route
+            key={p.id}
+            path={p.path}
+            element={
+              <Suspense fallback={
+                <Flex justifyItems="center" alignItems="center" height="100vh">
+                  <Spinner renderTitle="Loading" size="large" />
+                </Flex>
+              }>
+                <p.component isDark={isDark} onToggleTheme={onToggleTheme} />
+              </Suspense>
+            }
+          />
+        ))}
       </Routes>
     </InstUISettingsProvider>
   )
