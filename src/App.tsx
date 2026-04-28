@@ -7,7 +7,7 @@ import { Spinner } from '@instructure/ui-spinner/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Home } from './Home'
 import { Showcase } from './references/Showcase'
-import { prototypes } from './prototypes/registry'
+import { prototypes } from './registry'
 
 function ScrollbarStyle() {
   const { sharedTokens } = useComputedTheme()
@@ -42,7 +42,9 @@ export default function App() {
 
   const currentTheme = THEMES[themeKey].theme
   const themeNames = Object.keys(THEMES) as ThemeKey[]
+  // eslint-disable-next-line instui/no-theme-name-detection -- theme state management, not color selection
   const isDark = themeKey === 'dark'
+  // eslint-disable-next-line instui/no-theme-name-detection -- theme toggle logic
   const onToggleTheme = () => setThemeKey(prev => prev === 'dark' ? 'light' : 'dark')
 
   return (

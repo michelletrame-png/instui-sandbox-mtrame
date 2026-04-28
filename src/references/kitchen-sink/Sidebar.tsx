@@ -1,8 +1,9 @@
+import { isValidElement, cloneElement } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Text } from '@instructure/ui-text/latest'
-import { CanvasLogoIcon } from '../../assets/CanvasLogoIcon'
+import { IconCanvasLogoSolid } from '@instructure/ui-icons'
 
 export type NavItem = {
   id: string
@@ -39,18 +40,16 @@ export function Sidebar({ title, items, footer }: SidebarProps) {
         {/* Canvas logo in navy app-icon square + title */}
         <View as="div" display="block" padding="x-small small" margin="0 0 xx-small 0">
           <Flex alignItems="center" gap="small">
-            <div style={{
-              backgroundColor: sharedTokens.background.brandColor,
-              borderRadius: sharedTokens.borderRadius.card.nestedContainer.sm,
-              width: 40,
-              height: 40,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <CanvasLogoIcon color={sharedTokens.background.baseColor} size={18} />
-            </div>
+            <View
+              as="div"
+              background="primary"
+              themeOverride={{ backgroundPrimary: sharedTokens.background.brandColor }}
+              borderRadius={sharedTokens.borderRadius.card.nestedContainer.sm}
+              padding="x-small"
+              display="block"
+            >
+              <IconCanvasLogoSolid color="primary-inverse" size="small" />
+            </View>
             <Text weight="bold" size="medium">{title}</Text>
           </Flex>
         </View>
@@ -76,9 +75,9 @@ export function Sidebar({ title, items, footer }: SidebarProps) {
               onClick={item.onClick}
             >
               <Flex alignItems="center" gap="small" padding="xx-small small">
-                <span style={{ color: item.selected ? sharedTokens.background.baseColor : 'inherit', display: 'flex' }}>
-                  {item.icon}
-                </span>
+                {item.selected && isValidElement(item.icon)
+                  ? cloneElement(item.icon as React.ReactElement<{ color?: string }>, { color: 'primary-inverse' })
+                  : item.icon}
                 <Text color={item.selected ? 'primary-inverse' : 'primary'}>{item.label}</Text>
               </Flex>
             </View>

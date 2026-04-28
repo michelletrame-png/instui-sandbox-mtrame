@@ -13,7 +13,6 @@ import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
 import { Tray } from '@instructure/ui-tray/latest'
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
-import CanvasLogo from '../assets/Canvas.svg'
 import {
   SettingsInstUIIcon,
   LayoutDashboardInstUIIcon,
@@ -27,6 +26,7 @@ import {
   EllipsisVerticalInstUIIcon,
   AlignJustifyInstUIIcon,
   XInstUIIcon,
+  IconCanvasLogoSolid,
 } from '@instructure/ui-icons'
 
 function useIsMobile() {
@@ -50,7 +50,6 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
   const { sharedTokens } = useComputedTheme()
   const isMobile = useIsMobile()
 
-  const logoFilter = isDark ? 'brightness(0) invert(1)' : 'none'
 
   const breadcrumb = (
     <Breadcrumb label="Navigation">
@@ -87,7 +86,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
           display="block"
         >
           <Flex alignItems="center" justifyItems="space-between" padding="x-small medium">
-            <img src={CanvasLogo} alt="Canvas" style={{ filter: logoFilter, width: 40, height: 40 }} />
+            <IconCanvasLogoSolid size="small" />
             <Flex alignItems="center" gap="x-small">
               <IconButton color="ai-primary" screenReaderLabel="AI button" size="small">
                 <IgniteaiLogoInstUIIcon />
@@ -118,7 +117,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
           <View as="div" height="100%" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} display="block">
             <View as="div" display="block" borderWidth="0 0 small 0">
               <Flex alignItems="center" justifyItems="space-between" padding="small medium">
-                <img src={CanvasLogo} alt="Canvas" style={{ filter: logoFilter, width: 40, height: 40 }} />
+                <IconCanvasLogoSolid size="small" />
                 <IconButton
                   screenReaderLabel="Close menu"
                   color="secondary"
@@ -242,21 +241,29 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
       <Flex height="100%" width="100%" alignItems="stretch">
 
         {/* Sidebar */}
-        <Flex.Item>
-          <View as="div" height="97vh">
+        <View as="div" height="97vh">
             <SideNavBar
               label="Main navigation"
               toggleLabel={{ expandedLabel: 'Minimize navigation', minimizedLabel: 'Expand navigation' }}
             >
               <SideNavBar.Item
-                icon={<img src={CanvasLogo} alt="" style={{ filter: logoFilter }} />}
+                icon={<IconCanvasLogoSolid size="medium" />}
                 label={<ScreenReaderContent>Canvas</ScreenReaderContent>}
                 href="#"
                 themeOverride={{ contentPadding: '1em 0.375rem 1em 0.375rem' }}
               />
               <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
               <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
-              <SideNavBar.Item icon={<LayoutDashboardInstUIIcon />} label="Dashboard" href="#" selected />
+              <SideNavBar.Item
+                icon={
+                  <Flex as="span" style={{ color: sharedTokens.background.baseColor }}>
+                    <LayoutDashboardInstUIIcon />
+                  </Flex>
+                }
+                label="Dashboard"
+                href="#"
+                selected
+              />
               <SideNavBar.Item icon={<BookOpenInstUIIcon />} label="Courses" href="#" />
               <SideNavBar.Item icon={<CalendarDaysInstUIIcon />} label="Calendar" href="#" />
               <SideNavBar.Item icon={<InboxInstUIIcon />} label="Inbox" href="#" />
@@ -268,7 +275,6 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
               />
             </SideNavBar>
           </View>
-        </Flex.Item>
 
         {/* Main content */}
         <Flex.Item shouldGrow shouldShrink overflowY="auto" padding="large">

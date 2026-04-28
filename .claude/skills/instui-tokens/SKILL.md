@@ -1,7 +1,7 @@
 ---
-name: instui-theming
+name: instui-tokens
 description: >
-  Authoritative guide for theming in Instructure UI (InstUI) v11.7.2.
+  Authoritative guide for theming and tokens in Instructure UI (InstUI) v11.7.2.
   Invoke this skill whenever working with InstUISettingsProvider, theme tokens,
   useComputedTheme, component themeOverride props, custom themes, dark/high-contrast
   mode, or any question about how colors, spacing, border radius, or component styles
@@ -10,9 +10,9 @@ description: >
   properties or className overrides without checking this skill first.
 ---
 
-# Instructure UI Theming Skill
+# Instructure UI Tokens & Theming Skill
 
-> Quick-nav: [Mental Model](#mental-model) · [Provider Setup](#provider-setup) · [Available Themes](#available-themes) · [Token Hierarchy](#token-hierarchy) · [useComputedTheme](#usecomputedtheme) · [themeOverride Prop](#themeoverride-prop) · [Custom Themes](#custom-themes) · [Merge Logic](#merge-logic) · [Anti-Patterns](#anti-patterns)
+> Quick-nav: [Mental Model](#mental-model) · [Provider Setup](#provider-setup) · [Available Themes](#available-themes) · [Token Hierarchy](#token-hierarchy) · [useComputedTheme](#usecomputedtheme) · [sharedTokens Reference](#sharedtokens-reference) · [themeOverride Prop](#themeoverride-prop) · [Custom Themes](#custom-themes) · [Anti-Patterns](#anti-patterns)
 
 ---
 
@@ -131,85 +131,180 @@ function MyComponent() {
 }
 ```
 
-### Common sharedTokens paths
+---
 
-**Stroke (border colors):**
-```ts
-sharedTokens.stroke.mutedColor    // muted border — e.g. image containers, dividers
-sharedTokens.stroke.baseColor     // default border color
-sharedTokens.stroke.strongColor   // high-emphasis border
-sharedTokens.stroke.brandColor    // brand-colored border
-sharedTokens.stroke.errorColor    // error/danger border
-```
+## sharedTokens Reference
 
-**Background:**
-```ts
-sharedTokens.background.pageColor       // page/canvas background
-sharedTokens.background.baseColor       // component base (white in light themes)
-sharedTokens.background.containerColor  // card/container surface
-sharedTokens.background.mutedColor      // muted surface
-sharedTokens.background.inverseColor    // inverse (dark on light, light on dark)
-```
+Complete reference sourced from `@instructure/ui-themes/src/themes/newThemeTokens/light/sharedTokens.ts`. Shape is identical across all themes — values differ.
 
-**Border radius:**
-```ts
-sharedTokens.borderRadius.card.sm    // small card corner radius
-sharedTokens.borderRadius.card.md    // standard card corner radius
-sharedTokens.borderRadius.card.lg    // large card corner radius
-sharedTokens.borderRadius.card.nestedContainer.sm  // element inside a card
-sharedTokens.borderRadius.card.nestedContainer.md  // element inside a card
-sharedTokens.borderRadius.xs         // extra small (inputs, chips)
-sharedTokens.borderRadius.sm         // small
-sharedTokens.borderRadius.md         // medium
-sharedTokens.borderRadius.lg         // large
-sharedTokens.borderRadius.full       // pill / fully rounded ("999rem")
-```
+---
 
-**Spacing:**
-```ts
-sharedTokens.spacing.general.spaceXs   // "0.5rem"
-sharedTokens.spacing.general.spaceSm   // "0.75rem"
-sharedTokens.spacing.general.spaceMd   // "1rem"
-sharedTokens.spacing.general.spaceLg   // "1.5rem"
-sharedTokens.spacing.general.space2xl  // "3rem"
-sharedTokens.spacing.gap.cards.md      // gap between card-level elements
-sharedTokens.spacing.padding.card.sm   // padding for a small card
-sharedTokens.spacing.padding.card.md   // padding for a standard card
-```
+### `sharedTokens.background`
 
-### Example: theme-aware image container
+Surface and fill colors for UI elements.
 
-```tsx
-function PandaCard() {
-  const { sharedTokens } = useComputedTheme()
+| Token | Use for |
+|---|---|
+| `pageColor` | Page/canvas background — outermost surface |
+| `baseColor` | Component base — white in light themes, dark in dark themes |
+| `containerColor` | Card and container surface — sits on top of page |
+| `mutedColor` | Muted/subdued surface — selected rows, hover states |
+| `brandColor` | Brand-colored surface — always the brand accent (dark navy by default) |
+| `onColor` | Content placed ON brand surfaces — white text/icons on brand bg |
+| `inverseColor` | Inverse of base — dark on light, light on dark |
+| `successColor` | Success state surface |
+| `errorColor` | Error/danger state surface |
+| `infoColor` | Info state surface |
+| `warningColor` | Warning state surface |
+| `aiTopGradientColor` | AI gradient — top/start color |
+| `aiBottomGradientColor` | AI gradient — bottom/end color |
+| `aiTextColor` | AI-specific text color |
 
-  return (
-    <div style={{
-      borderRadius: sharedTokens.borderRadius.card.nestedContainer.sm,
-      overflow: 'hidden',
-      border: `1px solid ${sharedTokens.stroke.mutedColor}`,
-    }}>
-      <img src="/panda.png" alt="Panda" />
-    </div>
-  )
-}
-```
+**Accent backgrounds** — for tags, badges, category chips:
 
-This produces the correct border color and radius for whichever theme is active — no conditionals on theme name required.
+`accentAsh` · `accentAurora` · `accentBlue` · `accentGreen` · `accentGrey` · `accentHoney` · `accentOrange` · `accentPlum` · `accentRed` · `accentSea` · `accentSky` · `accentStone` · `accentViolet`
+
+---
+
+### `sharedTokens.stroke`
+
+Border and divider colors.
+
+| Token | Use for |
+|---|---|
+| `baseColor` | Default border color |
+| `mutedColor` | Muted border — image containers, dividers |
+| `strongColor` | High-emphasis border |
+| `brandColor` | Brand-colored border |
+| `successColor` | Success state border |
+| `errorColor` | Error/danger state border |
+| `warningColor` | Warning state border |
+| `infoColor` | Info state border |
+| `visualSeparator` | Dividers and section separators |
+| `aiTopGradientColor` | AI gradient border — start |
+| `aiBottomGradientColor` | AI gradient border — end |
+
+**Accent strokes** — same set as background accents:
+
+`accentAsh` · `accentAurora` · `accentBlue` · `accentGreen` · `accentGrey` · `accentHoney` · `accentOrange` · `accentPlum` · `accentRed` · `accentSea` · `accentSky` · `accentStone` · `accentViolet`
+
+---
+
+### `sharedTokens.strokeWidth`
+
+| Token | Description |
+|---|---|
+| `sm` | Thin border (default component border) |
+| `md` | Medium border |
+| `lg` | Thick border |
+
+---
+
+### `sharedTokens.borderRadius`
+
+Pass directly to `View`'s `borderRadius` prop — no hardcoded rem values.
+
+**General scale:**
+
+| Token | Notes |
+|---|---|
+| `xs` | Extra small |
+| `sm` | Small |
+| `md` | Medium |
+| `lg` | Large |
+| `xl` | Extra large |
+| `xxl` | Extra extra large |
+| `full` | Pill / fully rounded (`"999rem"`) |
+
+**Card-specific:**
+
+| Token | Use for |
+|---|---|
+| `card.sm` | Small card (fixed `"0.75rem"`) |
+| `card.md` | Standard card |
+| `card.lg` | Large card or modal |
+| `card.nestedContainer.sm` | Element inside a card — image, icon box |
+| `card.nestedContainer.md` | Medium nested container inside a card |
+| `card.nestedContainer.lg` | Large nested container inside a card |
+
+---
+
+### `sharedTokens.spacing`
+
+**General scale** (`sharedTokens.spacing.general.*`):
+
+| Token | Approximate value |
+|---|---|
+| `spaceNone` | `0rem` |
+| `space2xs` | ~0.25rem |
+| `spaceXs` | ~0.5rem |
+| `spaceSm` | ~0.75rem |
+| `spaceMd` | ~1rem |
+| `spaceLg` | ~1.5rem |
+| `spaceXl` | ~2rem |
+| `space2xl` | ~3rem |
+
+**Gap tokens** (`sharedTokens.spacing.gap.*`):
+
+| Token | Use for |
+|---|---|
+| `sections` | Gap between major page sections |
+| `buttons` | Gap between buttons in a row |
+| `cards.sm` | Gap between small cards |
+| `cards.md` | Gap between standard cards |
+| `cards.lg` | Gap between large cards |
+| `cards.nestedContainers.sm` | Gap between items inside a card — small |
+| `cards.nestedContainers.md` | Gap between items inside a card — medium |
+| `cards.nestedContainers.lg` | Gap between items inside a card — large |
+| `inputs.horizontal` | Horizontal gap between input elements |
+| `inputs.vertical` | Vertical gap between input elements |
+
+**Padding tokens** (`sharedTokens.spacing.padding.card.*`):
+
+| Token | Use for |
+|---|---|
+| `card.sm` | Padding for a small/compact card |
+| `card.md` | Padding for a standard card |
+| `card.lg` | Padding for a large card |
+
+---
+
+### `sharedTokens.focusOutline`
+
+Focus ring styles — use with `View`'s focus props or component `themeOverride`.
+
+| Token | Description |
+|---|---|
+| `offset` | Outer offset of focus ring |
+| `inset` | Inset amount (`0rem`) |
+| `width` | Ring stroke width |
+| `infoColor` | Default focus ring color (blue) |
+| `onColor` | Focus ring for elements on brand/dark surfaces |
+| `successColor` | Focus ring for success contexts |
+| `dangerColor` | Focus ring for destructive contexts |
+| `style` | Ring style (`"solid"`) |
+
+---
+
+### `sharedTokens.boxShadow`
+
+Structured shadow descriptor objects used internally by InstUI. **Do not use directly** — use `View`'s `shadow` prop instead:
+
+| `shadow` prop value | Elevation |
+|---|---|
+| `"resting"` | elevation1 |
+| `"above"` | elevation2 |
+| `"topmost"` | elevation3 |
 
 ---
 
 ## Wiring Tokens to View
 
-The `View` component's `background` prop selects a **slot** (`primary`, `secondary`, etc.) that maps to a legacy token. Use `themeOverride` to wire that slot to the correct `sharedTokens` value. This is the canonical pattern for applying semantic colors to surfaces.
+The `View` component's `background` prop selects a **slot** (`primary`, `secondary`, etc.) that maps to a legacy token. Use `themeOverride` to wire that slot to the correct `sharedTokens` value.
 
 ### Page background
 
-The outermost surface in a component tree. Owns `height="100vh"` and overflow control.
-
 ```tsx
-const { sharedTokens } = useComputedTheme()
-
 <View
   as="div"
   height="100vh"
@@ -223,8 +318,6 @@ const { sharedTokens } = useComputedTheme()
 
 ### Card / container surface
 
-Any card, panel, or elevated surface that sits on top of the page.
-
 ```tsx
 <View
   background="primary"
@@ -235,19 +328,30 @@ Any card, panel, or elevated surface that sits on top of the page.
 >
 ```
 
-### Border radius
+### Brand-colored surface with legible content
 
-Pass `sharedTokens` values directly as the `borderRadius` prop — no hardcoded rem values:
+Use `sharedTokens.background.onColor` for any text or icon placed on a `brandColor` background — it's always the correct contrasting color regardless of theme. **Do not use `baseColor` here** — it is wrong in dark themes.
 
 ```tsx
-borderRadius={sharedTokens.borderRadius.card.sm}   // small card
-borderRadius={sharedTokens.borderRadius.card.md}   // standard card
-borderRadius={sharedTokens.borderRadius.card.lg}   // large card
-borderRadius={sharedTokens.borderRadius.card.nestedContainer.sm}  // element inside a card
-borderRadius={sharedTokens.borderRadius.full}      // pill
+<View
+  background="primary"
+  themeOverride={{ backgroundPrimary: sharedTokens.background.brandColor }}
+  borderRadius={sharedTokens.borderRadius.card.nestedContainer.sm}
+  padding="x-small"
+>
+  <CanvasLogoIcon color={sharedTokens.background.onColor} />
+</View>
 ```
 
-**The rule:** `background` picks the slot, `themeOverride` wires the semantic value into it, `borderRadius` receives the token value directly.
+InstUI icon components use their own internal color system — CSS `color` on a parent element does **not** affect their fill. Pass `color="primary-inverse"` directly as a prop (which maps to `onColor` internally):
+
+```tsx
+// Wrong — CSS color is ignored by InstUI icons
+<span style={{ color: sharedTokens.background.onColor }}><SettingsInstUIIcon /></span>
+
+// Right — inject via prop
+cloneElement(icon as ReactElement<{ color?: string }>, { color: 'primary-inverse' })
+```
 
 ---
 
@@ -285,7 +389,6 @@ Receives `(componentTheme, currentTheme)`. Use this when the override should ref
 ### Finding component token names:
 
 ```bash
-# Find available tokens for a component, e.g. Button:
 grep -r "primaryBackground\|primaryColor" \
   node_modules/@instructure/ui-buttons/es/BaseButton/theme.js
 ```
@@ -357,8 +460,6 @@ const brandedTheme = {
 3. Result has all required `BaseTheme` keys → used as-is (full replacement)
 4. Otherwise → **deep merged** onto the ancestor
 
-Partial objects only override what you specify — everything else falls through from the ancestor.
-
 ---
 
 ## Anti-Patterns
@@ -366,14 +467,14 @@ Partial objects only override what you specify — everything else falls through
 | Don't | Do instead |
 |---|---|
 | Detect theme by name to pick colors: `isDark ? '#3F515E' : '#E8EAEC'` | `useComputedTheme()` → `sharedTokens.stroke.mutedColor` |
-| Hardcode hex values that match theme colors | Use token paths from `sharedTokens` or `semantics` |
-| `(theme as any).newTheme?.semantics?.color?.background?.page` | `useComputedTheme()` → `sharedTokens.background.pageColor` |
+| Hardcode hex values that match theme colors | Use token paths from `sharedTokens` |
 | `borderRadius="1rem"` hardcoded on View | `borderRadius={sharedTokens.borderRadius.card.md}` |
 | `background="secondary"` without themeOverride | Add `themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}` |
 | `background="primary"` without themeOverride on a card | Add `themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}` |
 | `style={{ borderRadius: 8 }}` inside a themed component | `sharedTokens.borderRadius.card.nestedContainer.sm` |
 | `style={{ color: '#0770A3' }}` on InstUI components | `themeOverride={{ primaryColor: '#0770A3' }}` |
+| `style={{ color: token }}` on parent, expecting icon to inherit | InstUI icons ignore CSS color — pass `color="primary-inverse"` as a prop |
+| `sharedTokens.background.baseColor` for content on brand surfaces | Use `sharedTokens.background.onColor` — baseColor is wrong in dark themes |
 | CSS class overrides targeting InstUI internals | `themeOverride` prop |
 | Creating a new theme from scratch | Spread an existing theme and override specifics |
-| Wrapping each component separately with a provider | Nest a single provider around a subtree |
 | `!important` in CSS to override component styles | `themeOverride` prop or provider-level `componentOverrides` |

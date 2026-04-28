@@ -67,8 +67,7 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
             Here, you can view all the available themes in one place.
           </Text>
         </Flex.Item>
-        <Flex.Item>
-          <SimpleSelect
+        <SimpleSelect
             renderLabel=""
             value={themeName}
             onChange={(_e, { value }) => onThemeChange(value as string)}
@@ -80,7 +79,6 @@ export function Showcase({ themeName, themeNames, onThemeChange }: ShowcaseProps
               </SimpleSelect.Option>
             ))}
           </SimpleSelect>
-        </Flex.Item>
       </Flex>
 
       {/* 3 Column Layout */}
