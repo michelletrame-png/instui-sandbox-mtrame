@@ -1,22 +1,26 @@
-# InstUI Vibe Coding Sandbox (POC)
+# InstUI Prototypes
 
-> **Experimental.** This is a proof of concept and is not yet intended to scale.
+A sandbox for rapidly prototyping Canvas LMS UI concepts using [Instructure UI (InstUI) v11](https://instructure.design/). Designed to be used with an AI coding agent (Claude Code) that is guided by built-in conventions to produce idiomatic InstUI code.
 
-A sandbox for exploring "vibe coding" workflows with [Instructure UI (InstUI)](https://instructure.design/). The goal is to make it fast and low-friction for AI coding agents to build UI correctly using InstUI conventions.
+**Live:** [instructure.github.io/instui-proto-sandbox-poc](https://instructure.github.io/instui-proto-sandbox-poc/)
 
-## What this is
+## How it works
 
-This project experiments with three levers for steering AI-assisted development with InstUI:
+Prototypes live in `src/prototypes/` and are registered in `src/registry.ts`. Each one is a self-contained React component that gets its own route and appears in the home page index. Add a new directory, register it, and it's live.
 
-- **Claude skills** — reusable skill files (in `.claude/skills/`) that give the agent authoritative guidance on InstUI setup, theming, layout, and component usage
-- **Clean template code** — a minimal, well-structured React + Vite baseline that agents can reference and extend without fighting legacy patterns
-- **Hooks** — Claude Code hooks that steer agent behavior at key moments (e.g. before edits, after tool calls) to enforce InstUI conventions automatically
+The environment provides three layers of guidance for the agent:
+
+- **Skills** (`.claude/skills/`) — authoritative docs on InstUI theming, layout, icons, and setup that the agent reads automatically
+- **Reference code** (`src/references/`) — fully-built example pages demonstrating correct patterns at scale
+- **ESLint rules** (`eslint-rules/`) — local plugin that catches common InstUI mistakes (hardcoded colors, missing `themeOverride`, theme name detection) at write time
+
+See [AGENTS.md](AGENTS.md) for the full environment guide.
 
 ## Stack
 
-- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vitejs.dev/)
+- React + TypeScript + Vite
 - [Instructure UI v11](https://instructure.design/)
+- Claude Code
 
 ## Getting started
 
@@ -25,6 +29,4 @@ npm install
 npm run dev
 ```
 
-## Status
-
-This is an early-stage experiment. Patterns here are being evaluated before any broader adoption.
+Deploys to GitHub Pages automatically on push to `main`.
