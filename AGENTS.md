@@ -24,6 +24,7 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 | `instui-tokens` | Token hierarchy, `useComputedTheme()`, `sharedTokens` reference, `themeOverride` patterns |
 | `instui-layout` | `View`, `Flex`, `Grid` — spacing tokens, layout patterns, anti-patterns |
 | `instui-icons` | Two icon systems (`Icon*` legacy vs `*InstUIIcon`), props, color tokens, size tokens, full icon directory |
+| `instui-animation` | `Transition` component, animation types, `DrawerLayout` push panels, theme timing tokens |
 | `instui-init` | How to scaffold a new prototype from scratch |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.

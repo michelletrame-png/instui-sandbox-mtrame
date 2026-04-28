@@ -44,6 +44,7 @@ export default defineConfig([
       'instui/flex-item-shadow-clip': 'warn',
       'instui/no-flex-item-without-behavior': 'warn',
       'instui/view-background-needs-override': 'warn',
+      'instui/button-text-max-words': 'warn',
     },
   },
 ])

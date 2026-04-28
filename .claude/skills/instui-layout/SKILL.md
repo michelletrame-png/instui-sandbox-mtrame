@@ -45,17 +45,18 @@ import { View, Flex, Grid } from '@instructure/ui/latest'
 
 All `margin`, `padding`, `gap`, `colSpacing`, and `rowSpacing` props accept these token values or CSS shorthand combining them:
 
-| Token | Approximate value |
+| Token | Value |
 |---|---|
 | `0` / `none` | 0 |
-| `xxx-small` | 0.125rem |
-| `xx-small` | 0.25rem |
-| `x-small` | 0.5rem |
-| `small` | 0.75rem |
-| `medium` | 1rem |
-| `large` | 1.5rem |
-| `x-large` | 2rem |
-| `xx-large` | 2.5rem |
+| `xxx-small` | 0.125rem (2px) |
+| `xx-small` | 0.375rem (6px) |
+| `x-small` | 0.5rem (8px) |
+| `small` | 0.75rem (12px) |
+| `mediumSmall` | 1rem (16px) |
+| `medium` | 1.5rem (24px) |
+| `large` | 2.25rem (36px) |
+| `x-large` | 3rem (48px) |
+| `xx-large` | 3.75rem (60px) |
 | `auto` | auto (margins only) |
 
 **CSS shorthand** — combine tokens with spaces just like CSS margin/padding shorthand:

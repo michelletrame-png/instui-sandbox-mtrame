@@ -256,9 +256,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
               <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
               <SideNavBar.Item
                 icon={
-                  <Flex as="span" style={{ color: sharedTokens.background.baseColor }}>
-                    <LayoutDashboardInstUIIcon />
-                  </Flex>
+                  <LayoutDashboardInstUIIcon color="onColor" />
                 }
                 label="Dashboard"
                 href="#"

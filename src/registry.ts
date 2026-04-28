@@ -19,6 +19,14 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
+    id: 'agent-shell',
+    title: 'Agent Shell',
+    path: '/agent-shell',
+    createdAt: '2026-04-28',
+    status: 'WIP',
+    component: lazy(() => import('./prototypes/agent-shell')),
+  },
+  {
     id: 'hello-world',
     title: 'Hello World',
     path: '/hello-world',
