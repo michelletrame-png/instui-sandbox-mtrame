@@ -30,7 +30,11 @@ import {
   ArrowUpInstUIIcon,
   AiInfoInstUIIcon,
   IconCanvasLogoSolid,
+  HandInstUIIcon,
+  WandSparklesInstUIIcon,
 } from '@instructure/ui-icons'
+import { Link } from '@instructure/ui-link/latest'
+import { Pill } from '@instructure/ui-pill/latest'
 import { DrawerLayout } from '@instructure/ui-drawer-layout/latest'
 import { Transition } from '@instructure/ui-motion'
 import type { PrototypeProps } from '../../registry'
@@ -43,6 +47,87 @@ function useIsMobile() {
     return () => window.removeEventListener('resize', handler)
   }, [])
   return isMobile
+}
+
+function AgentWelcome() {
+  const { sharedTokens } = useComputedTheme()
+  const aiGradient = `linear-gradient(90deg, ${sharedTokens.background.aiTopGradientColor} 20%, ${sharedTokens.background.aiBottomGradientColor} 81%)`
+
+  const pill = (label: string, description: string, showBadge = false) => (
+    <View
+      as="button"
+      display="block"
+      width="100%"
+      borderWidth="small"
+      borderColor="primary"
+      borderRadius={sharedTokens.borderRadius.card.md}
+      padding="small medium"
+      background="transparent"
+      cursor="pointer"
+      textAlign="start"
+    >
+      <Flex gap="mediumSmall" alignItems="center">
+        <WandSparklesInstUIIcon color="brand" size="md" />
+        <Flex.Item shouldGrow shouldShrink>
+          <Flex direction="column" gap="xxx-small">
+            <Text weight="bold">{label}</Text>
+            <Text size="small" color="secondary">{description}</Text>
+          </Flex>
+        </Flex.Item>
+        {showBadge && <Pill color="info">Start here</Pill>}
+      </Flex>
+    </View>
+  )
+
+  return (
+    <View as="div" display="block" padding="large medium">
+      <Flex direction="column" gap="large">
+
+        {/* Greeting */}
+        <Flex direction="column" gap="xx-small">
+          <Flex alignItems="center" gap="xx-small">
+            <HandInstUIIcon size="lg" />
+            <Heading level="h2" margin="0">
+              <span
+                style={{
+                  background: aiGradient,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Hello, Zoe!
+              </span>
+            </Heading>
+          </Flex>
+          <Text color="secondary">What are we doing today?</Text>
+        </Flex>
+
+        {/* Get started */}
+        <Flex direction="column" gap="small">
+          <Heading level="h4" as="h3" margin="0">Get started</Heading>
+          <Flex direction="column" gap="small">
+            {pill('Prompt builder', 'Generate common prompts', true)}
+            {pill('Community library', 'Browse and contribute community prompts')}
+          </Flex>
+        </Flex>
+
+        {/* Try asking */}
+        <Flex direction="column" gap="small">
+          <Heading level="h4" as="h3" margin="0">Try asking</Heading>
+          <Flex direction="column" gap="small">
+            <Button color="secondary" display="block" textAlign="start">List recently published courses</Button>
+            <Button color="secondary" display="block" textAlign="start">Draft a message to students</Button>
+            <Button color="secondary" display="block" textAlign="start">Shift dates in a module</Button>
+          </Flex>
+          <View as="div" display="block" margin="small 0 0 0">
+            <Link href="#">What else can you do?</Link>
+          </View>
+        </Flex>
+
+      </Flex>
+    </View>
+  )
 }
 
 export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
@@ -312,8 +397,8 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
                     />
                   </Flex>
                 </View>
-                <Flex.Item shouldGrow shouldShrink overflowY="auto">
-                  {/* chat content goes here */}
+                <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable' }}>
+                  <AgentWelcome />
                 </Flex.Item>
                 <View as="div" padding="x-small" display="block">
                   {agentInput}
@@ -422,10 +507,10 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
                         />
                       </Flex>
                     </View>
-                    <Flex.Item shouldGrow shouldShrink overflowY="auto">
-                      {/* chat content goes here */}
+                    <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable' }}>
+                      <AgentWelcome />
                     </Flex.Item>
-                    <View as="div" padding="x-small mediumSmall mediumSmall" display="block">
+                    <View as="div" padding="none mediumSmall mediumSmall" display="block">
                       {agentInput}
                     </View>
                   </Flex>
