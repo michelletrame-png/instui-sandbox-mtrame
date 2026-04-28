@@ -3,13 +3,18 @@ import type { ComponentType } from 'react'
 
 export type PrototypeStatus = 'WIP' | 'In Review' | 'Archived' | 'Complete' | 'Reference'
 
+export type PrototypeProps = {
+  isDark: boolean
+  onToggleTheme: () => void
+}
+
 export type PrototypeMeta = {
   id: string
   title: string
   path: string
   createdAt: string
   status: PrototypeStatus
-  component: ComponentType<any>
+  component: ComponentType<PrototypeProps>
 }
 
 export const prototypes: PrototypeMeta[] = [

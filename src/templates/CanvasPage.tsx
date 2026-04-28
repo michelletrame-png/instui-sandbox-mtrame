@@ -113,7 +113,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
           placement="start"
           size="regular"
           shouldCloseOnDocumentClick
-          themeOverride={{ padding: '0' } as any}
+          themeOverride={{ padding: '0' } as object}
         >
           <View as="div" height="100%" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} display="block">
             <View as="div" display="block" borderWidth="0 0 small 0">

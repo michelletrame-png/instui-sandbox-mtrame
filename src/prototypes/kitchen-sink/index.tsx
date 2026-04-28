@@ -62,7 +62,8 @@ type Section = {
   content: React.ReactNode
 }
 
-function Card({ title, description, content, sharedTokens }: Section & { sharedTokens: any }) {
+function Card({ title, description, content }: Section) {
+  const { sharedTokens } = useComputedTheme()
   return (
     <View
       as="div"
@@ -655,11 +656,7 @@ function KitchenSinkInner({
                 <ShowcaseContent themeKey={themeKey} setThemeKey={setThemeKey} />
               ) : (
                 SECTIONS[selected as Exclude<CategoryId, 'showcase'>].map(section => (
-                  <Card
-                    key={section.title}
-                    sharedTokens={sharedTokens}
-                    {...section}
-                  />
+                  <Card key={section.title} {...section} />
                 ))
               )}
 
