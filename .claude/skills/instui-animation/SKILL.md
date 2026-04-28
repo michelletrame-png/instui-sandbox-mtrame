@@ -10,7 +10,7 @@ description: >
 
 # Instructure UI Animation Skill
 
-> Quick-nav: [Key Rule](#key-rule) · [Transition Component](#transition-component) · [Animation Types](#animation-types) · [Theme Tokens](#theme-tokens) · [DrawerLayout](#drawerlayout-push-panels) · [Anti-Patterns](#anti-patterns)
+> Quick-nav: [Key Rule](#key-rule) · [Transition Component](#transition-component) · [Animation Types](#animation-types) · [Theme Tokens](#theme-tokens) · [Custom Keyframe Animations](#custom-keyframe-animations) · [DrawerLayout](#drawerlayout-push-panels) · [Anti-Patterns](#anti-patterns)
 
 ---
 
@@ -122,6 +122,89 @@ The `!important` ensures the transition overrides any conflicting animation on t
 
 ---
 
+## Custom Keyframe Animations
+
+`Transition` only supports fade, scale, and slide. For any other animation — rotation, bounce, custom enter effects — you need custom `@keyframes`. There are two things to get right: **injecting** the rule and **applying** it.
+
+### Injecting keyframes: use `Global`, not `keyframes`
+
+`@instructure/emotion` exports a `keyframes` utility (re-exported from `@emotion/react`). **Do not use it alone.** `keyframes` only creates a named object — it does not inject the `@keyframes` CSS rule into the document unless used inside emotion's CSS pipeline (a `css()` call or styled component). Setting `el.style.animation` with the returned name will silently fail because the rule was never inserted.
+
+**Correct approach:** use `Global` from `@instructure/emotion` to inject the rule as a plain CSS string, and reference it by a plain name.
+
+```tsx
+import { Global } from '@instructure/emotion'
+
+// Inside the component's render:
+<Global styles={`
+  @keyframes my-animation {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`} />
+```
+
+`Global` goes through emotion's injection pipeline — it is SSR-safe, deduplicated, and managed by the active emotion cache. It renders no DOM node.
+
+### Applying and re-triggering: use `elementRef` + direct style mutation
+
+For user-triggered animations that need to re-fire on repeat interactions (e.g. hover-to-wave), React state alone is insufficient — removing and re-adding a class or style in the same render cycle won't restart the animation. The correct approach is:
+
+1. Get the DOM element via `elementRef` on a `View as="span"`
+2. Clear the animation, force a reflow, then re-set it
+3. Clean up via `animationend`
+
+```tsx
+import { useRef } from 'react'
+import { Global } from '@instructure/emotion'
+import { View } from '@instructure/ui-view/latest'
+
+function WavingHand() {
+  const handRef = useRef<HTMLElement | null>(null)
+
+  function wave() {
+    const el = handRef.current
+    if (!el) return
+    el.style.animation = 'none'
+    void el.offsetWidth            // force reflow — restarts the animation clock
+    el.style.animation = 'agent-wave 0.7s ease-in-out'
+    el.addEventListener('animationend', () => { el.style.animation = '' }, { once: true })
+  }
+
+  return (
+    <>
+      <Global styles={`
+        @keyframes agent-wave {
+          0%   { transform: rotate(0deg); }
+          20%  { transform: rotate(20deg); }
+          40%  { transform: rotate(-15deg); }
+          60%  { transform: rotate(18deg); }
+          80%  { transform: rotate(-8deg); }
+          100% { transform: rotate(0deg); }
+        }
+      `} />
+      <View
+        as="span"
+        display="inline-block"
+        elementRef={(el) => { handRef.current = el as HTMLElement | null }}
+        style={{ transformOrigin: 'bottom center' }}
+        onMouseEnter={wave}
+      >
+        <HandInstUIIcon size="lg" />
+      </View>
+    </>
+  )
+}
+```
+
+### Key rules
+
+- `void el.offsetWidth` is the standard browser trick to force a reflow between clearing and re-setting an animation — it has no InstUI-specific alternative.
+- `style={{ transformOrigin: '...' }}` on `View` sets a base inline style that persists. The `animation` property is set and cleared directly — they don't conflict.
+- Do not put `Global` at module scope. It must render inside the React tree so emotion's cache context is available.
+
+---
+
 ## DrawerLayout — Push Panels
 
 Use `DrawerLayout` when a panel should **push the main content aside** rather than overlay it. It measures the tray width after the transition enters and applies an animated `margin` to the content area — this is the only correct way to get smooth layout reflow.
@@ -220,6 +303,9 @@ On close, the margin animates back to 0 before the tray exits.
 | Don't | Do instead |
 |---|---|
 | Raw `@keyframes` + `style={{ animation: '...' }}` for slide-in | `<Transition type="slide-right" transitionOnMount>` |
+| `keyframes` from `@instructure/emotion` used alone with `el.style.animation` | Use `Global` to inject the `@keyframes` string — `keyframes` alone never puts the rule in the document |
+| `Global` at module scope (outside the React tree) | `Global` must render inside the component tree so emotion's cache context is active |
+| `<span className="my-anim">` with a raw `<style>` tag for custom animations | `<View as="span" elementRef={...}>` + `<Global styles={...}>` |
 | `{open && <Transition in type="...">}` expecting an exit animation | Use `<Transition in={open} unmountOnExit>` outside the conditional |
 | `Transition` for a panel that should push content | Use `DrawerLayout` — `Transition` alone causes layout to snap |
 | Setting `style={{ transform: 'translateX(...)' }}` to position the panel | `Transition` manages transforms — don't set them manually |

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useComputedTheme } from '@instructure/emotion'
+import React, { useState, useEffect, useRef } from 'react'
+import { useComputedTheme, Global } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
@@ -32,12 +32,14 @@ import {
   IconCanvasLogoSolid,
   HandInstUIIcon,
   WandSparklesInstUIIcon,
+  LibraryInstUIIcon,
 } from '@instructure/ui-icons'
 import { Link } from '@instructure/ui-link/latest'
 import { Pill } from '@instructure/ui-pill/latest'
 import { DrawerLayout } from '@instructure/ui-drawer-layout/latest'
 import { Transition } from '@instructure/ui-motion'
 import type { PrototypeProps } from '../../registry'
+
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
@@ -52,8 +54,23 @@ function useIsMobile() {
 function AgentWelcome() {
   const { sharedTokens } = useComputedTheme()
   const aiGradient = `linear-gradient(90deg, ${sharedTokens.background.aiTopGradientColor} 20%, ${sharedTokens.background.aiBottomGradientColor} 81%)`
+  const handRef = useRef<HTMLSpanElement | null>(null)
 
-  const pill = (label: string, description: string, showBadge = false) => (
+  function waveHand() {
+    const el = handRef.current
+    if (!el) return
+    el.style.animation = 'none'
+    void el.offsetWidth
+    el.style.animation = 'agent-wave 0.7s ease-in-out'
+    el.addEventListener('animationend', () => { el.style.animation = '' }, { once: true })
+  }
+
+  useEffect(() => {
+    const t = setTimeout(waveHand, 400)
+    return () => clearTimeout(t)
+  }, [])
+
+  const pill = (label: string, description: string, icon: React.ReactNode, showBadge = false) => (
     <View
       as="button"
       display="block"
@@ -67,7 +84,7 @@ function AgentWelcome() {
       textAlign="start"
     >
       <Flex gap="mediumSmall" alignItems="center">
-        <WandSparklesInstUIIcon color="brand" size="md" />
+        {icon}
         <Flex.Item shouldGrow shouldShrink>
           <Flex direction="column" gap="xxx-small">
             <Text weight="bold">{label}</Text>
@@ -81,12 +98,30 @@ function AgentWelcome() {
 
   return (
     <View as="div" display="block" padding="large medium">
+      <Global styles={`
+        @keyframes agent-wave {
+          0%   { transform: rotate(0deg); }
+          20%  { transform: rotate(20deg); }
+          40%  { transform: rotate(-15deg); }
+          60%  { transform: rotate(18deg); }
+          80%  { transform: rotate(-8deg); }
+          100% { transform: rotate(0deg); }
+        }
+      `} />
       <Flex direction="column" gap="large">
 
         {/* Greeting */}
         <Flex direction="column" gap="xx-small">
-          <Flex alignItems="center" gap="xx-small">
-            <HandInstUIIcon size="lg" />
+          <Flex alignItems="center" gap="x-small">
+            <span
+              ref={handRef}
+              style={{ display: 'inline-block', flexShrink: 0, transformOrigin: 'bottom center' }}
+              onMouseEnter={waveHand}
+            >
+              <View as="span" display="inline-block" style={{ transform: 'rotate(-35deg)' }}>
+                <HandInstUIIcon size="lg" />
+              </View>
+            </span>
             <Heading level="h2" margin="0">
               <span
                 style={{
@@ -107,8 +142,8 @@ function AgentWelcome() {
         <Flex direction="column" gap="small">
           <Heading level="h4" as="h3" margin="0">Get started</Heading>
           <Flex direction="column" gap="small">
-            {pill('Prompt builder', 'Generate common prompts', true)}
-            {pill('Community library', 'Browse and contribute community prompts')}
+            {pill('Prompt builder', 'Generate common prompts', <WandSparklesInstUIIcon color="brand" size="md" />, true)}
+            {pill('Community library', 'Browse and contribute community prompts', <LibraryInstUIIcon color="brand" size="md" />)}
           </Flex>
         </Flex>
 
