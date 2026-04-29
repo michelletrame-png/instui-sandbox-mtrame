@@ -152,7 +152,9 @@ function AgentWelcome() {
           <Heading level="h4" as="h3" margin="0">Try asking</Heading>
           <Flex direction="column" gap="small">
             <Button color="secondary" display="block" textAlign="start">List recently published courses</Button>
+            {/* eslint-disable-next-line instui/button-text-max-words */}
             <Button color="secondary" display="block" textAlign="start">Draft a message to students</Button>
+            {/* eslint-disable-next-line instui/button-text-max-words */}
             <Button color="secondary" display="block" textAlign="start">Shift dates in a module</Button>
           </Flex>
           <View as="div" display="block" margin="small 0 0 0">
@@ -205,7 +207,8 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
         <Flex direction="column" gap="xx-small">
           <Text size="small" color="secondary">Enter a prompt</Text>
           {/* Native textarea: InstUI TextArea v2 doesn't support component-level token overrides, and transparent-border styling is required to simulate focus on the outer card. */}
-          <style>{`[data-agent-prompt]::placeholder { color: ${(semantics as any)?.color?.text?.input?.placeholder}; }`}</style>
+          <style>{`[data-agent-prompt]::placeholder { color: ${(semantics as unknown as { color?: { text?: { input?: { placeholder?: string } } } })?.color?.text?.input?.placeholder}; }`}</style>
+          {/* eslint-disable instui/no-style-border */}
           <textarea
             data-agent-prompt
             placeholder="Help me…"
@@ -225,6 +228,7 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
               padding: 0,
             }}
           />
+          {/* eslint-enable instui/no-style-border */}
         </Flex>
         <Flex justifyItems="space-between" alignItems="center" margin="x-small 0 0 0">
           <Flex gap="x-small">

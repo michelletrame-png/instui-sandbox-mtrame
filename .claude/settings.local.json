@@ -8,12 +8,13 @@
     ]
   },
   "hooks": {
-    "Stop": [
+    "PostToolUse": [
       {
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx eslint src/ 2>&1"
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ]; then ESLINT_OUT=$(cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx eslint \"$FILE\" --max-warnings 0 2>&1); STATUS=$?; if [ $STATUS -ne 0 ]; then echo \"$ESLINT_OUT\" >&2; exit 2; fi; fi"
           }
         ]
       }
