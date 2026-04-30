@@ -79,7 +79,8 @@ function AgentWelcome() {
       borderColor="primary"
       borderRadius={sharedTokens.borderRadius.card.md}
       padding="small medium"
-      background="transparent"
+      background="primary"
+      themeOverride={{ backgroundPrimary: sharedTokens.background.mutedColor }}
       cursor="pointer"
       textAlign="start"
     >
