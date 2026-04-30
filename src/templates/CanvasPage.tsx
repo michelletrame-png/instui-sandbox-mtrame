@@ -5,13 +5,13 @@ import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button } from '@instructure/ui-buttons/latest'
-import { IconButton } from '@instructure/ui-buttons/latest'
 import { Avatar } from '@instructure/ui-avatar/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
 import { Tray } from '@instructure/ui-tray/latest'
+
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
 import {
   SettingsInstUIIcon,
@@ -20,7 +20,6 @@ import {
   CalendarDaysInstUIIcon,
   InboxInstUIIcon,
   CircleHelpInstUIIcon,
-  IgniteaiLogoInstUIIcon,
   SunInstUIIcon,
   MoonInstUIIcon,
   EllipsisVerticalInstUIIcon,
@@ -238,99 +237,92 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
       themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
       display="block"
     >
-      <Flex height="100%" width="100%" alignItems="stretch">
+      <Flex height="100%" width="100%" alignItems="stretch" padding="0 0 small 0">
 
         {/* Sidebar */}
-        <View as="div" height="97vh">
-            <SideNavBar
-              label="Main navigation"
-              toggleLabel={{ expandedLabel: 'Minimize navigation', minimizedLabel: 'Expand navigation' }}
-            >
-              <SideNavBar.Item
-                icon={<IconCanvasLogoSolid size="medium" />}
-                label={<ScreenReaderContent>Canvas</ScreenReaderContent>}
-                href="#"
-                themeOverride={{ contentPadding: '1em 0.375rem 1em 0.375rem' }}
-              />
-              <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
-              <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
-              <SideNavBar.Item
-                icon={
-                  <LayoutDashboardInstUIIcon color="onColor" />
-                }
-                label="Dashboard"
-                href="#"
-                selected
-              />
-              <SideNavBar.Item icon={<BookOpenInstUIIcon />} label="Courses" href="#" />
-              <SideNavBar.Item icon={<CalendarDaysInstUIIcon />} label="Calendar" href="#" />
-              <SideNavBar.Item icon={<InboxInstUIIcon />} label="Inbox" href="#" />
-              <SideNavBar.Item icon={<CircleHelpInstUIIcon />} label="Help" href="#" />
-              <SideNavBar.Item
-                icon={isDark ? <SunInstUIIcon /> : <MoonInstUIIcon />}
-                label="Theme"
-                onClick={onToggleTheme}
-              />
-            </SideNavBar>
-          </View>
+        <View as="div" height="100%" padding="0 0 small 0" display="block">
+          <SideNavBar
+            label="Main navigation"
+            toggleLabel={{ expandedLabel: 'Minimize navigation', minimizedLabel: 'Expand navigation' }}
+          >
+            <SideNavBar.Item
+              icon={<IconCanvasLogoSolid size="medium" />}
+              label={<ScreenReaderContent>Canvas</ScreenReaderContent>}
+              href="#"
+              themeOverride={{ contentPadding: '1em 0.375rem 1em 0.375rem' }}
+            />
+            <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
+            <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
+            <SideNavBar.Item
+              icon={<LayoutDashboardInstUIIcon color="onColor" />}
+              label="Dashboard"
+              href="#"
+              selected
+            />
+            <SideNavBar.Item icon={<BookOpenInstUIIcon />} label="Courses" href="#" />
+            <SideNavBar.Item icon={<CalendarDaysInstUIIcon />} label="Calendar" href="#" />
+            <SideNavBar.Item icon={<InboxInstUIIcon />} label="Inbox" href="#" />
+            <SideNavBar.Item icon={<CircleHelpInstUIIcon />} label="Help" href="#" />
+            <SideNavBar.Item
+              icon={isDark ? <SunInstUIIcon /> : <MoonInstUIIcon />}
+              label="Theme"
+              onClick={onToggleTheme}
+            />
+          </SideNavBar>
+        </View>
 
         {/* Main content */}
-        <Flex.Item shouldGrow shouldShrink overflowY="auto" padding="large">
-          <View as="div" maxWidth="1100px" display="block" margin="0 auto" width="100%">
-            <Flex direction="column" gap="medium">
+        <Flex.Item shouldGrow shouldShrink overflowY="auto">
+          <View as="div" height="100%" overflowY="auto" padding="large" display="block">
+            <View as="div" maxWidth="1100px" display="block" margin="0 auto" width="100%">
+              <Flex direction="column" gap="medium">
 
-              <Flex alignItems="start" gap="small">
-                <Flex.Item shouldGrow shouldShrink>
-                  <Flex direction="column" gap="small">
-                    {breadcrumb}
-                    <Heading level="h1" variant="titlePageDesktop" margin="0">Assignments</Heading>
-                    <Text size="descriptionPage">
-                      Manage course assignments and track submission deadlines.
-                    </Text>
-                  </Flex>
-                </Flex.Item>
-                <IconButton color="ai-primary" screenReaderLabel="Open AI assistant" margin="0">
-                  <IgniteaiLogoInstUIIcon />
-                </IconButton>
-              </Flex>
+                <Flex direction="column" gap="small">
+                  {breadcrumb}
+                  <Heading level="h1" variant="titlePageDesktop" margin="0">Assignments</Heading>
+                  <Text size="descriptionPage">
+                    Manage course assignments and track submission deadlines.
+                  </Text>
+                </Flex>
 
-              <Flex gap="small">
-                <Button color="primary">Create assignment</Button>
-                <Button>Import</Button>
-              </Flex>
+                <Flex gap="small">
+                  <Button color="primary">Create assignment</Button>
+                  <Button>Import</Button>
+                </Flex>
 
-              <Tabs onRequestTabChange={(_e, { index }) => setSelectedTabIndex(index)}>
-                <Tabs.Panel
-                  renderTitle="Overview"
-                  isSelected={selectedTabIndex === 0}
-                  padding="none"
-                  themeOverride={{ defaultOverflowY: 'visible' }}
-                >
-                  <View
-                    as="div"
-                    background="primary"
-                    themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-                    borderRadius={sharedTokens.borderRadius.card.lg}
-                    shadow="resting"
-                    padding="medium"
-                    display="block"
-                    margin="medium 0 0 0"
+                <Tabs onRequestTabChange={(_e, { index }) => setSelectedTabIndex(index)}>
+                  <Tabs.Panel
+                    renderTitle="Overview"
+                    isSelected={selectedTabIndex === 0}
+                    padding="none"
+                    themeOverride={{ defaultOverflowY: 'visible' }}
                   >
-                    <Flex direction="column" gap="xx-small">
-                      <Heading level="h2" variant="titleCardLarge" margin="0">Upcoming assignments</Heading>
-                      <Text size="content" color="secondary">Due in the next seven days</Text>
-                      {loremContent}
-                    </Flex>
-                  </View>
-                </Tabs.Panel>
-                <Tabs.Panel
-                  renderTitle="Details"
-                  isSelected={selectedTabIndex === 1}
-                  padding="none"
-                />
-              </Tabs>
+                    <View
+                      as="div"
+                      background="primary"
+                      themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
+                      borderRadius={sharedTokens.borderRadius.card.lg}
+                      shadow="resting"
+                      padding="medium"
+                      display="block"
+                      margin="medium 0 0 0"
+                    >
+                      <Flex direction="column" gap="xx-small">
+                        <Heading level="h2" variant="titleCardLarge" margin="0">Upcoming assignments</Heading>
+                        <Text size="content" color="secondary">Due in the next seven days</Text>
+                        {loremContent}
+                      </Flex>
+                    </View>
+                  </Tabs.Panel>
+                  <Tabs.Panel
+                    renderTitle="Details"
+                    isSelected={selectedTabIndex === 1}
+                    padding="none"
+                  />
+                </Tabs>
 
-            </Flex>
+              </Flex>
+            </View>
           </View>
         </Flex.Item>
 

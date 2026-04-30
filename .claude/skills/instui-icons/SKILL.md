@@ -78,13 +78,21 @@ Both systems share the same core props (from `SVGIconProps`):
 
 **Critical:** InstUI icons use emotion-based theming internally. Setting CSS `color` on a parent element does **not** affect icon fill. Color must be passed as a prop directly.
 
-When an icon sits on a `brandColor` surface (e.g. a selected nav item, logo container), use `color="inverseColor"` on `*InstUIIcon` components. For legacy `IconCanvasLogoSolid`, use `color="primary-inverse"` (the legacy color token it accepts).
+Two tokens apply to icons on colored surfaces — choose based on context:
+
+- `color="inverseColor"` — icon sits on a **brand/selection** surface (e.g. selected nav item, logo container with `brandColor` background)
+- `color="onColor"` — icon sits **on** a colored gradient or themed surface (e.g. the AI gradient header, any surface using `aiTopGradientColor`/`aiBottomGradientColor`)
+
+For legacy `IconCanvasLogoSolid`, use `color="primary-inverse"` (the legacy token it accepts).
 
 ```tsx
-// Correct — white *InstUIIcon on dark background
-<SettingsInstUIIcon color="inverseColor" />
+// Selected nav item — brand background
+<LayoutDashboardInstUIIcon color="inverseColor" />
 
-// Correct — legacy Canvas logo on dark background
+// AI gradient header — themed surface
+<IgniteaiLogoInstUIIcon color="onColor" />
+
+// Legacy Canvas logo on dark background
 <IconCanvasLogoSolid color="primary-inverse" />
 
 // Wrong — CSS color prop is ignored by icon's emotion styles

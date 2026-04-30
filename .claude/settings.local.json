@@ -15,7 +15,8 @@
       "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\(Object.keys\\(theme.canvas.newTheme || {}\\)\\)\")",
       "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\('newTheme.sharedTokens keys:', Object.keys\\(theme.canvas.newTheme.sharedTokens || {}\\)\\)\")",
       "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); const st = theme.light.newTheme.sharedTokens; console.log\\('light sharedTokens keys:', Object.keys\\(st || {}\\)\\)\")",
-      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); const sem = theme.light.newTheme.semantics; console.log\\('light semantics keys:', Object.keys\\(sem || {}\\)\\); console.log\\('light semantics.color:', Object.keys\\(sem?.color || {}\\)\\)\")"
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); const sem = theme.light.newTheme.semantics; console.log\\('light semantics keys:', Object.keys\\(sem || {}\\)\\); console.log\\('light semantics.color:', Object.keys\\(sem?.color || {}\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\('exports',{}\\).keys\\(\\)\\)[:10]\\)\")"
     ]
   },
   "hooks": {

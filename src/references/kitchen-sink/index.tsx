@@ -245,7 +245,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
 
           <View as="div" background="primary" themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }} shadow="resting" borderRadius={cardRadius} padding="medium">
             <Flex direction="column" gap="small">
-              <Heading level="h3">Switch themes</Heading>
+              <Heading level="h3">Input controls</Heading>
               <Text color="secondary" size="small">
                 Try the input controls below.
               </Text>

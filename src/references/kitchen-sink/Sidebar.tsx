@@ -76,7 +76,7 @@ export function Sidebar({ title, items, footer }: SidebarProps) {
             >
               <Flex alignItems="center" gap="small" padding="xx-small small">
                 {item.selected && isValidElement(item.icon)
-                  ? cloneElement(item.icon as React.ReactElement<{ color?: string }>, { color: 'primary-inverse' })
+                  ? cloneElement(item.icon as React.ReactElement<{ color?: string }>, { color: 'inverseColor' })
                   : item.icon}
                 <Text color={item.selected ? 'primary-inverse' : 'primary'}>{item.label}</Text>
               </Flex>
