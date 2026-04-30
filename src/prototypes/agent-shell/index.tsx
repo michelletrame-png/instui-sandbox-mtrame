@@ -479,7 +479,7 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
             <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
             <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
             <SideNavBar.Item
-              icon={<LayoutDashboardInstUIIcon color="onColor" />}
+              icon={<LayoutDashboardInstUIIcon/>}
               label="Dashboard"
               href="#"
               selected

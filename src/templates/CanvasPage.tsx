@@ -254,7 +254,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
             <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
             <SideNavBar.Item icon={<SettingsInstUIIcon />} label="Admin" href="#" />
             <SideNavBar.Item
-              icon={<LayoutDashboardInstUIIcon color="onColor" />}
+              icon={<LayoutDashboardInstUIIcon/>}
               label="Dashboard"
               href="#"
               selected
