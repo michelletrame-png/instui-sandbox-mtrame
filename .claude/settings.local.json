@@ -20,7 +20,8 @@
       "Bash(curl -s \"http://localhost:5177/instui-proto-sandbox-poc/@vite/client\")",
       "Bash(curl -s \"http://localhost:5173/instui-proto-sandbox-poc/src/prototypes/learner-dashboard/index.tsx\")",
       "Bash(npx vite *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
     ]
   },
   "hooks": {
