@@ -6,10 +6,10 @@
 
 | `startAt` value | Approx. min-width | Use when… |
 |---|---|---|
-| `'small'` | ~480px | Stack only on very small screens |
-| `'medium'` | ~768px | Tablet breakpoint (most common) |
-| `'large'` | ~1024px | Desktop breakpoint |
-| `'x-large'` | ~1366px | Wide screens only |
+| `'small'` | ~480px (30em) | Stack only on very small screens |
+| `'medium'` | ~768px (48em) | Tablet breakpoint (most common) |
+| `'large'` | ~992px (62em) | Desktop breakpoint |
+| `'x-large'` | ~1200px (75em) | Wide screens only |
 | `null` | Never stacks | Always show columns regardless of viewport |
 
 ---

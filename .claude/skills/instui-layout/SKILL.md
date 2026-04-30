@@ -52,7 +52,7 @@ All `margin`, `padding`, `gap`, `colSpacing`, and `rowSpacing` props accept thes
 | `xx-small` | 0.375rem (6px) |
 | `x-small` | 0.5rem (8px) |
 | `small` | 0.75rem (12px) |
-| `mediumSmall` | 1rem (16px) |
+| `mediumSmall` | 1rem (16px) — use this, don't skip to `medium` |
 | `medium` | 1.5rem (24px) |
 | `large` | 2.25rem (36px) |
 | `x-large` | 3rem (48px) |
@@ -172,7 +172,7 @@ margin="0 auto small"
 | `alignItems` | `'center' \| 'start' \| 'end' \| 'stretch'` | Cross-axis alignment |
 | `justifyItems` | `'center' \| 'start' \| 'end' \| 'space-around' \| 'space-between'` | Main-axis distribution |
 | `wrap` | `'wrap' \| 'no-wrap' \| 'wrap-reverse'` | Flex wrap |
-| `gap` | `Spacing` | Spacing between items (single token, not shorthand) |
+| `gap` | `Spacing` | Spacing between items — accepts shorthand like `margin`/`padding` |
 | `margin` | `Spacing` | CSS shorthand with spacing tokens |
 | `padding` | `Spacing` | CSS shorthand with spacing tokens |
 | `width` / `height` | `string \| number` | Raw CSS values |
@@ -284,12 +284,12 @@ Inherits `colSpacing`, `rowSpacing`, `hAlign`, `vAlign`, `startAt`, `visualDebug
 
 ### Breakpoints
 
-| Token | Approx. min-width |
+| Token | Min-width |
 |---|---|
-| `small` | 480px |
-| `medium` | 768px |
-| `large` | 1024px |
-| `x-large` | 1366px |
+| `small` | 480px (30em) |
+| `medium` | 768px (48em) |
+| `large` | 992px (62em) |
+| `x-large` | 1200px (75em) |
 
 ### Examples
 
@@ -427,23 +427,23 @@ Inherits `colSpacing`, `rowSpacing`, `hAlign`, `vAlign`, `startAt`, `visualDebug
 | `<Flex.Item style={{ flexGrow: 1 }}>` | `<Flex.Item shouldGrow>` |
 | `width={{ small: ..., medium: ... }}` on `Grid.Col` without setting `startAt` on `Grid` | Set `startAt` on the parent `Grid` to control the stacking breakpoint |
 | Mixing raw CSS shorthand pixels with token names: `padding="16px small"` | Use consistent token shorthand: `padding="medium small"` |
-| Wrapping a shadowed `View` in `<Flex.Item>` | Place it as a **direct child of `<Flex>`** — `Flex.Item` applies `overflow: hidden` which clips box shadows |
+| Wrapping a shadowed `View` in `<Flex.Item>` in a column layout | Place it as a **direct child of `<Flex>`** — column-direction `Flex.Item` defaults to `overflow: auto` which can clip box shadows |
 | Using `<Flex.Item>` when no grow/shrink/align behavior is needed | Make the element a direct child of `<Flex>` — `gap` applies to all direct children, so spacing still works |
 
 ## Flex.Item overflow behavior
 
-**Critical:** `Flex.Item` applies `overflow: hidden` in its base styles. This clips box shadows, focus rings, and any paint that extends beyond the item's boundary.
+`Flex.Item` does **not** apply `overflow: hidden` in its base styles. Its overflow defaults are:
 
-**Default override:** To change this, set `overflowX` or `overflowY` directly on the `Flex.Item`:
+- **Row direction:** `overflowY="visible"` (default — shadows and focus rings paint freely)
+- **Column direction:** `overflowY="auto"` (default — can clip shadows that extend beyond the item boundary)
+
+If you're in a column layout and a shadowed `View` is being clipped, override explicitly:
 
 ```tsx
-// Allow shadows/focus rings to paint outside the item
+// Fix clipping in a column layout
 <Flex.Item overflowY="visible">
   <View shadow="resting">...</View>
 </Flex.Item>
-
-// Explicit clip (same as default, but self-documenting)
-<Flex.Item overflowY="hidden">...</Flex.Item>
 ```
 
-**Preferred pattern:** Avoid the problem entirely by only using `Flex.Item` when you actually need `shouldGrow`, `shouldShrink`, `align`, or `order`. Elements that don't need those props should be direct children of `<Flex>` — CSS `gap` applies to all direct flex children regardless.
+**Preferred pattern:** Only use `Flex.Item` when you actually need `shouldGrow`, `shouldShrink`, `align`, or `order`. Elements that don't need those props should be direct children of `<Flex>` — CSS `gap` applies to all direct flex children regardless.

@@ -4,7 +4,18 @@
       "mcp__figma__get_figma_data",
       "WebFetch(domain:github.com)",
       "WebSearch",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(find /Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure -path \"*/theme.ts\" -exec grep -l \"Transition\\\\|transitions\" {} \\\\;)",
+      "Bash(python3 -c \"import sys, json; data = json.load\\(sys.stdin\\); bp = data['breakpoints']; [print\\(f'{k}: {v[\\\\\"value\\\\\"]}'\\) for k,v in sorted\\(bp.items\\(\\)\\)]\")",
+      "Bash(python3 -c \"import sys, json; data = json.load\\(sys.stdin\\); spacing = data['spacing']; [print\\(f'{k}: {v[\\\\\"value\\\\\"]}'\\) for k,v in sorted\\(spacing.items\\(\\)\\) if not k.startswith\\('space'\\) and not k.startswith\\('padding'\\) and not k.startswith\\('section'\\) and not k.startswith\\('tray'\\) and not k.startswith\\('modal'\\) and not k.startswith\\('module'\\) and not k.startswith\\('select'\\) and not k.startswith\\('checkbox'\\) and not k.startswith\\('radio'\\) and not k.startswith\\('toggle'\\) and not k.startswith\\('button'\\) and not k.startswith\\('tag'\\) and not k.startswith\\('status'\\) and not k.startswith\\('dataPoint'\\) and not k.startswith\\('input'\\) and not k.startswith\\('text'\\)]\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\(Object.keys\\(theme.canvas\\).slice\\(0, 20\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\(Object.keys\\(theme.canvas.colors\\).slice\\(0, 30\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\(Object.keys\\(theme.canvas.colors.ui || {}\\).slice\\(0, 30\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\('Has colors.backgroundBrand:', 'backgroundBrand' in theme.canvas.colors\\); console.log\\('Colors object keys:', Object.keys\\(theme.canvas.colors\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\(Object.keys\\(theme.canvas.newTheme || {}\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); console.log\\('newTheme.sharedTokens keys:', Object.keys\\(theme.canvas.newTheme.sharedTokens || {}\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); const st = theme.light.newTheme.sharedTokens; console.log\\('light sharedTokens keys:', Object.keys\\(st || {}\\)\\)\")",
+      "Bash(node -e \"const theme = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes'\\); const sem = theme.light.newTheme.semantics; console.log\\('light semantics keys:', Object.keys\\(sem || {}\\)\\); console.log\\('light semantics.color:', Object.keys\\(sem?.color || {}\\)\\)\")"
     ]
   },
   "hooks": {
@@ -14,7 +25,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ]; then ESLINT_OUT=$(cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx eslint \"$FILE\" --max-warnings 0 2>&1); STATUS=$?; if [ $STATUS -ne 0 ]; then echo \"$ESLINT_OUT\" >&2; exit 2; fi; fi"
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.(ts|tsx|js|jsx)$'; then ESLINT_OUT=$(cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx eslint \"$FILE\" --max-warnings 0 2>&1); STATUS=$?; if [ $STATUS -ne 0 ]; then echo \"$ESLINT_OUT\" >&2; exit 2; fi; fi"
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.tsx$'; then if grep -qE '>\\s*[A-Z][a-z].{10,}' \"$FILE\" 2>/dev/null; then echo \"UX copy detected in $FILE. Invoke the uxcopy-check skill on any new human-visible strings before proceeding.\"; fi; fi"
           }
         ]
       }

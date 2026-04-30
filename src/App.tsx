@@ -15,7 +15,6 @@ function ScrollbarStyle() {
     const el = document.createElement('style')
     el.id = 'instui-scrollbar'
     el.textContent = `
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: ${sharedTokens.stroke.mutedColor}; border-radius: 999px; }
       ::-webkit-scrollbar-thumb:hover { background: ${sharedTokens.stroke.baseColor}; }

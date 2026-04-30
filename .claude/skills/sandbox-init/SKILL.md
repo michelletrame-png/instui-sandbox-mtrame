@@ -1,5 +1,5 @@
 ---
-name: instui-init
+name: sandbox-init
 description: >
   Checks that this InstUI sandbox project is set up correctly and ready to run.
   Diagnoses Node.js installation, dependency installation, and dev server health.

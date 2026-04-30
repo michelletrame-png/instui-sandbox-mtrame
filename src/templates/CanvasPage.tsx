@@ -53,16 +53,16 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
 
   const breadcrumb = (
     <Breadcrumb label="Navigation">
-      <Breadcrumb.Link href="#">Level 1</Breadcrumb.Link>
-      <Breadcrumb.Link>Current Level</Breadcrumb.Link>
+      <Breadcrumb.Link href="#">Courses</Breadcrumb.Link>
+      <Breadcrumb.Link>Introduction to Biology</Breadcrumb.Link>
     </Breadcrumb>
   )
 
   const loremContent = (
     <Flex direction="column" gap="small">
-      <Text size="content">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</Text>
-      <Text size="content">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</Text>
-      <Text size="content">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</Text>
+      <Text size="content">This assignment asks you to analyze the cell division process and describe the key differences between mitosis and meiosis. Your response should be 500–800 words and cite at least three sources.</Text>
+      <Text size="content">Submit your completed work through the course portal by the due date. Late submissions receive a 10% penalty per day unless your instructor has approved an extension.</Text>
+      <Text size="content">If you have questions about the requirements, post them to the discussion board so your classmates can benefit from the answer. Office hours are Tuesday and Thursday, 2–4 pm.</Text>
     </Flex>
   )
 
@@ -88,7 +88,7 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
           <Flex alignItems="center" justifyItems="space-between" padding="x-small medium">
             <IconCanvasLogoSolid size="small" />
             <Flex alignItems="center" gap="x-small">
-              <IconButton color="ai-primary" screenReaderLabel="AI button" size="small">
+              <IconButton color="ai-primary" screenReaderLabel="Open AI assistant" size="small">
                 <IgniteaiLogoInstUIIcon />
               </IconButton>
               <IconButton
@@ -183,15 +183,15 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
 
             <Flex direction="column" gap="x-small">
               {breadcrumb}
-              <Heading level="h1" variant="titlePageMobile" margin="0">Page title</Heading>
+              <Heading level="h1" variant="titlePageMobile" margin="0">Assignments</Heading>
               <Text size="content">
-                This is a page description. If your page requires describing in 1-2 rows, then use this.
+                Manage course assignments and track submission deadlines.
               </Text>
             </Flex>
 
             <Flex gap="small" alignItems="center">
               <Flex.Item shouldGrow shouldShrink>
-                <Button color="primary" display="block">Primary action</Button>
+                <Button color="primary" display="block">Create assignment</Button>
               </Flex.Item>
               <IconButton color="secondary" screenReaderLabel="More actions" renderIcon={<EllipsisVerticalInstUIIcon />} />
             </Flex>
@@ -201,8 +201,8 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
               value={String(selectedTabIndex)}
               onChange={(_e, { value }) => setSelectedTabIndex(Number(value))}
             >
-              <SimpleSelect.Option id="tab-0" value="0">Tab item</SimpleSelect.Option>
-              <SimpleSelect.Option id="tab-1" value="1">Tab item</SimpleSelect.Option>
+              <SimpleSelect.Option id="tab-0" value="0">Overview</SimpleSelect.Option>
+              <SimpleSelect.Option id="tab-1" value="1">Details</SimpleSelect.Option>
             </SimpleSelect>
 
             <View
@@ -215,8 +215,8 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
               display="block"
             >
               <Flex direction="column" gap="xx-small">
-                <Heading level="h2" variant="titleCardRegular" margin="0">Content area</Heading>
-                <Text size="content" color="secondary">Short card description</Text>
+                <Heading level="h2" variant="titleCardRegular" margin="0">Upcoming assignments</Heading>
+                <Text size="content" color="secondary">Due in the next seven days</Text>
                 {loremContent}
               </Flex>
             </View>
@@ -283,25 +283,25 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
                 <Flex.Item shouldGrow shouldShrink>
                   <Flex direction="column" gap="small">
                     {breadcrumb}
-                    <Heading level="h1" variant="titlePageDesktop" margin="0">Page title</Heading>
+                    <Heading level="h1" variant="titlePageDesktop" margin="0">Assignments</Heading>
                     <Text size="descriptionPage">
-                      This is a page description. If your page requires describing in 1-2 rows, then use this. Try to keep it as short as possible.
+                      Manage course assignments and track submission deadlines.
                     </Text>
                   </Flex>
                 </Flex.Item>
-                <IconButton color="ai-primary" screenReaderLabel="AI button" margin="0">
+                <IconButton color="ai-primary" screenReaderLabel="Open AI assistant" margin="0">
                   <IgniteaiLogoInstUIIcon />
                 </IconButton>
               </Flex>
 
               <Flex gap="small">
-                <Button color="primary">Primary action</Button>
-                <Button>Secondary action</Button>
+                <Button color="primary">Create assignment</Button>
+                <Button>Import</Button>
               </Flex>
 
               <Tabs onRequestTabChange={(_e, { index }) => setSelectedTabIndex(index)}>
                 <Tabs.Panel
-                  renderTitle="Tab item"
+                  renderTitle="Overview"
                   isSelected={selectedTabIndex === 0}
                   padding="none"
                   themeOverride={{ defaultOverflowY: 'visible' }}
@@ -317,14 +317,14 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
                     margin="medium 0 0 0"
                   >
                     <Flex direction="column" gap="xx-small">
-                      <Heading level="h2" variant="titleCardLarge" margin="0">Content area</Heading>
-                      <Text size="content" color="secondary">Short card description</Text>
+                      <Heading level="h2" variant="titleCardLarge" margin="0">Upcoming assignments</Heading>
+                      <Text size="content" color="secondary">Due in the next seven days</Text>
                       {loremContent}
                     </Flex>
                   </View>
                 </Tabs.Panel>
                 <Tabs.Panel
-                  renderTitle="Tab item"
+                  renderTitle="Details"
                   isSelected={selectedTabIndex === 1}
                   padding="none"
                 />

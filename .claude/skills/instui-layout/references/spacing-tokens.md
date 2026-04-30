@@ -4,19 +4,21 @@ All spacing props (`margin`, `padding`, `gap`, `colSpacing`, `rowSpacing`) accep
 
 ## Token Values
 
-| Token | Value |
-|---|---|
-| `0` | 0 |
-| `none` | 0 (alias) |
-| `xxx-small` | 0.125rem (2px) |
-| `xx-small` | 0.25rem (4px) |
-| `x-small` | 0.5rem (8px) |
-| `small` | 0.75rem (12px) |
-| `medium` | 1rem (16px) |
-| `large` | 1.5rem (24px) |
-| `x-large` | 2rem (32px) |
-| `xx-large` | 2.5rem (40px) |
-| `auto` | `auto` (margins only) |
+Sourced from `@instructure/ui-themes/tokens/canvas/source.json` — `newTheme.spacing`.
+
+| Token | Value | Notes |
+|---|---|---|
+| `0` / `none` | 0 | — |
+| `xxx-small` | 0.125rem (2px) | — |
+| `xx-small` | 0.375rem (6px) | — |
+| `x-small` | 0.5rem (8px) | — |
+| `small` | 0.75rem (12px) | — |
+| `mediumSmall` | 1rem (16px) | Between small and medium — use it, don't skip |
+| `medium` | 1.5rem (24px) | — |
+| `large` | 2.25rem (36px) | — |
+| `x-large` | 3rem (48px) | — |
+| `xx-large` | 3.75rem (60px) | — |
+| `auto` | `auto` | Margins only |
 
 ## Shorthand Syntax
 
@@ -32,12 +34,13 @@ All spacing props (`margin`, `padding`, `gap`, `colSpacing`, `rowSpacing`) accep
 ### Examples
 
 ```tsx
-padding="medium"                    // all sides 1rem
-padding="small medium"              // top+bottom 0.75rem, left+right 1rem
-padding="0 medium small"            // top 0, sides 1rem, bottom 0.75rem
-padding="small 0 small 0"          // top 0.75rem, right 0, bottom 0.75rem, left 0
-margin="0 auto"                     // vertically 0, horizontally centered
-margin="large auto small"           // top 1.5rem, auto sides, bottom 0.75rem
+padding="medium"                         // all sides 1.5rem
+padding="small medium"                   // top+bottom 0.75rem, left+right 1.5rem
+padding="mediumSmall medium"             // top+bottom 1rem, left+right 1.5rem
+padding="0 mediumSmall small"            // top 0, sides 1rem, bottom 0.75rem
+padding="small 0 small 0"               // top 0.75rem, right 0, bottom 0.75rem, left 0
+margin="0 auto"                          // vertically 0, horizontally centered
+margin="large auto small"                // top 2.25rem, auto sides, bottom 0.75rem
 ```
 
 ## Component-specific notes

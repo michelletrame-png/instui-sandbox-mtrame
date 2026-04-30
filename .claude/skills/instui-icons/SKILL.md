@@ -13,7 +13,7 @@ description: >
 
 > Quick-nav: [Two Icon Systems](#two-icon-systems) · [Import](#import) · [Props Reference](#props-reference) · [Color Tokens](#color-tokens) · [Size Tokens](#size-tokens) · [Accessibility](#accessibility) · [IconPropsProvider](#iconpropsprovider) · [Anti-Patterns](#anti-patterns)
 
-> Directories: [InstUIIcon directory (1935)](references/instui-icons-directory.md) · [Legacy Icon directory (386)](references/legacy-icons-directory.md)
+> Directories: [InstUIIcon directory (1935)](references/instui-icons-directory.md)
 
 ---
 
@@ -29,7 +29,7 @@ import { SettingsInstUIIcon } from '@instructure/ui-icons'
 import { IconSettingsSolid } from '@instructure/ui-icons'
 ```
 
-Before using a legacy icon, search the [InstUIIcon directory](references/instui-icons-directory.md) for an equivalent. The naming maps roughly: `IconSettingsSolid` → `SettingsInstUIIcon`, `IconTrashLine` → `TrashInstUIIcon`, `IconEditLine` → `PencilInstUIIcon` (Lucide names sometimes differ).
+Before using a legacy icon, search the [InstUIIcon directory](references/instui-icons-directory.md) for an equivalent. The naming maps roughly: `IconSettingsSolid` → `SettingsInstUIIcon`, `IconTrashLine` → `TrashInstUIIcon` (Lucide names sometimes differ — always verify in the directory).
 
 ---
 
@@ -37,15 +37,7 @@ Before using a legacy icon, search the [InstUIIcon directory](references/instui-
 
 `@instructure/ui-icons` ships two distinct icon families. **Use `*InstUIIcon` for new work** — they are Lucide-based, support semantic size tokens, and auto-scale stroke width.
 
-| | Legacy `Icon*` | New `*InstUIIcon` |
-|---|---|---|
-| Naming | `IconSettingsSolid`, `IconSettingsLine` | `SettingsInstUIIcon` |
-| Count | ~388 icons (Solid + Line variants) | ~1935 icons |
-| Based on | Custom SVG glyphs | Lucide React |
-| Size tokens | `'x-small' \| 'small' \| 'medium' \| 'large' \| 'x-large'` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl'` |
-| Color tokens | Legacy named tokens (`'primary'`, `'primary-inverse'`, etc.) | Same legacy tokens + new semantic tokens |
-| Stroke width | Fixed | Auto-derived from size |
-| Variants | Solid and Line | Single variant |
+Use `*InstUIIcon` for all new work. The only exception is Canvas-branded glyphs (`IconCanvasLogoSolid`, `IconCanvasLogoLine`) and Instructure/Mastery product icons that have no `*InstUIIcon` equivalent.
 
 ---
 
@@ -78,8 +70,6 @@ Both systems share the same core props (from `SVGIconProps`):
 | `bidirectional` | `boolean` | `true` | Flips horizontally in RTL layouts |
 | `inline` | `boolean` | `true` | `display: inline-block` vs `block` |
 | `title` | `string` | — | Adds `aria-label` + `role="img"` — use for standalone meaningful icons |
-| `width` | `string \| number` | — | Raw CSS width override (e.g. `'2rem'`, `24`) |
-| `height` | `string \| number` | — | Raw CSS height override |
 | `elementRef` | `(el: Element \| null) => void` | — | Ref callback |
 
 ---
@@ -88,28 +78,13 @@ Both systems share the same core props (from `SVGIconProps`):
 
 **Critical:** InstUI icons use emotion-based theming internally. Setting CSS `color` on a parent element does **not** affect icon fill. Color must be passed as a prop directly.
 
-### Typed color values (both systems):
-
-| Token | Use for |
-|---|---|
-| `'primary'` | Default icon color — dark on light backgrounds |
-| `'secondary'` | Muted/subdued icon |
-| `'primary-inverse'` | **Icons on brand/dark surfaces** — maps to `onColor` (white on navy) |
-| `'secondary-inverse'` | Secondary inverse |
-| `'success'` | Success state |
-| `'error'` | Error/danger state |
-| `'warning'` | Warning state |
-| `'alert'` | Alert/info state |
-| `'brand'` | Brand-colored icon |
-| `'inherit'` | Inherit from CSS `color` property |
-| `'auto'` | Same as `inherit` — uses CSS `currentColor` |
-
-### Key rule: icons on brand-colored backgrounds
-
-When an icon sits on a `brandColor` surface (e.g. a selected nav item, logo container), use `color="primary-inverse"`. This maps to `componentTheme.onColor` — always the correct contrasting color regardless of theme.
+When an icon sits on a `brandColor` surface (e.g. a selected nav item, logo container), use `color="inverseColor"` on `*InstUIIcon` components. For legacy `IconCanvasLogoSolid`, use `color="primary-inverse"` (the legacy color token it accepts).
 
 ```tsx
-// Correct — white icon on dark navy background
+// Correct — white *InstUIIcon on dark background
+<SettingsInstUIIcon color="inverseColor" />
+
+// Correct — legacy Canvas logo on dark background
 <IconCanvasLogoSolid color="primary-inverse" />
 
 // Wrong — CSS color prop is ignored by icon's emotion styles
@@ -118,13 +93,13 @@ When an icon sits on a `brandColor` surface (e.g. a selected nav item, logo cont
 
 ### Injecting color onto icon elements passed as ReactNode
 
-When an icon is passed as a `ReactNode` prop and you need to apply a color based on context (e.g. a selected nav item), use `cloneElement`:
+When an icon is passed as a `ReactNode` prop and you need to apply a color based on context (e.g. a selected nav item), use `cloneElement`. Use `inverseColor` for `*InstUIIcon`; use `primary-inverse` only for legacy `Icon*` components.
 
 ```tsx
 import { isValidElement, cloneElement } from 'react'
 
 const coloredIcon = isSelected && isValidElement(icon)
-  ? cloneElement(icon as React.ReactElement<{ color?: string }>, { color: 'primary-inverse' })
+  ? cloneElement(icon as React.ReactElement<{ color?: string }>, { color: 'inverseColor' })
   : icon
 ```
 
@@ -132,29 +107,17 @@ const coloredIcon = isSelected && isValidElement(icon)
 
 ## Size Tokens
 
-### New `*InstUIIcon` sizes (semantic, stroke auto-scales):
-
-| Token | Approximate size |
+| Token | Size |
 |---|---|
-| `'xs'` | Extra small (~1rem) |
-| `'sm'` | Small (~1.25rem) |
-| `'md'` | Medium (~1.5rem) |
-| `'lg'` | Large (~2rem) |
-| `'xl'` | Extra large (~2.5rem) |
-| `'2xl'` | Double extra large (~3rem) |
-| `'illu-sm'` | Illustration small |
-| `'illu-md'` | Illustration medium |
-| `'illu-lg'` | Illustration large |
-
-### Legacy `Icon*` sizes (fixed, stroke does not scale):
-
-| Token | Exact value |
-|---|---|
-| `'x-small'` | `1.125rem` (~18px) |
-| `'small'` | `2rem` (32px) |
-| `'medium'` | `3rem` (48px) |
-| `'large'` | `5rem` (80px) |
-| `'x-large'` | `10rem` (160px) |
+| `'xs'` | 0.75rem (12px) |
+| `'sm'` | 1rem (16px) |
+| `'md'` | 1.25rem (20px) |
+| `'lg'` | 1.5rem (24px) |
+| `'xl'` | 2rem (32px) |
+| `'2xl'` | 2.25rem (36px) |
+| `'illu-sm'` | 3rem (48px) |
+| `'illu-md'` | 5rem (80px) |
+| `'illu-lg'` | 10rem (160px) |
 
 No `size` prop → icon renders at whatever its container/context sets via CSS font-size.
 
@@ -232,8 +195,9 @@ A selection of commonly used icons in this project:
 
 | Don't | Do instead |
 |---|---|
-| `<span style={{ color: 'white' }}><SettingsInstUIIcon /></span>` | Pass `color="primary-inverse"` directly as a prop |
-| `<SettingsInstUIIcon color="white" />` | Use semantic token: `color="primary-inverse"` |
+| `<span style={{ color: 'white' }}><SettingsInstUIIcon /></span>` | Pass `color="inverseColor"` directly as a prop |
+| `<SettingsInstUIIcon color="white" />` | Use semantic token: `color="inverseColor"` |
+| `<SettingsInstUIIcon color="primary-inverse" />` | `primary-inverse` is a legacy token — use `color="inverseColor"` on `*InstUIIcon` |
 | Mix `*InstUIIcon` size tokens with legacy `Icon*` (e.g. `size="xs"` on `IconSettingsSolid`) | Check which system the icon belongs to |
 | Use `title` prop on icons inside `<IconButton>` | Use `screenReaderLabel` on `IconButton` instead |
 | Add `aria-hidden` manually | It's applied automatically when `title` is absent |

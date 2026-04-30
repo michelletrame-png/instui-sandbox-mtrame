@@ -25,7 +25,7 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 | `instui-layout` | `View`, `Flex`, `Grid` — spacing tokens, layout patterns, anti-patterns |
 | `instui-icons` | Two icon systems (`Icon*` legacy vs `*InstUIIcon`), props, color tokens, size tokens, full icon directory |
 | `instui-animation` | `Transition` component, animation types, `DrawerLayout` push panels, theme timing tokens |
-| `instui-init` | How to scaffold a new prototype from scratch |
+| `sandbox-init` | How to scaffold a new prototype from scratch |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.
 
@@ -101,6 +101,21 @@ And for a card surface:
 ```
 
 `background="primary"` without `themeOverride` is a lint warning and will produce wrong colors in dark/rebrand themes. Always pair them.
+
+---
+
+## UX Writing
+
+`/.claude/skills/` includes two UX writing skills backed by the Instructure style guide at `.claude/skills/ux-writing/references/style-guide.md`.
+
+| Skill | When to use |
+|---|---|
+| `uxcopy-check` | Reviewing or auditing existing copy — errors, labels, tooltips, empty states |
+| `uxcopy-write` | Generating new copy for a UI pattern; accepts a Figma URL or plain description |
+
+The PostToolUse hook detects human-visible strings in prototype TSX files and reminds you to invoke `uxcopy-check` when it fires. Wait for that prompt — do not invoke `uxcopy-check` proactively. Invoke `sandbox-eval` only when the user explicitly asks for a session quality report.
+
+All AI-generated copy must be reviewed by a human writer before shipping to production.
 
 ---
 

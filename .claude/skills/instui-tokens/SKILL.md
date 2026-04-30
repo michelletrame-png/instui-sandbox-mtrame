@@ -248,16 +248,18 @@ Pass directly to `View`'s `borderRadius` prop — no hardcoded rem values.
 
 **General scale** (`sharedTokens.spacing.general.*`):
 
-| Token | Approximate value |
-|---|---|
-| `spaceNone` | `0rem` |
-| `space2xs` | ~0.25rem |
-| `spaceXs` | ~0.5rem |
-| `spaceSm` | ~0.75rem |
-| `spaceMd` | ~1rem |
-| `spaceLg` | ~1.5rem |
-| `spaceXl` | ~2rem |
-| `space2xl` | ~3rem |
+| Token | Value | Component prop equivalent |
+|---|---|---|
+| `spaceNone` | `0rem` | `none` |
+| `space2xs` | `0.125rem` | `xxx-small` |
+| `spaceXs` | `0.25rem` | — (no named equivalent) |
+| `spaceSm` | `0.5rem` | `x-small` |
+| `spaceMd` | `0.75rem` | `small` |
+| `spaceLg` | `1rem` | `mediumSmall` ← don't skip this |
+| `spaceXl` | `1.5rem` | `medium` |
+| `space2xl` | `2rem` | — (between `medium` and `large`) |
+
+The `sharedTokens.spacing.general` scale (accessed via `useComputedTheme`) and the component prop scale (`margin`, `padding`, `gap`) are **different scales** with different step values. The key callout: `spaceLg` (1rem) maps to the prop value `mediumSmall` — and `mediumSmall` is a real, required step. Use it whenever `small` (12px / `spaceMd`) is too tight and `medium` (24px / `spaceXl`) is too loose.
 
 **Gap tokens** (`sharedTokens.spacing.gap.*`):
 
@@ -414,7 +416,7 @@ For `IconButton` or `Button` on a colored surface, override the component's colo
   renderIcon={<XInstUIIcon />}
   themeOverride={{
     secondaryColor: semantics.color.icon.onColor,
-    secondaryHoverTextColor: semantics.color.icon.onColor,
+    secondaryHoverBackground: semantics.color.icon.onColor,
   } as object}
 />
 ```
@@ -501,7 +503,7 @@ Receives `(componentTheme, currentTheme)`. Use this when the override should ref
 
 ```bash
 grep -r "primaryBackground\|primaryColor" \
-  node_modules/@instructure/ui-buttons/es/BaseButton/theme.js
+  node_modules/@instructure/ui-buttons/es/BaseButton/v1/theme.js
 ```
 
 Or inspect `components['BaseButton']` from `useComputedTheme()` at runtime.
@@ -510,66 +512,28 @@ Or inspect `components['BaseButton']` from `useComputedTheme()` at runtime.
 
 ## Custom Themes
 
-### Partial override object (merged onto canvas):
+For prototypes, prefer switching between the four provided themes rather than creating custom ones. When you do need to customize, use `themeOverride` on individual components — it's the modern, surgical approach:
 
 ```tsx
-<InstUISettingsProvider theme={{
-  colors: {
-    backgroundBrand: '#bf2109',
-    textBrand: '#bf2109',
-  }
-}}>
+// Override a single component instance
+<Button themeOverride={{ primaryBackground: '#bf2109' }} />
+
+// Override all instances of a component in a subtree
+<InstUISettingsProvider theme={light}>
   <App />
 </InstUISettingsProvider>
 ```
 
-### Spread an existing theme and override specifics:
+### Nesting providers to scope a theme:
 
 ```tsx
-import { canvas } from '@instructure/ui-themes'
-
-const brandedTheme = {
-  ...canvas,
-  colors: {
-    ...canvas.colors,
-    contrasts: {
-      ...canvas.colors.contrasts,
-      blue4570: '#0044aa',
-    },
-  },
-}
-```
-
-### Function form (receives ancestor theme):
-
-```tsx
-<InstUISettingsProvider theme={(base) => ({
-  ...base,
-  colors: { ...base.colors, backgroundBrand: '#c00' },
-})}>
+<InstUISettingsProvider theme={light}>
   <App />
-</InstUISettingsProvider>
-```
-
-### Nesting providers:
-
-```tsx
-<InstUISettingsProvider theme={canvas}>
-  <App />
-  <InstUISettingsProvider theme={{ colors: { backgroundBrand: '#c00' } }}>
-    <BrandedSection />  {/* canvas + brand color override */}
+  <InstUISettingsProvider theme={dark}>
+    <DarkPanel />  {/* dark theme scoped to this subtree */}
   </InstUISettingsProvider>
 </InstUISettingsProvider>
 ```
-
----
-
-## Merge Logic
-
-1. No ancestor in context → defaults to `canvas`
-2. `theme` is a function → called with ancestor: `theme(ancestorTheme)`
-3. Result has all required `BaseTheme` keys → used as-is (full replacement)
-4. Otherwise → **deep merged** onto the ancestor
 
 ---
 

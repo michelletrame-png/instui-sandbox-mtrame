@@ -436,10 +436,10 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
                     />
                   </Flex>
                 </View>
-                <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable' }}>
+                <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable both-edges' }}>
                   <AgentWelcome />
                 </Flex.Item>
-                <View as="div" padding="x-small" display="block">
+                <View as="div" padding="none x-small x-small" display="block">
                   {agentInput}
                 </View>
               </Flex>
@@ -546,7 +546,7 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
                         />
                       </Flex>
                     </View>
-                    <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable' }}>
+                    <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable both-edges' }}>
                       <AgentWelcome />
                     </Flex.Item>
                     <View as="div" padding="none mediumSmall mediumSmall" display="block">

@@ -111,21 +111,21 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Create an account</Heading>
               <Text color="secondary" size="small">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                Fill in your details to set up a new Canvas account.
               </Text>
               <TextInput renderLabel="Full name" />
-              <TextInput renderLabel="E-mail address" />
+              <TextInput renderLabel="Email address" />
               <TextInput
                 renderLabel="Password"
                 type="password"
-                messages={[{ text: 'Password must be at least 8 characters long.', type: 'hint' }]}
+                messages={[{ text: 'Must be at least 8 characters.', type: 'hint' }]}
               />
               <TextInput renderLabel="Re-enter password" type="password" />
               <Checkbox label="Accept terms and conditions" value="terms" />
               <Checkbox label="Accept privacy policy" value="privacy" defaultChecked />
               <Button color="primary" display="block">Register</Button>
               <Button color="secondary" display="block">Back</Button>
-              <Text size="small">Already have an account? <Link href="#">Login</Link></Text>
+              <Text size="small">Already have an account? <Link href="#">Log in</Link></Text>
             </Flex>
           </View>
 
@@ -133,10 +133,10 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Settings</Heading>
               <Text color="secondary" size="small">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                Manage your dictation, punctuation, and notification preferences.
               </Text>
-              <Checkbox label="Enable Dictation" value="dictation" variant="toggle" defaultChecked />
-              <Checkbox label="Auto-Punctuation" value="autopunc" variant="toggle" defaultChecked />
+              <Checkbox label="Enable dictation" value="dictation" variant="toggle" defaultChecked />
+              <Checkbox label="Auto-punctuation" value="autopunc" variant="toggle" defaultChecked />
               <Checkbox label="Stickers" value="stickers" variant="toggle" />
             </Flex>
           </View>
@@ -145,7 +145,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">File upload</Heading>
               <Text color="secondary" size="small">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                Upload files to attach them to this module.
               </Text>
               <FileDrop
                 renderLabel={
@@ -153,8 +153,8 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
                     <View as="div" margin="0 0 small 0">
                       <UploadInstUIIcon size="large" />
                     </View>
-                    <Text weight="bold" as="div">Drop files here to add them to module</Text>
-                    <Text color="brand" size="small">Drag and drop, or click to browse your computer</Text>
+                    <Text weight="bold" as="div">Drop files here to add them to the module</Text>
+                    <Text color="brand" size="small">Drag and drop, or browse to upload</Text>
                   </View>
                 }
               />
@@ -171,12 +171,12 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Login</Heading>
               <Text color="secondary" size="small">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                Sign in to access your courses, assignments, and grades.
               </Text>
-              <TextInput renderLabel="E-mail address" />
+              <TextInput renderLabel="Email address" />
               <TextInput renderLabel="Password" type="password" />
-              <Button color="primary" display="block">Login</Button>
-              <Text size="small">Don't have an account? <Link href="#">Register now!</Link></Text>
+              <Button color="primary" display="block">Log in</Button>
+              <Text size="small">Don't have an account? <Link href="#">Register</Link></Text>
             </Flex>
           </View>
 
@@ -185,14 +185,14 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
               <div style={{ borderRadius: sharedTokens.borderRadius.card.nestedContainer.sm, overflow: 'hidden', border: `1px solid ${strokeMuted}` }}>
                 <img src="/Panda.png" alt="Panda" style={{ width: '105%', height: 220, objectFit: 'cover', display: 'block', marginLeft: '-2.5%' }} />
               </div>
-              <Heading level="h3" margin="x-small 0 0 0">Card title</Heading>
+              <Heading level="h3" margin="x-small 0 0 0">Introduction to Biology</Heading>
               <Flex gap="x-small" wrap="wrap">
-                <Pill color="info">Status</Pill>
-                <Pill color="info">Status</Pill>
-                <Pill color="error" statusLabel="Label:">Status</Pill>
+                <Pill color="info">Active</Pill>
+                <Pill color="success">Submitted</Pill>
+                <Pill color="error" statusLabel="Status:">Overdue</Pill>
               </Flex>
               <Text color="secondary" size="small" as="div">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                A survey of core biological concepts including cells, genetics, and ecosystems.
               </Text>
               <Flex gap="small">
                 <Button color="primary">Show details</Button>
@@ -205,7 +205,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">FAQ</Heading>
               <Text color="secondary" size="small">
-                Lorem ipsum dolor sit amet posuere arcu mollis id scelerisque tellus morbi.
+                Find answers to common questions about Canvas.
               </Text>
               <ToggleDetails summary="What do pandas eat?" variant="filled" />
               <ToggleDetails summary="Where do pandas reside?" variant="filled" />
@@ -228,7 +228,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Switch themes</Heading>
               <Text color="secondary" size="small">
-                You can switch themes in the prototype here!
+                Select a theme to preview how components look.
               </Text>
               <RadioInputGroup
                 name="sc-theme-radio"
@@ -247,7 +247,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Switch themes</Heading>
               <Text color="secondary" size="small">
-                You can switch themes in the prototype here!
+                Try the input controls below.
               </Text>
               <TextInput renderLabel="Tag selector" />
               <NumberInput
@@ -267,7 +267,7 @@ function ShowcaseContent({ themeKey, setThemeKey }: { themeKey: ThemeKey; setThe
             <Flex direction="column" gap="small">
               <Heading level="h3">Users</Heading>
               <Text color="secondary" size="small">
-                You can switch themes in the prototype here!
+                Users with unread notifications appear here.
               </Text>
               {[
                 { name: 'Chuckles McFluffington', role: 'Bamboo Bouncer', badge: 12 },
@@ -552,27 +552,27 @@ function SpinnerSection() {
 
 const SECTIONS: Record<Exclude<CategoryId, 'showcase'>, Section[]> = {
   buttons: [
-    { title: 'Button — Colors', description: 'All color intents including AI and inverse variants.', content: <ButtonColors /> },
-    { title: 'Button — Sizes', description: 'Three standard sizes: small, medium, and large.', content: <ButtonSizes /> },
-    { title: 'Condensed Button', description: 'Dedicated component for inline actions — always transparent, no border. Limited to primary, primary-inverse, and secondary colors.', content: <ButtonCondensed /> },
-    { title: 'Button — With Icon', description: 'Buttons with a leading icon and a full-width block example.', content: <ButtonWithIcon /> },
-    { title: 'Button — Outlined', description: 'withBackground={false} renders transparent fill with a visible border. No withBorder prop exists on Button — use CondensedButton for truly borderless labeled actions.', content: <ButtonOutlined /> },
-    { title: 'Button — States', description: 'Enabled, disabled, and readonly interaction states.', content: <ButtonStates /> },
-    { title: 'Icon Button — Colors', description: 'All color intents for icon-only actions.', content: <IconButtonColors /> },
-    { title: 'Icon Button — Shapes & Sizes', description: 'Rectangle and circle shapes across all five sizes.', content: <IconButtonShapes /> },
-    { title: 'Icon Button — Ghost', description: 'Transparent and border-only variants.', content: <IconButtonGhost /> },
-    { title: 'Icon Button — States', description: 'Enabled, disabled, and readonly interaction states.', content: <IconButtonStates /> },
+    { title: 'Button — colors', description: 'All color intents including AI and inverse variants.', content: <ButtonColors /> },
+    { title: 'Button — sizes', description: 'Three standard sizes: small, medium, and large.', content: <ButtonSizes /> },
+    { title: 'Condensed button', description: 'Dedicated component for inline actions — always transparent, no border. Limited to primary, primary-inverse, and secondary colors.', content: <ButtonCondensed /> },
+    { title: 'Button — with icon', description: 'Buttons with a leading icon and a full-width block example.', content: <ButtonWithIcon /> },
+    { title: 'Button — outlined', description: 'withBackground={false} renders transparent fill with a visible border. No withBorder prop exists on Button — use CondensedButton for truly borderless labeled actions.', content: <ButtonOutlined /> },
+    { title: 'Button — states', description: 'Enabled, disabled, and readonly interaction states.', content: <ButtonStates /> },
+    { title: 'Icon button — colors', description: 'All color intents for icon-only actions.', content: <IconButtonColors /> },
+    { title: 'Icon button — shapes and sizes', description: 'Rectangle and circle shapes across all five sizes.', content: <IconButtonShapes /> },
+    { title: 'Icon button — ghost', description: 'Transparent and border-only variants.', content: <IconButtonGhost /> },
+    { title: 'Icon button — states', description: 'Enabled, disabled, and readonly interaction states.', content: <IconButtonStates /> },
   ],
   inputs: [
-    { title: 'Text Input', description: 'Single-line text entry with optional hint and error states.', content: <TextInputSection /> },
-    { title: 'Number Input', description: 'Numeric entry with increment and decrement controls.', content: <NumberInputSection /> },
+    { title: 'Text input', description: 'Single-line text entry with optional hint and error states.', content: <TextInputSection /> },
+    { title: 'Number input', description: 'Numeric entry with increment and decrement controls.', content: <NumberInputSection /> },
   ],
   selection: [
     { title: 'Checkbox', description: 'Binary on/off selection, also available as a toggle.', content: <CheckboxSection /> },
-    { title: 'Radio Input', description: 'Single selection from a set of mutually exclusive options.', content: <RadioSection /> },
+    { title: 'Radio input', description: 'Single selection from a set of mutually exclusive options.', content: <RadioSection /> },
   ],
   feedback: [
-    { title: 'Pill', description: 'Compact status and categorisation labels across all color intents.', content: <PillSection /> },
+    { title: 'Pill', description: 'Compact status and categorization labels across all color intents.', content: <PillSection /> },
     { title: 'Badge', description: 'Tiny numeric indicator overlaid on a target element.', content: <BadgeSection /> },
     { title: 'Spinner', description: 'Loading indicator in three sizes.', content: <SpinnerSection /> },
   ],
