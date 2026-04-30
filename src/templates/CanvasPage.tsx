@@ -4,7 +4,7 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Text } from '@instructure/ui-text/latest'
-import { Button } from '@instructure/ui-buttons/latest'
+import { Button, IconButton } from '@instructure/ui-buttons/latest'
 import { Avatar } from '@instructure/ui-avatar/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
@@ -86,20 +86,15 @@ export function CanvasPage({ isDark, onToggleTheme }: CanvasPageProps) {
         >
           <Flex alignItems="center" justifyItems="space-between" padding="x-small medium">
             <IconCanvasLogoSolid size="small" />
-            <Flex alignItems="center" gap="x-small">
-              <IconButton color="ai-primary" screenReaderLabel="Open AI assistant" size="small">
-                <IgniteaiLogoInstUIIcon />
-              </IconButton>
-              <IconButton
-                screenReaderLabel="Open navigation menu"
-                color="secondary"
-                size="small"
-                withBackground={false}
-                withBorder={false}
-                onClick={() => setMenuOpen(true)}
-                renderIcon={<AlignJustifyInstUIIcon />}
-              />
-            </Flex>
+            <IconButton
+              screenReaderLabel="Open navigation menu"
+              color="secondary"
+              size="small"
+              withBackground={false}
+              withBorder={false}
+              onClick={() => setMenuOpen(true)}
+              renderIcon={<AlignJustifyInstUIIcon />}
+            />
           </Flex>
         </View>
 
