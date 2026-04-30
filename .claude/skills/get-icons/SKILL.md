@@ -1,5 +1,5 @@
 ---
-name: get-icon
+name: get-icons
 description: >
   Finds the right InstUI icon for a use case. Invoke when the user asks for an icon
   by purpose or name — "what icon should I use for settings", "is there a download icon",
