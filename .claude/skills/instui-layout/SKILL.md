@@ -162,6 +162,14 @@ margin="0 auto small"
 
 `Flex` wraps CSS flexbox. Use `Flex.Item` for direct children that need individual alignment or grow/shrink behavior.
 
+> **InstUI flex values are NOT CSS strings.** Common mistakes:
+> - `alignItems="flex-start"` ❌ → `alignItems="start"` ✅
+> - `alignItems="flex-end"` ❌ → `alignItems="end"` ✅
+> - `justifyItems="flex-end"` ❌ → `justifyItems="end"` ✅
+> - `direction="row-reverse"` ✅ (this one matches CSS)
+>
+> TypeScript will catch these, but only if you run `tsc -p tsconfig.app.json --noEmit` (not bare `tsc --noEmit`).
+
 ### Flex props
 
 | Prop | Type | Notes |
@@ -169,8 +177,8 @@ margin="0 auto small"
 | `as` | `AsElementType` | Element to render, defaults to `div` |
 | `display` | `'flex' \| 'inline-flex'` | Defaults to `flex` |
 | `direction` | `'row' \| 'column' \| 'row-reverse' \| 'column-reverse'` | Flex direction |
-| `alignItems` | `'center' \| 'start' \| 'end' \| 'stretch'` | Cross-axis alignment |
-| `justifyItems` | `'center' \| 'start' \| 'end' \| 'space-around' \| 'space-between'` | Main-axis distribution |
+| `alignItems` | `'center' \| 'start' \| 'end' \| 'stretch'` | Cross-axis alignment — **not** CSS `flex-start`/`flex-end` |
+| `justifyItems` | `'center' \| 'start' \| 'end' \| 'space-around' \| 'space-between'` | Main-axis distribution — **not** CSS `flex-start`/`flex-end` |
 | `wrap` | `'wrap' \| 'no-wrap' \| 'wrap-reverse'` | Flex wrap |
 | `gap` | `Spacing` | Spacing between items — accepts shorthand like `margin`/`padding` |
 | `margin` | `Spacing` | CSS shorthand with spacing tokens |
@@ -447,3 +455,20 @@ If you're in a column layout and a shadowed `View` is being clipped, override ex
 ```
 
 **Preferred pattern:** Only use `Flex.Item` when you actually need `shouldGrow`, `shouldShrink`, `align`, or `order`. Elements that don't need those props should be direct children of `<Flex>` — CSS `gap` applies to all direct flex children regardless.
+
+### Flex.Item pre-flight checklist
+
+Before writing any `<Flex.Item>`, verify each point:
+
+1. **Does it need grow/shrink/align/order behavior?** If no, remove it and make the child a direct `<Flex>` child.
+2. **Does the child have `shadow` or `borderRadius`?** If yes, add `overflowX="visible" overflowY="visible"` to the `Flex.Item`.
+3. **Is the Flex direction `column`?** If yes, default overflow is `auto` which clips shadows — add `overflowY="visible"` unless scrolling is intentional.
+
+Quick check table:
+
+| Scenario | Required on `Flex.Item` |
+|---|---|
+| Fill remaining space | `shouldGrow shouldShrink` |
+| Child has `shadow="resting"` or `borderRadius` | `overflowX="visible" overflowY="visible"` |
+| Fixed width sidebar | `width="Npx"` + `shouldShrink` |
+| No behavior needed | Don't use `Flex.Item` — direct child instead |

@@ -152,6 +152,11 @@ function MyComponent() {
 
 Complete reference sourced from `@instructure/ui-themes/src/themes/newThemeTokens/light/sharedTokens.ts`. Shape is identical across all themes — values differ.
 
+> **Valid top-level keys** — the only paths that exist on `sharedTokens`:
+> `background` · `stroke` · `strokeWidth` · `borderRadius` · `spacing` · `focusOutline` · `boxShadow` · `legacy`
+>
+> Paths like `sharedTokens.border.*` or `sharedTokens.color.*` do **not** exist. For border/divider colors use `sharedTokens.stroke.*`. When in doubt, invoke `get-tokens` to verify a path before writing it.
+
 ---
 
 ### `sharedTokens.background`
