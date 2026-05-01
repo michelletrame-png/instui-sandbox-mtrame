@@ -52,6 +52,8 @@ export function SpecSheet({
       display="block"
       background="primary"
       themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
+      borderRadius={sharedTokens.borderRadius.card.lg}
+      shadow="resting"
       padding="xx-large"
     >
         <Flex direction="column" gap="large">
