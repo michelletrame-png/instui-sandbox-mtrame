@@ -15,7 +15,7 @@
           var q = new URLSearchParams(window.location.search).get('q');
           window.history.replaceState(
             null, null,
-            window.location.pathname + '/' + decodeURIComponent(p) +
+            window.location.pathname.replace(/\/$/, '') + '/' + decodeURIComponent(p) +
             (q ? '?' + decodeURIComponent(q) : '') +
             window.location.hash
           );
