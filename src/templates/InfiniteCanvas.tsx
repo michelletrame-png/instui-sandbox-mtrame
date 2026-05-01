@@ -126,6 +126,8 @@ export function InfiniteCanvas({
     if (!el) return
 
     function onMouseDown(e: MouseEvent) {
+      const active = document.activeElement as HTMLElement | null
+      if (active && active !== document.body) active.blur()
       if (!spaceRef.current) return
       e.preventDefault()
       panRef.current = { active: true, startX: e.clientX, startY: e.clientY }

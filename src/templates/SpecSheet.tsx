@@ -30,6 +30,7 @@ function Separator() {
       borderWidth="small 0 0 0"
       borderColor="primary"
       themeOverride={{ borderColorPrimary: sharedTokens.stroke.mutedColor }}
+      margin="large 0"
     />
   )
 }
@@ -51,7 +52,7 @@ export function SpecSheet({
       display="block"
       background="primary"
       themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-      padding="large"
+      padding="xx-large"
     >
         <Flex direction="column" gap="large">
 
@@ -66,7 +67,7 @@ export function SpecSheet({
           {/* Sections */}
           {sections.map((section, si) => (
             <React.Fragment key={si}>
-              <Flex direction="column" gap="large">
+              <Flex direction="column" gap="xx-large">
 
                 {/* Section header */}
                 <Flex direction="column" gap="x-small">
@@ -77,10 +78,10 @@ export function SpecSheet({
                 </Flex>
 
                 {/* Artboard row — horizontal, non-wrapping */}
-                <Flex gap="large" alignItems="start">
+                <Flex gap="xx-large" alignItems="start">
                   {section.boards.map((board, bi) => (
                     <Flex.Item key={bi} shouldShrink={false}>
-                      <Flex direction="column" gap="small" width={`${board.width}px`}>
+                      <Flex direction="column" gap="medium" width={`${board.width}px`}>
 
                         {/* Board number + title */}
                         <Heading level="h3" margin="0">
@@ -100,7 +101,7 @@ export function SpecSheet({
                           borderWidth="small"
                           borderColor="primary"
                           borderRadius={sharedTokens.borderRadius.card.sm}
-                          padding="mediumSmall"
+                          shadow="resting"
                           display="block"
                           overflowX="hidden"
                           overflowY="hidden"
