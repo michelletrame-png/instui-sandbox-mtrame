@@ -21,7 +21,8 @@ const statusOrder: Record<PrototypeStatus, number> = {
   'In Review': 1,
   Complete: 2,
   Archived: 3,
-  Reference: 4,
+  Template: 4,
+  Reference: 5,
 }
 
 const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'primary'> = {
@@ -29,6 +30,7 @@ const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'pri
   'In Review': 'info',
   Complete: 'success',
   Archived: 'primary',
+  Template: 'info',
   Reference: 'primary',
 }
 
@@ -88,7 +90,8 @@ export function Home() {
   const [tabIndex, setTabIndex] = useState(0)
   const { sharedTokens } = useComputedTheme()
 
-  const prototypeItems = prototypes.filter(p => p.status !== 'Reference')
+  const prototypeItems = prototypes.filter(p => p.status !== 'Reference' && p.status !== 'Template')
+  const templateItems = prototypes.filter(p => p.status === 'Template')
   const referenceItems = prototypes.filter(p => p.status === 'Reference')
 
   return (
@@ -124,7 +127,21 @@ export function Home() {
                 <PrototypeTable items={prototypeItems} />
               </View>
             </Tabs.Panel>
-            <Tabs.Panel renderTitle="References" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+            <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+              <View
+                as="div"
+                display="block"
+                background="primary"
+                themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
+                borderRadius={sharedTokens.borderRadius.card.sm}
+                shadow="resting"
+                padding="medium"
+                margin="medium 0 0 0"
+              >
+                <PrototypeTable items={templateItems} />
+              </View>
+            </Tabs.Panel>
+            <Tabs.Panel renderTitle="References" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               <View
                 as="div"
                 display="block"

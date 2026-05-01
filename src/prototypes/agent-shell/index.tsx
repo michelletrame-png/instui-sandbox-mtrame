@@ -33,6 +33,14 @@ import {
   HandInstUIIcon,
   WandSparklesInstUIIcon,
   LibraryInstUIIcon,
+  HistoryInstUIIcon,
+  SquarePenInstUIIcon,
+  ChevronLeftInstUIIcon,
+  ChevronRightInstUIIcon,
+  CircleCheckInstUIIcon,
+  CopyInstUIIcon,
+  ThumbsUpInstUIIcon,
+  ThumbsDownInstUIIcon,
 } from '@instructure/ui-icons'
 import { Link } from '@instructure/ui-link/latest'
 import { Pill } from '@instructure/ui-pill/latest'
@@ -51,7 +59,7 @@ function useIsMobile() {
   return isMobile
 }
 
-function AgentWelcome() {
+function AgentWelcome({ onSendMessage }: { onSendMessage: (text: string) => void }) {
   const { sharedTokens } = useComputedTheme()
   const aiGradient = `linear-gradient(90deg, ${sharedTokens.background.aiTopGradientColor} 20%, ${sharedTokens.background.aiBottomGradientColor} 81%)`
   const handRef = useRef<HTMLSpanElement | null>(null)
@@ -152,11 +160,11 @@ function AgentWelcome() {
         <Flex direction="column" gap="small">
           <Heading level="h4" as="h3" margin="0">Try asking</Heading>
           <Flex direction="column" gap="small">
-            <Button color="secondary" display="block" textAlign="start">List recently published courses</Button>
+            <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('List recently published courses')}>List recently published courses</Button>
             {/* eslint-disable-next-line instui/button-text-max-words */}
-            <Button color="secondary" display="block" textAlign="start">Draft a message to students</Button>
+            <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('Draft a message to students')}>Draft a message to students</Button>
             {/* eslint-disable-next-line instui/button-text-max-words */}
-            <Button color="secondary" display="block" textAlign="start">Shift dates in a module</Button>
+            <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('Shift dates in a module')}>Shift dates in a module</Button>
           </Flex>
           <View as="div" display="block" margin="small 0 0 0">
             <Link href="#">What else can you do?</Link>
@@ -168,13 +176,185 @@ function AgentWelcome() {
   )
 }
 
+const HISTORY_GROUPS = [
+  {
+    date: '12/31/2025',
+    chats: [
+      'Review geometry proofs for the Unit 4 quiz',
+      'Build a weekly study plan across classes',
+      'Get feedback on my English essay draft',
+    ],
+  },
+  {
+    date: '12/30/2025',
+    chats: [
+      'Create a catch up plan for overdue work',
+      'Practice biology terms with quick flashcards',
+      "Prepare for tomorrow's chemistry lab checklist",
+    ],
+  },
+]
+
+function ChatHistory({ onBack }: { onBack: () => void }) {
+  const { sharedTokens } = useComputedTheme()
+
+  return (
+    <View as="div" display="block" padding="medium" overflowY="auto">
+      <Flex direction="column" gap="medium">
+        <Link onClick={onBack} renderIcon={<ChevronLeftInstUIIcon size="x-small" />} iconPlacement="start">
+          Back
+        </Link>
+        <Heading level="h2" margin="0">Chat History</Heading>
+        {HISTORY_GROUPS.map((group) => (
+          <Flex key={group.date} direction="column" gap="small">
+            <Text>{group.date}</Text>
+            <Flex direction="column" gap="none">
+              {group.chats.map((chat, i) => (
+                <React.Fragment key={chat}>
+                  <Flex alignItems="center" justifyItems="space-between" padding="small none">
+                    <Flex.Item shouldGrow shouldShrink>
+                      <Link href="#">{chat}</Link>
+                    </Flex.Item>
+                    <IconButton
+                      screenReaderLabel={`More options for "${chat}"`}
+                      color="secondary"
+                      withBackground={false}
+                      withBorder={false}
+                      size="small"
+                      renderIcon={<EllipsisVerticalInstUIIcon />}
+                    />
+                  </Flex>
+                  {i < group.chats.length - 1 && (
+                    <View
+                      as="div"
+                      display="block"
+                      borderWidth="small 0 0 0"
+                      borderColor="primary"
+                      themeOverride={{ borderColorPrimary: sharedTokens.stroke.mutedColor }}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </Flex>
+          </Flex>
+        ))}
+      </Flex>
+    </View>
+  )
+}
+
+function AgentChatFlow({ message, onSendMessage }: { message: string; onSendMessage: (text: string) => void }) {
+  const { sharedTokens } = useComputedTheme()
+
+  return (
+    <View as="div" display="block" padding="large medium">
+      <Flex direction="column" gap="large">
+
+        {/* User message – right-aligned bubble */}
+        <Flex justifyItems="end" padding="0 0 0 large">
+          <View
+            as="div"
+            display="block"
+            background="primary"
+            themeOverride={{
+              backgroundPrimary: sharedTokens.background.containerColor,
+              borderColorPrimary: sharedTokens.stroke.mutedColor,
+            }}
+            borderWidth="small"
+            borderColor="primary"
+            borderRadius={sharedTokens.borderRadius.card.md}
+            padding="mediumSmall"
+          >
+            <Text>{message}</Text>
+          </View>
+        </Flex>
+
+        {/* Agent response */}
+        <Flex direction="column" gap="medium">
+
+          {/* Thought indicator + response text */}
+          <Flex direction="column" gap="small">
+            <Flex alignItems="center" gap="xx-small">
+              <CircleCheckInstUIIcon color="success" size="x-small" />
+              <Text weight="bold" color="success">Agent thought for 27 seconds</Text>
+              <ChevronRightInstUIIcon color="success" size="x-small" />
+            </Flex>
+            <Text size="content">
+              AI response Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Nunc sit amet velit lorum faucibus, tristique orci ut, posuere odio. Pellentesque venenatis neque ipsum, in sit malesuada elit egestas hendrerit. Posuere odio.
+            </Text>
+          </Flex>
+
+          {/* Response footer */}
+          <Flex direction="column" gap="medium">
+
+            {/* Action icon buttons */}
+            <Flex gap="xx-small">
+              <IconButton
+                screenReaderLabel="Copy response"
+                color="secondary"
+                withBackground={false}
+                size="small"
+                renderIcon={<CopyInstUIIcon />}
+              />
+              <IconButton
+                screenReaderLabel="Like response"
+                color="secondary"
+                withBackground={false}
+                size="small"
+                renderIcon={<ThumbsUpInstUIIcon />}
+              />
+              <IconButton
+                screenReaderLabel="Dislike response"
+                color="secondary"
+                withBackground={false}
+                size="small"
+                renderIcon={<ThumbsDownInstUIIcon />}
+              />
+            </Flex>
+
+            {/* Suggested follow-up prompts */}
+            <Flex direction="column" gap="small">
+              <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('Tell me more about this')}>Suggested prompt</Button>
+              <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('How do I apply this?')}>Suggested prompt</Button>
+              <Button color="secondary" display="block" textAlign="start" onClick={() => onSendMessage('Show me an example')}>Suggested prompt</Button>
+            </Flex>
+
+            {/* Disclaimer */}
+            <Text size="small" color="secondary">
+              AI can make mistakes. Consider checking important information.
+            </Text>
+
+          </Flex>
+        </Flex>
+
+      </Flex>
+    </View>
+  )
+}
+
 export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [agentOpen, setAgentOpen] = useState(false)
+  const [agentView, setAgentView] = useState<'welcome' | 'history' | 'chat'>('welcome')
+  const [chatMessage, setChatMessage] = useState('')
+  const [inputValue, setInputValue] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const { sharedTokens, semantics } = useComputedTheme()
   const isMobile = useIsMobile()
+
+  function handleCloseAgent() {
+    setAgentOpen(false)
+    setAgentView('welcome')
+    setInputValue('')
+  }
+
+  function handleSendMessage(text: string) {
+    if (!text.trim()) return
+    setChatMessage(text)
+    setAgentView('chat')
+    setInputValue('')
+  }
 
   const breadcrumb = (
     <Breadcrumb label="Navigation">
@@ -214,6 +394,14 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
             data-agent-prompt
             placeholder="Help me…"
             rows={2}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage(inputValue)
+              }
+            }}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
             style={{
@@ -252,11 +440,62 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
             screenReaderLabel="Send message"
             color="primary"
             size="small"
+            onClick={() => handleSendMessage(inputValue)}
             renderIcon={<ArrowUpInstUIIcon />}
           />
         </Flex>
       </View>
   )
+
+  const agentHeader = (
+    <View
+      as="div"
+      background="primary"
+      themeOverride={{ backgroundPrimary: `linear-gradient(to right, ${sharedTokens.background.aiTopGradientColor} 0%, ${sharedTokens.background.aiBottomGradientColor} 100%)` }}
+      padding="small mediumSmall"
+      display="block"
+    >
+      <Flex alignItems="center" justifyItems="space-between">
+        <Flex alignItems="center" gap="x-small">
+          <IgniteaiLogoInstUIIcon color="onColor" size="md" />
+          <Heading level="h2" variant="titleCardRegular" color="primary-on" margin="0">IgniteAI Agent</Heading>
+        </Flex>
+        <Flex alignItems="center" gap="xx-small">
+          <IconButton
+            screenReaderLabel="New chat"
+            color="primary-inverse"
+            withBackground={false}
+            size="small"
+            onClick={() => { setAgentView('welcome'); setInputValue('') }}
+            renderIcon={<SquarePenInstUIIcon />}
+          />
+          <IconButton
+            screenReaderLabel="Chat history"
+            color="primary-inverse"
+            withBackground={false}
+            size="small"
+            onClick={() => setAgentView('history')}
+            renderIcon={<HistoryInstUIIcon />}
+          />
+          <IconButton
+            screenReaderLabel="Close AI assistant"
+            color="primary-inverse"
+            withBackground={false}
+            withBorder={false}
+            size="small"
+            onClick={handleCloseAgent}
+            renderIcon={<XInstUIIcon />}
+          />
+        </Flex>
+      </Flex>
+    </View>
+  )
+
+  const agentContent = agentView === 'history'
+    ? <ChatHistory onBack={() => setAgentView('welcome')} />
+    : agentView === 'chat'
+    ? <AgentChatFlow message={chatMessage} onSendMessage={handleSendMessage} />
+    : <AgentWelcome onSendMessage={handleSendMessage} />
 
   /* ── Mobile layout ── */
   if (isMobile) {
@@ -414,31 +653,9 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
               overflowY="hidden"
             >
               <Flex direction="column" height="100%">
-                <View
-                  as="div"
-                  background="primary"
-                  themeOverride={{ backgroundPrimary: `linear-gradient(to right, ${sharedTokens.background.aiTopGradientColor} 0%, ${sharedTokens.background.aiBottomGradientColor} 100%)` }}
-                  padding="small medium"
-                  display="block"
-                >
-                  <Flex alignItems="center" justifyItems="space-between">
-                    <Flex alignItems="center" gap="x-small">
-                      <IgniteaiLogoInstUIIcon color="onColor" size="md" />
-                      <Heading level="h2" variant="titleCardRegular" color="primary-on" margin="0">IgniteAI Agent</Heading>
-                    </Flex>
-                    <IconButton
-                      screenReaderLabel="Close AI assistant"
-                      color="primary-inverse"
-                      withBackground={false}
-                      withBorder={false}
-                      size="small"
-                      onClick={() => setAgentOpen(false)}
-                      renderIcon={<XInstUIIcon />}
-                    />
-                  </Flex>
-                </View>
+                {agentHeader}
                 <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable both-edges' }}>
-                  <AgentWelcome />
+                  {agentContent}
                 </Flex.Item>
                 <View as="div" padding="none x-small x-small" display="block">
                   {agentInput}
@@ -524,31 +741,9 @@ export default function AgentShell({ isDark, onToggleTheme }: PrototypeProps) {
                   overflowX="hidden"
                 >
                   <Flex direction="column" height="100%" gap="none">
-                    <View
-                      as="div"
-                      background="primary"
-                      themeOverride={{ backgroundPrimary: `linear-gradient(to right, ${sharedTokens.background.aiTopGradientColor} 0%, ${sharedTokens.background.aiBottomGradientColor} 100%)` }}
-                      padding="small mediumSmall"
-                      display="block"
-                    >
-                      <Flex alignItems="center" justifyItems="space-between">
-                        <Flex alignItems="center" gap="x-small">
-                          <IgniteaiLogoInstUIIcon color="onColor" size="md" />
-                          <Heading level="h2" variant="titleCardRegular" color="primary-on" margin="0">IgniteAI Agent</Heading>
-                        </Flex>
-                        <IconButton
-                          screenReaderLabel="Close AI assistant"
-                          color="primary-inverse"
-                          withBackground={false}
-                          withBorder={false}
-                          size="small"
-                          onClick={() => setAgentOpen(false)}
-                          renderIcon={<XInstUIIcon />}
-                        />
-                      </Flex>
-                    </View>
+                    {agentHeader}
                     <Flex.Item shouldGrow shouldShrink overflowY="auto" style={{ scrollbarGutter: 'stable both-edges' }}>
-                      <AgentWelcome />
+                      {agentContent}
                     </Flex.Item>
                     <View as="div" padding="none mediumSmall mediumSmall" display="block">
                       {agentInput}

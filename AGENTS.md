@@ -28,7 +28,11 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 | `get-tokens` | Dynamically look up available keys and values for any token layer (sharedTokens, semantics, components, primitives) |
 | `get-component` | Look up available props, sizes, colors, and configurations for any InstUI component |
 | `get-icons` | Search for the right icon by keyword — finds matching `*InstUIIcon` names from Lucide and custom sets |
-| `sandbox-init` | How to scaffold a new prototype from scratch |
+| `send-to-paper` | Translate an InstUI React prototype into a Paper MCP design — token resolution, font mapping, component CSS, icon SVG extraction, Paper layout rules |
+| `send-to-pencil` | Translate an InstUI React prototype into a Pencil MCP design (.pen file) — token → hex resolution, Lucide icon mapping, gradient direction, cross-batch ID management, component → .pen schema |
+| `send-to-figma` | Translate an InstUI React prototype into a Figma design — maps `sharedTokens.*` to Figma variables, InstUI text scales to Figma text styles, and InstUI components to components from the **InstUI Component Library - Beta** |
+| `sandbox-init` | How to check the environment and start the dev server |
+| `sandbox-prototypes` | Create and delete prototypes; picks the right template |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.
 
@@ -67,9 +71,10 @@ Prototypes are registered in `src/registry.ts`:
 
 The app handles routing, theme switching, and lazy loading automatically. A prototype only needs to render its own UI — it receives `isDark` and `onToggleTheme` as props and is responsible for its own full-page layout.
 
-**Status values:** `WIP` | `In Review` | `Complete` | `Archived` | `Reference`
+**Status values:** `WIP` | `In Review` | `Complete` | `Archived` | `Template` | `Reference`
 
-Prototypes with status `Reference` are shown in the References tab on the home page, not the Prototypes tab.
+Prototypes with status `Template` appear in the Templates tab on the home page.
+Prototypes with status `Reference` appear in the References tab.
 
 ---
 

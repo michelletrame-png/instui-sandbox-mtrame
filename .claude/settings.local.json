@@ -21,7 +21,17 @@
       "Bash(curl -s \"http://localhost:5173/instui-proto-sandbox-poc/src/prototypes/learner-dashboard/index.tsx\")",
       "Bash(npx vite *)",
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__plugin_figma_figma__generate_figma_design",
+      "mcp__plugin_figma_figma__use_figma",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "mcp__plugin_paper-desktop_paper__get_font_family_info",
+      "mcp__plugin_paper-desktop_paper__write_html",
+      "mcp__plugin_figma_figma__search_design_system",
+      "Bash(node -e ' *)",
+      "mcp__plugin_paper-desktop_paper__create_artboard",
+      "mcp__plugin_paper-desktop_paper__get_screenshot",
+      "Bash(node -e \"const m = require\\('/Users/tom.murphy/VibeCoding/instui-sandbox/node_modules/@instructure/ui-themes/es/themes/newThemeTokens/light/sharedTokens.js'\\); console.log\\(JSON.stringify\\(m\\).slice\\(0, 500\\)\\);\")"
     ]
   },
   "hooks": {
