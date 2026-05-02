@@ -108,15 +108,17 @@ export function SpecSheet({
                           overflowX="hidden"
                           overflowY="hidden"
                         >
-                          {board.content ?? (
-                            <View
-                              as="div"
-                              display="block"
-                              height="100%"
-                              background="primary"
-                              themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
-                            />
-                          )}
+                          <div style={{ width: board.width, height: board.height, overflow: 'hidden', position: 'relative' }}>
+                            {board.content ?? (
+                              <View
+                                as="div"
+                                display="block"
+                                height="100%"
+                                background="primary"
+                                themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
+                              />
+                            )}
+                          </div>
                         </View>
 
                         {/* Notes */}

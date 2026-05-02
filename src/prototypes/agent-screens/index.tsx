@@ -378,8 +378,9 @@ function DesktopSnapshot({ showAgent = false, agentView = 'welcome' }: { showAge
       overflowX="hidden"
       overflowY="hidden"
     >
-      <Flex height="100%" alignItems="stretch">
-        <View as="div" height="100%" padding="0 0 small 0" display="block">
+      
+      <Flex height="100%" alignItems="stretch" padding="0">
+        <View as="div" height="96vh" padding="0 0 0 0" display="block">
           <SideNavBar label="Main navigation" toggleLabel={{ expandedLabel: 'Minimize navigation', minimizedLabel: 'Expand navigation' }}>
             <SideNavBar.Item icon={<IconCanvasLogoSolid size="medium" />} label={<ScreenReaderContent>Canvas</ScreenReaderContent>} href="#" themeOverride={{ contentPadding: '1em 0.375rem 1em 0.375rem' }} />
             <SideNavBar.Item icon={<Avatar name="User" size="x-small" />} label="Account" href="#" />
@@ -398,7 +399,7 @@ function DesktopSnapshot({ showAgent = false, agentView = 'welcome' }: { showAge
             </Flex.Item>
             {showAgent && (
               <Flex.Item shouldShrink={false}>
-                <View as="div" display="block" height="100%" padding="small small 0 0">
+                <View as="div" display="block" height="97vh" padding="small small 0 0">
                   <DesktopAgentPanel view={agentView} />
                 </View>
               </Flex.Item>
