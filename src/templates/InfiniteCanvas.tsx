@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { IconButton } from '@instructure/ui-buttons/latest'
 import { Text } from '@instructure/ui-text/latest'
+import { TextInput } from '@instructure/ui-text-input/latest'
+import { ScreenReaderContent } from '@instructure/ui-a11y-content'
 import {
   SunInstUIIcon,
   MoonInstUIIcon,
@@ -15,8 +17,10 @@ const MIN_SCALE = 0.05
 const MAX_SCALE = 5
 const NAV_HEIGHT = 44
 
+import { InfiniteCanvasContext, type CanvasTool } from './InfiniteCanvasContext'
+
 type Transform = { x: number; y: number; scale: number }
-type Tool = 'hand' | 'select'
+type Tool = CanvasTool
 
 const DARK = {
   canvasBg: '#1a1d21',
@@ -52,11 +56,6 @@ const NAV_TITLE_GROUP_STYLE: React.CSSProperties = {
   gap: 4,
 }
 
-const ZOOM_LABEL_STYLE: React.CSSProperties = {
-  minWidth: 38,
-  textAlign: 'center',
-  userSelect: 'none',
-}
 
 export function InfiniteCanvas({
   children,
@@ -79,6 +78,7 @@ export function InfiniteCanvas({
   const transformRef = useRef<Transform>({ x: 40, y: initialY, scale: initialScale })
   const [tool, setTool] = useState<Tool>('hand')
   const toolRef = useRef<Tool>('hand')
+  const [zoomInput, setZoomInput] = useState(String(Math.round(initialScale * 100)))
   const spaceRef = useRef(false)
   const panRef = useRef<{ active: boolean; startX: number; startY: number }>({ active: false, startX: 0, startY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
@@ -86,6 +86,7 @@ export function InfiniteCanvas({
   const sync = useCallback((t: Transform) => {
     transformRef.current = t
     setTransform(t)
+    setZoomInput(String(Math.round(t.scale * 100)))
   }, [])
 
   const zoomBy = useCallback((factor: number) => {
@@ -288,9 +289,34 @@ export function InfiniteCanvas({
             withBorder={false}
             size="small"
           />
-          <span style={ZOOM_LABEL_STYLE}>
-            <Text size="x-small" color="secondary">{Math.round(transform.scale * 100)}%</Text>
-          </span>
+          <TextInput
+            renderLabel={<ScreenReaderContent>Zoom level</ScreenReaderContent>}
+            size="small"
+            width="60px"
+            value={zoomInput}
+            onChange={(_e, value) => setZoomInput(value)}
+            onBlur={() => {
+              const parsed = parseFloat(zoomInput.replace('%', ''))
+              if (!isNaN(parsed)) {
+                const el = containerRef.current
+                const t = transformRef.current
+                const cx = el ? el.getBoundingClientRect().width / 2 : 0
+                const cy = el ? el.getBoundingClientRect().height / 2 : 0
+                const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, parsed / 100))
+                const k = newScale / t.scale
+                sync({ x: cx + (t.x - cx) * k, y: cy + (t.y - cy) * k, scale: newScale })
+              } else {
+                setZoomInput(String(Math.round(transformRef.current.scale * 100)))
+              }
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+              if (e.key === 'Escape') {
+                setZoomInput(String(Math.round(transformRef.current.scale * 100)))
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+          />
           <IconButton
             renderIcon={<ZoomInInstUIIcon />}
             screenReaderLabel="Zoom in"
@@ -314,7 +340,9 @@ export function InfiniteCanvas({
           )}
         </div>
       </nav>
-      <div style={layerStyle}>{children}</div>
+      <InfiniteCanvasContext.Provider value={{ tool }}>
+        <div style={layerStyle}>{children}</div>
+      </InfiniteCanvasContext.Provider>
     </div>
   )
 }

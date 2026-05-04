@@ -23,13 +23,22 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
+    id: 'agent-patterns',
+    title: 'Agent Patterns',
+    path: '/agent-patterns',
+    createdAt: '2026-05-04',
+    category: 'Spec',
+    viewMode: 'spec',
+    component: lazy(() => import('./designs/agent-patterns')),
+  },
+  {
     id: 'agent-screens',
     title: 'Agent Screens',
     path: '/agent-screens',
     createdAt: '2026-05-01',
-    category: 'Spec',
-    status: 'WIP',
-    component: lazy(() => import('./prototypes/agent-screens')),
+    category: 'Reference',
+    viewMode: 'spec',
+    component: lazy(() => import('./references/agent-screens')),
   },
   {
     id: 'agent-shell',
@@ -38,7 +47,7 @@ export const prototypes: PrototypeMeta[] = [
     createdAt: '2026-04-28',
     category: 'Prototype',
     status: 'WIP',
-    component: lazy(() => import('./prototypes/agent-shell')),
+    component: lazy(() => import('./designs/agent-shell')),
   },
   {
     id: 'learner-overview',
@@ -55,7 +64,7 @@ export const prototypes: PrototypeMeta[] = [
     createdAt: '2026-04-28',
     category: 'Prototype',
     status: 'WIP',
-    component: lazy(() => import('./prototypes/hello-world')),
+    component: lazy(() => import('./designs/hello-world')),
   },
   {
     id: 'canvas-page',

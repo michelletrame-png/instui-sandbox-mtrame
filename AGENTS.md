@@ -153,7 +153,7 @@ Use `src/prototypes/hello-world/index.tsx` as the minimal starting template.
 
 ### Atomic multi-location edits
 
-When adding a prop to a component, **always update the signature, its usage inside the component, and all call sites in a single edit.** The PostToolUse ESLint and TypeScript hooks run after every edit — an intermediate state where the prop is declared but not used (or declared but not passed at the call site) will produce lint errors that block the next edit.
+When adding a prop to a component, **always update the signature, its usage inside the component, and all call sites in a single edit.** The PostToolUse TypeScript hook runs after every edit — an intermediate state where a prop is declared but not passed at the call site will produce type errors that block the next edit.
 
 Example: adding `isMobile: boolean` to a component requires three changes in one pass:
 1. The function signature: `{ isMobile, sharedTokens }`

@@ -1,24 +1,44 @@
-import React from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Text } from '@instructure/ui-text/latest'
+import { Button, CloseButton } from '@instructure/ui-buttons/latest'
+import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon } from '@instructure/ui-icons'
+import { Modal } from '@instructure/ui-modal/latest'
 import { InfiniteCanvas } from './InfiniteCanvas'
+import { InfiniteCanvasContext } from './InfiniteCanvasContext'
 import type { PrototypeProps } from '../registry'
+
+export type CopyEntry = {
+  label: string
+  text: string
+}
+
+export type FrameCtx = {
+  sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens']
+}
 
 export type SpecBoard = {
   width: number
-  height: number
+  height?: number
   caption?: string
   notes?: string
   content?: React.ReactNode
+  code?: string
+  copy?: CopyEntry[]
+  playable?: boolean
 }
 
 export type SpecSection = {
   title: string
   description?: string
   boards: SpecBoard[]
+}
+
+function toSheetsTsv(screenLabel: string, entries: CopyEntry[]): string {
+  return ['Screen\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.label}\t${e.text}`)].join('\n')
 }
 
 function Separator() {
@@ -45,17 +65,26 @@ export function SpecSheet({
   sections: SpecSection[]
 }) {
   const { sharedTokens } = useComputedTheme()
+  const { tool } = useContext(InfiniteCanvasContext)
+  const [codeModal, setCodeModal] = useState<{ caption?: string; code: string } | null>(null)
+  const [copyModal, setCopyModal] = useState<{ caption?: string; screenLabel: string; copy: CopyEntry[] } | null>(null)
+  const [playKeys, setPlayKeys] = useState<Record<string, number>>({})
+
+  const replay = useCallback((key: string) => {
+    setPlayKeys(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))
+  }, [])
 
   return (
-    <View
-      as="div"
-      display="block"
-      background="primary"
-      themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-      borderRadius={sharedTokens.borderRadius.card.lg}
-      shadow="resting"
-      padding="xx-large"
-    >
+    <>
+      <View
+        as="div"
+        display="block"
+        background="primary"
+        themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
+        borderRadius={sharedTokens.borderRadius.card.lg}
+        shadow="resting"
+        padding="xx-large"
+      >
         <Flex direction="column" gap="large">
 
           {/* Page header */}
@@ -79,56 +108,105 @@ export function SpecSheet({
                   )}
                 </Flex>
 
-                {/* Artboard row — horizontal, non-wrapping */}
+                {/* Artboard row */}
                 <Flex gap="xx-large" alignItems="start">
-                  {section.boards.map((board, bi) => (
-                    <Flex.Item key={bi} shouldShrink={false}>
-                      <Flex direction="column" gap="medium" width={`${board.width}px`}>
+                  {section.boards.map((board, bi) => {
+                    const boardKey = `${si}-${bi}`
+                    const playKey = playKeys[boardKey] ?? 0
+                    return (
+                      <Flex.Item key={bi} shouldShrink={false}>
+                        <Flex direction="column" gap="medium" width={`${board.width}px`}>
 
-                        {/* Board number + title */}
-                        <Heading level="h3" margin="0">
-                          {si + 1}.{bi}{board.caption ? ` ${board.caption}` : ''}
-                        </Heading>
+                          {/* Board number + caption */}
+                          <Heading level="h3" margin="0">
+                            {si + 1}.{bi}{board.caption ? ` ${board.caption}` : ''}
+                          </Heading>
 
-                        {/* Artboard frame */}
-                        <View
-                          as="div"
-                          width={`${board.width}px`}
-                          height={`${board.height}px`}
-                          background="primary"
-                          themeOverride={{
-                            backgroundPrimary: sharedTokens.background.containerColor,
-                            borderColorPrimary: sharedTokens.stroke.mutedColor,
-                          }}
-                          borderWidth="small"
-                          borderColor="primary"
-                          borderRadius={sharedTokens.borderRadius.card.sm}
-                          shadow="resting"
-                          display="block"
-                          overflowX="hidden"
-                          overflowY="hidden"
-                        >
-                          <div style={{ width: board.width, height: board.height, overflow: 'hidden', position: 'relative' }}>
-                            {board.content ?? (
-                              <View
-                                as="div"
-                                display="block"
-                                height="100%"
-                                background="primary"
-                                themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
-                              />
-                            )}
-                          </div>
-                        </View>
+                          {/* Artboard frame */}
+                          <View
+                            as="div"
+                            display="block"
+                            width={`${board.width}px`}
+                            background="primary"
+                            themeOverride={{
+                              backgroundPrimary: sharedTokens.background.containerColor,
+                              borderColorPrimary: sharedTokens.stroke.mutedColor,
+                            }}
+                            borderWidth="small"
+                            borderColor="primary"
+                            borderRadius="0"
+                            shadow="resting"
+                            overflowX="hidden"
+                            {...(board.height !== undefined ? {
+                              height: `${board.height}px`,
+                              overflowY: 'hidden' as const,
+                            } : {})}
+                          >
+                            <div style={{
+                              width: board.width,
+                              ...(board.height !== undefined ? { height: board.height, overflow: 'hidden' } : {}),
+                              position: 'relative',
+                              pointerEvents: tool === 'hand' ? 'none' : 'auto',
+                            }}>
+                              <div key={playKey} style={{ width: '100%', height: '100%' }}>
+                                {board.content ?? (
+                                  <View
+                                    as="div"
+                                    display="block"
+                                    background="primary"
+                                    themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
+                                    {...(board.height !== undefined ? { height: '100%' } : { minHeight: '200px' })}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </View>
 
-                        {/* Notes */}
-                        {board.notes && (
-                          <Text size="content" color="secondary">{board.notes}</Text>
-                        )}
+                          {/* Action buttons */}
+                          {(board.copy || board.code || board.playable) && (
+                            <Flex gap="x-small">
+                              {board.playable && (
+                                <Button
+                                  size="small"
+                                  withBackground={false}
+                                  renderIcon={<RefreshCwInstUIIcon />}
+                                  onClick={() => replay(boardKey)}
+                                >
+                                  Replay
+                                </Button>
+                              )}
+                              {board.copy && (
+                                <Button
+                                  size="small"
+                                  withBackground={false}
+                                  renderIcon={<FileTextInstUIIcon />}
+                                  onClick={() => setCopyModal({ caption: board.caption, screenLabel: `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`, copy: board.copy! })}
+                                >
+                                  UX Copy
+                                </Button>
+                              )}
+                              {board.code && (
+                                <Button
+                                  size="small"
+                                  withBackground={false}
+                                  renderIcon={<CodeInstUIIcon />}
+                                  onClick={() => setCodeModal({ caption: board.caption, code: board.code! })}
+                                >
+                                  InstUI Source
+                                </Button>
+                              )}
+                            </Flex>
+                          )}
 
-                      </Flex>
-                    </Flex.Item>
-                  ))}
+                          {/* Notes */}
+                          {board.notes && (
+                            <Text size="content" color="secondary">{board.notes}</Text>
+                          )}
+
+                        </Flex>
+                      </Flex.Item>
+                    )
+                  })}
                 </Flex>
 
               </Flex>
@@ -138,7 +216,87 @@ export function SpecSheet({
           ))}
 
         </Flex>
-    </View>
+      </View>
+
+      {/* Code modal */}
+      <Modal
+        open={codeModal !== null}
+        onDismiss={() => setCodeModal(null)}
+        label={codeModal?.caption ? `Code: ${codeModal.caption}` : 'Code'}
+        size="large"
+      >
+        <Modal.Header>
+          <Flex alignItems="center" justifyItems="space-between">
+            <Heading level="h2" margin="0">{codeModal?.caption ?? 'Code'}</Heading>
+            <CloseButton screenReaderLabel="Close" onClick={() => setCodeModal(null)} />
+          </Flex>
+        </Modal.Header>
+        <Modal.Body>
+          <View
+            as="div"
+            display="block"
+            background="secondary"
+            themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
+            borderRadius="0"
+            padding="medium"
+          >
+            <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {codeModal?.code}
+            </pre>
+          </View>
+        </Modal.Body>
+        <Modal.Footer>
+          <Flex justifyItems="end" gap="small">
+            <Button onClick={() => navigator.clipboard.writeText(codeModal?.code ?? '')}>Copy</Button>
+            <Button color="primary" onClick={() => setCodeModal(null)}>Done</Button>
+          </Flex>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Copy doc modal */}
+      <Modal
+        open={copyModal !== null}
+        onDismiss={() => setCopyModal(null)}
+        label={copyModal?.caption ? `Copy doc: ${copyModal.caption}` : 'Copy doc'}
+        size="medium"
+      >
+        <Modal.Header>
+          <Flex alignItems="center" justifyItems="space-between">
+            <Heading level="h2" margin="0">{copyModal?.caption ?? 'Copy doc'}</Heading>
+            <CloseButton screenReaderLabel="Close" onClick={() => setCopyModal(null)} />
+          </Flex>
+        </Modal.Header>
+        <Modal.Body>
+          <Flex direction="column" gap="none">
+            {copyModal?.copy.map((entry, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && (
+                  <View
+                    as="div"
+                    display="block"
+                    borderWidth="small 0 0 0"
+                    borderColor="primary"
+                    themeOverride={{ borderColorPrimary: sharedTokens.stroke.mutedColor }}
+                  />
+                )}
+                <Flex gap="medium" alignItems="start" padding="small none">
+                  <View as="div" display="block" minWidth="180px">
+                    <Text size="small" color="secondary">{entry.label}</Text>
+                  </View>
+                  <Text size="small">{entry.text}</Text>
+                </Flex>
+              </React.Fragment>
+            ))}
+          </Flex>
+        </Modal.Body>
+        <Modal.Footer>
+          <Flex justifyItems="end" gap="small">
+            <Button onClick={() => navigator.clipboard.writeText(toSheetsTsv(copyModal?.screenLabel ?? '', copyModal?.copy ?? []))}>Copy for Sheets</Button>
+            <Button color="primary" onClick={() => setCopyModal(null)}>Done</Button>
+          </Flex>
+        </Modal.Footer>
+      </Modal>
+    </>
   )
 }
 

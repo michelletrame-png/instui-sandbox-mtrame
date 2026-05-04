@@ -94,10 +94,14 @@ them. Each board's `content` prop is optional — leave it undefined (shows a da
 placeholder) until the user is ready to wire in live components.
 
 ```tsx
+import { useComputedTheme } from '@instructure/emotion'
 import { SpecSheet } from '../../templates/SpecSheet'
 import type { PrototypeProps } from '../../registry'
 
 export default function <ComponentName>(_: PrototypeProps) {
+  const { sharedTokens } = useComputedTheme()
+  const ctx = { sharedTokens }
+
   return (
     <SpecSheet
       title="<Prototype title>"
@@ -115,6 +119,36 @@ export default function <ComponentName>(_: PrototypeProps) {
   )
 }
 ```
+
+**Boards with live content — use the frames pattern:**
+
+When boards have live JSX content, each board's content goes in its own file under
+`src/prototypes/<id>/frames/`. Each frame file exports a plain function — not a React
+component — that accepts `FrameCtx` and returns `React.ReactNode`. Hooks stay only in
+the main `index.tsx`.
+
+```tsx
+// frames/my-screen.tsx
+import { View } from '@instructure/ui-view/latest'
+import type { FrameCtx } from '../../../templates/SpecSheet'
+
+export function myScreen({ sharedTokens }: FrameCtx): React.ReactNode {
+  return (
+    <View ...>...</View>
+  )
+}
+```
+
+```tsx
+// index.tsx — call frame functions, never render as <Component />
+import { myScreen } from './frames/my-screen'
+
+boards: [{ content: myScreen(ctx), ... }]
+```
+
+Each frame file can also export a `code` string (flat InstUI JSX for dev handoff)
+and a `copy` array (`CopyEntry[]` for the copy doc modal). Board metadata (`notes`,
+`width`, `height`, `caption`) stays in `index.tsx`.
 
 ---
 
