@@ -11,9 +11,9 @@ import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { IconCanvasLogoSolid } from '@instructure/ui-icons'
 import { prototypes } from './registry'
-import type { PrototypeMeta, PrototypeStatus } from './registry'
+import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
-type SortCol = 'title' | 'createdAt' | 'status'
+type SortCol = 'title' | 'createdAt' | 'status' | 'category'
 type SortDir = 'ascending' | 'descending'
 
 const statusOrder: Record<PrototypeStatus, number> = {
@@ -21,8 +21,6 @@ const statusOrder: Record<PrototypeStatus, number> = {
   'In Review': 1,
   Complete: 2,
   Archived: 3,
-  Template: 4,
-  Reference: 5,
 }
 
 const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'primary'> = {
@@ -30,7 +28,12 @@ const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'pri
   'In Review': 'info',
   Complete: 'success',
   Archived: 'primary',
-  Template: 'info',
+}
+
+const categoryColor: Record<PrototypeCategory, 'warning' | 'info' | 'success' | 'primary'> = {
+  Spec: 'success',
+  Prototype: 'info',
+  Template: 'primary',
   Reference: 'primary',
 }
 
@@ -43,12 +46,17 @@ function sortPrototypes(list: PrototypeMeta[], col: SortCol, dir: SortDir) {
     let cmp = 0
     if (col === 'title') cmp = a.title.localeCompare(b.title)
     else if (col === 'createdAt') cmp = a.createdAt.localeCompare(b.createdAt)
-    else if (col === 'status') cmp = statusOrder[a.status] - statusOrder[b.status]
+    else if (col === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '')
+    else if (col === 'status') cmp = (statusOrder[a.status ?? 'Archived'] ?? 99) - (statusOrder[b.status ?? 'Archived'] ?? 99)
     return dir === 'ascending' ? cmp : -cmp
   })
 }
 
-function PrototypeTable({ items }: { items: PrototypeMeta[] }) {
+function PrototypeTable({ items, showCategory = false, showStatus = false }: {
+  items: PrototypeMeta[]
+  showCategory?: boolean
+  showStatus?: boolean
+}) {
   const [sortCol, setSortCol] = useState<SortCol>('createdAt')
   const [sortDir, setSortDir] = useState<SortDir>('descending')
 
@@ -69,16 +77,18 @@ function PrototypeTable({ items }: { items: PrototypeMeta[] }) {
       <Table.Head>
         <Table.Row>
           <Table.ColHeader id="title" sortDirection={sortCol === 'title' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Title">Title</Table.ColHeader>
+          {showCategory && <Table.ColHeader id="category" sortDirection={sortCol === 'category' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Category" width="110px">Category</Table.ColHeader>}
+          {showStatus && <Table.ColHeader id="status" sortDirection={sortCol === 'status' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Status" width="120px">Status</Table.ColHeader>}
           <Table.ColHeader id="createdAt" sortDirection={sortCol === 'createdAt' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Created">Created</Table.ColHeader>
-          <Table.ColHeader id="status" sortDirection={sortCol === 'status' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Status" width="120px">Status</Table.ColHeader>
         </Table.Row>
       </Table.Head>
       <Table.Body>
         {sorted.map(p => (
           <Table.Row key={p.id}>
             <Table.Cell><Link as={RouterLink} to={p.path}>{p.title}</Link></Table.Cell>
+            {showCategory && <Table.Cell><Pill color={categoryColor[p.category]}>{p.category}</Pill></Table.Cell>}
+            {showStatus && <Table.Cell>{p.status && <Pill color={statusColor[p.status]}>{p.status}</Pill>}</Table.Cell>}
             <Table.Cell>{formatDate(p.createdAt)}</Table.Cell>
-            <Table.Cell><Pill color={statusColor[p.status]}>{p.status}</Pill></Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>
@@ -90,9 +100,24 @@ export function Home() {
   const [tabIndex, setTabIndex] = useState(0)
   const { sharedTokens } = useComputedTheme()
 
-  const prototypeItems = prototypes.filter(p => p.status !== 'Reference' && p.status !== 'Template')
-  const templateItems = prototypes.filter(p => p.status === 'Template')
-  const referenceItems = prototypes.filter(p => p.status === 'Reference')
+  const workItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
+  const templateItems = prototypes.filter(p => p.category === 'Template')
+  const referenceItems = prototypes.filter(p => p.category === 'Reference')
+
+  const tabPanelView = (children: React.ReactNode) => (
+    <View
+      as="div"
+      display="block"
+      background="primary"
+      themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
+      borderRadius={sharedTokens.borderRadius.card.sm}
+      shadow="resting"
+      padding="medium"
+      margin="medium 0 0 0"
+    >
+      {children}
+    </View>
+  )
 
   return (
     <View
@@ -114,46 +139,13 @@ export function Home() {
         <View as="div" display="block" maxWidth="700px" width="100%">
           <Tabs onRequestTabChange={(_e, { index }) => setTabIndex(index)}>
             <Tabs.Panel renderTitle="Prototypes" isSelected={tabIndex === 0} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              <View
-                as="div"
-                display="block"
-                background="primary"
-                themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-                borderRadius={sharedTokens.borderRadius.card.sm}
-                shadow="resting"
-                padding="medium"
-                margin="medium 0 0 0"
-              >
-                <PrototypeTable items={prototypeItems} />
-              </View>
+              {tabPanelView(<PrototypeTable items={workItems} showCategory showStatus />)}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              <View
-                as="div"
-                display="block"
-                background="primary"
-                themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-                borderRadius={sharedTokens.borderRadius.card.sm}
-                shadow="resting"
-                padding="medium"
-                margin="medium 0 0 0"
-              >
-                <PrototypeTable items={templateItems} />
-              </View>
+              {tabPanelView(<PrototypeTable items={templateItems} />)}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="References" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              <View
-                as="div"
-                display="block"
-                background="primary"
-                themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-                borderRadius={sharedTokens.borderRadius.card.sm}
-                shadow="resting"
-                padding="medium"
-                margin="medium 0 0 0"
-              >
-                <PrototypeTable items={referenceItems} />
-              </View>
+              {tabPanelView(<PrototypeTable items={referenceItems} />)}
             </Tabs.Panel>
           </Tabs>
         </View>

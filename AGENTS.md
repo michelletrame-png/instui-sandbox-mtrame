@@ -56,7 +56,10 @@ Each prototype lives in its own directory under `src/prototypes/<name>/` and exp
 export default function MyPrototype({ isDark, onToggleTheme }: PrototypeProps) { ... }
 ```
 
-Prototypes are registered in `src/registry.ts`:
+Items are registered in `src/registry.ts` with two separate fields:
+
+- **`category`** — determines which home page tab the item appears in: `'Spec'` | `'Prototype'` | `'Template'` | `'Reference'`
+- **`status`** — optional, only applies to Specs and Prototypes: `'WIP'` | `'In Review'` | `'Complete'` | `'Archived'`
 
 ```ts
 {
@@ -64,17 +67,21 @@ Prototypes are registered in `src/registry.ts`:
   title: 'My Prototype',
   path: '/my-prototype',
   createdAt: '2026-04-28',
+  category: 'Prototype',
   status: 'WIP',
   component: lazy(() => import('./prototypes/my-prototype')),
 }
 ```
 
+Templates and References omit `status`. Source files for each category live in their own directory:
+
+| Category | Source directory |
+|---|---|
+| `Spec` / `Prototype` | `src/prototypes/<id>/` |
+| `Template` | `src/templates/` |
+| `Reference` | `src/references/<id>/` |
+
 The app handles routing, theme switching, and lazy loading automatically. A prototype only needs to render its own UI — it receives `isDark` and `onToggleTheme` as props and is responsible for its own full-page layout.
-
-**Status values:** `WIP` | `In Review` | `Complete` | `Archived` | `Template` | `Reference`
-
-Prototypes with status `Template` appear in the Templates tab on the home page.
-Prototypes with status `Reference` appear in the References tab.
 
 ---
 
@@ -134,3 +141,18 @@ All AI-generated copy must be reviewed by a human writer before shipping to prod
 3. The route, home page listing, and lazy loading are handled automatically
 
 Use `src/prototypes/hello-world/index.tsx` as the minimal starting template.
+
+---
+
+## Agent process guidelines
+
+### Atomic multi-location edits
+
+When adding a prop to a component, **always update the signature, its usage inside the component, and all call sites in a single edit.** The PostToolUse ESLint and TypeScript hooks run after every edit — an intermediate state where the prop is declared but not used (or declared but not passed at the call site) will produce lint errors that block the next edit.
+
+Example: adding `isMobile: boolean` to a component requires three changes in one pass:
+1. The function signature: `{ isMobile, sharedTokens }`
+2. The prop used inside the function body
+3. Every call site: `<MyComponent isMobile={isMobile} ... />`
+
+If the call site is far from the component definition, use Grep to locate it before editing so all three changes land in one shot.

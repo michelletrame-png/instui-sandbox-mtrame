@@ -46,6 +46,12 @@ const NAV_ACTIONS_STYLE: React.CSSProperties = {
   gap: 8,
 }
 
+const NAV_TITLE_GROUP_STYLE: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+}
+
 function SunIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -76,12 +82,14 @@ export function InfiniteCanvas({
   title,
   isDark,
   onToggleTheme,
+  backTo,
 }: {
   children: React.ReactNode
   initialScale?: number
   title?: string
   isDark?: boolean
   onToggleTheme?: () => void
+  backTo?: string
 }) {
   const palette = isDark ? DARK : LIGHT
   const initialY = NAV_HEIGHT + 20
@@ -259,7 +267,13 @@ export function InfiniteCanvas({
   return (
     <div ref={containerRef} style={bgStyle}>
       <nav style={navStyle}>
-        <span style={navTitleStyle}>{title ?? ''}</span>
+        <div style={NAV_TITLE_GROUP_STYLE}>
+          {backTo && (
+            <a href={backTo} style={{ ...toggleBtnStyle, textDecoration: 'none', fontSize: 16, lineHeight: 1 }} title="Back">←</a>
+          )}
+          <span style={navTitleStyle}>{title ?? ''}</span>
+        </div>
+
         <div style={NAV_ACTIONS_STYLE}>
           {onToggleTheme && (
             <button style={toggleBtnStyle} onClick={onToggleTheme} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>

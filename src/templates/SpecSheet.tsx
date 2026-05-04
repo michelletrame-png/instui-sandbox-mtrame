@@ -144,7 +144,7 @@ export function SpecSheet({
 
 export default function SpecSheetTemplate({ isDark, onToggleTheme }: PrototypeProps) {
   return (
-    <InfiniteCanvas title="Spec Sheet" isDark={isDark} onToggleTheme={onToggleTheme}>
+    <InfiniteCanvas title="Spec Sheet" isDark={isDark} onToggleTheme={onToggleTheme} backTo="/">
       <SpecSheet
         title="Component name"
         description="Brief description of the component or feature being spec'd out. Replace this with your own."

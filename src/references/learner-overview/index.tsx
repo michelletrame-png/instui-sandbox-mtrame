@@ -134,15 +134,12 @@ function CourseCard({ course, isMobile, sharedTokens }: {
       <Flex direction="column" height="100%">
         <View
           as="div"
-          background="primary"
-          themeOverride={{ backgroundPrimary: sharedTokens.background.mutedColor }}
-          borderRadius={`${sharedTokens.borderRadius.card.md} ${sharedTokens.borderRadius.card.md} 0 0`}
-          padding="x-small medium"
+          padding="medium medium x-small"
           display="block"
         >
           <Pill color={course.tag}>{course.tag === 'info' ? 'Social Science' : course.tag === 'success' ? 'Humanities' : course.tag === 'warning' ? 'Natural Science' : 'Language Arts'}</Pill>
         </View>
-        <View as="div" padding="medium" display="block">
+        <View as="div" padding="x-small medium medium" display="block">
           <Flex direction="column" gap="small">
             <Flex direction="column" gap="xxx-small">
               <Heading level="h3" variant="titleCardRegular" margin="0">{course.name}</Heading>
@@ -160,7 +157,9 @@ function CourseCard({ course, isMobile, sharedTokens }: {
                 size="x-small"
               />
             </Flex>
-            <Button size="small" display="block">Go to course</Button>
+            <Flex.Item shouldGrow={false}>
+              <Button size="small">Go to course</Button>
+            </Flex.Item>
           </Flex>
         </View>
       </Flex>
@@ -182,7 +181,7 @@ function CoursesTab({ isMobile, sharedTokens }: { isMobile: boolean; sharedToken
   )
 }
 
-function AssignmentsTab({ sharedTokens }: { sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
+function AssignmentsTab({ isMobile, sharedTokens }: { isMobile: boolean; sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
   return (
     <View
       as="div"
@@ -190,10 +189,11 @@ function AssignmentsTab({ sharedTokens }: { sharedTokens: ReturnType<typeof useC
       themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
       borderRadius={sharedTokens.borderRadius.card.md}
       shadow="resting"
+      padding="medium"
       display="block"
       overflowX="auto"
     >
-      <Table caption="Upcoming assignments" hover>
+      <Table caption="Upcoming assignments" hover layout={isMobile ? 'stacked' : 'auto'}>
         <Table.Head>
           <Table.Row>
             <Table.ColHeader id="name" stackedSortByLabel="Assignment">Assignment</Table.ColHeader>
@@ -285,7 +285,9 @@ function AnnouncementsTab({ sharedTokens }: { sharedTokens: ReturnType<typeof us
           display="block"
         >
           <Flex gap="medium" alignItems="start">
-            <Avatar name={a.instructor} size="small" />
+            <Flex.Item shouldShrink={false}>
+              <Avatar name={a.instructor} size="small" />
+            </Flex.Item>
             <Flex.Item shouldGrow shouldShrink>
               <Flex direction="column" gap="x-small">
                 <Flex justifyItems="space-between" alignItems="start" wrap="wrap" gap="xx-small">
@@ -307,7 +309,7 @@ function AnnouncementsTab({ sharedTokens }: { sharedTokens: ReturnType<typeof us
   )
 }
 
-export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypeProps) {
+export default function LearnerOverview({ isDark, onToggleTheme }: PrototypeProps) {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const { sharedTokens } = useComputedTheme()
@@ -316,19 +318,19 @@ export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypePro
   const breadcrumb = (
     <Breadcrumb label="Navigation">
       <Breadcrumb.Link href="#">Home</Breadcrumb.Link>
-      <Breadcrumb.Link>Dashboard</Breadcrumb.Link>
+      <Breadcrumb.Link>Overview</Breadcrumb.Link>
     </Breadcrumb>
   )
 
   const tabContent = [
     <CoursesTab key="courses" isMobile={isMobile} sharedTokens={sharedTokens} />,
-    <AssignmentsTab key="assignments" sharedTokens={sharedTokens} />,
+    <AssignmentsTab key="assignments" isMobile={isMobile} sharedTokens={sharedTokens} />,
     <GradesTab key="grades" sharedTokens={sharedTokens} />,
     <AnnouncementsTab key="announcements" sharedTokens={sharedTokens} />,
   ]
 
   const navItems = [
-    { icon: <LayoutDashboardInstUIIcon />, label: 'Dashboard', selected: true },
+    { icon: <LayoutDashboardInstUIIcon />, label: 'Dashboard' },
     { icon: <BookOpenInstUIIcon />, label: 'Courses' },
     { icon: <CalendarDaysInstUIIcon />, label: 'Calendar' },
     { icon: <InboxInstUIIcon />, label: 'Inbox' },
@@ -392,21 +394,21 @@ export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypePro
               </Flex>
             </View>
             <View as="nav" display="block" padding="x-small 0">
-              {navItems.map(({ icon, label, selected }) => (
+              {navItems.map(({ icon, label }) => (
                 <View
                   key={label}
                   as="button"
                   display="block"
                   width="100%"
-                  background={selected ? 'primary' : 'transparent'}
-                  themeOverride={selected ? { backgroundPrimary: sharedTokens.background.mutedColor } : undefined}
+                  background="transparent"
+                  themeOverride={undefined}
                   borderWidth="0"
                   cursor="pointer"
                   padding="none"
                 >
                   <Flex alignItems="center" gap="medium" padding="small medium">
                     {icon}
-                    <Text weight={selected ? 'bold' : 'normal'}>{label}</Text>
+                    <Text weight="normal">{label}</Text>
                   </Flex>
                 </View>
               ))}
@@ -434,7 +436,7 @@ export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypePro
           <Flex direction="column" gap="medium">
             <Flex direction="column" gap="x-small">
               {breadcrumb}
-              <Heading level="h1" variant="titlePageMobile" margin="0">Dashboard</Heading>
+              <Heading level="h1" variant="titlePageMobile" margin="0">Overview</Heading>
               <Text size="content">Welcome back. Here's what's happening in your courses.</Text>
             </Flex>
 
@@ -481,7 +483,7 @@ export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypePro
               themeOverride={{ contentPadding: '1em 0.375rem 1em 0.375rem' }}
             />
             <SideNavBar.Item icon={<Avatar name="Alex Rivera" size="x-small" />} label="Account" href="#" />
-            <SideNavBar.Item icon={<LayoutDashboardInstUIIcon />} label="Dashboard" href="#" selected />
+            <SideNavBar.Item icon={<LayoutDashboardInstUIIcon />} label="Dashboard" href="#" />
             <SideNavBar.Item icon={<BookOpenInstUIIcon />} label="Courses" href="#" />
             <SideNavBar.Item icon={<CalendarDaysInstUIIcon />} label="Calendar" href="#" />
             <SideNavBar.Item icon={<InboxInstUIIcon />} label="Inbox" href="#" />
@@ -502,7 +504,7 @@ export default function LearnerDashboard({ isDark, onToggleTheme }: PrototypePro
 
                 <Flex direction="column" gap="small">
                   {breadcrumb}
-                  <Heading level="h1" variant="titlePageDesktop" margin="0">Dashboard</Heading>
+                  <Heading level="h1" variant="titlePageDesktop" margin="0">Overview</Heading>
                   <Text size="descriptionPage">
                     Welcome back, Alex. Here's what's happening in your courses.
                   </Text>

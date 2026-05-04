@@ -119,3 +119,47 @@ Or for direct sub-types like `Panel`:
 ```
 types/Tabs/v2/Panel/props.d.ts
 ```
+
+---
+
+## Known behavioral gotchas
+
+These are cases where the prop type is correct but the visual behavior is surprising.
+Check this section when a prop appears valid but isn't producing the expected result.
+
+### `Button` — `display="block"` does not center text-only labels
+
+**Symptom:** `<Button display="block">Label</Button>` stretches full-width but the
+label stays left-aligned even with `textAlign="center"`.
+
+**Why:** The centering mechanism (`childrenLayout` span with `justifyContent: center`)
+is only rendered when `renderIcon` is present. For text-only buttons it is skipped,
+so `textAlign` has no visual effect.
+
+**Fix:** Don't use `display="block"` on text-only buttons. Control width from the
+outside with `Flex.Item shouldGrow={false}`:
+
+```tsx
+// ✅ natural width, stays at content size in a column Flex
+<Flex.Item shouldGrow={false}>
+  <Button size="small">Go to course</Button>
+</Flex.Item>
+
+// ❌ stretches full-width but label stays left-aligned
+<Button size="small" display="block" textAlign="center">Go to course</Button>
+```
+
+### `Table` — always use `layout="stacked"` on mobile
+
+Tables must switch to stacked layout on narrow viewports. The default `layout="auto"`
+renders a horizontal table at all sizes, which overflows or requires horizontal
+scrolling on mobile.
+
+**Rule:** Always wire `layout` to the mobile breakpoint:
+
+```tsx
+<Table caption="..." layout={isMobile ? 'stacked' : 'auto'}>
+```
+
+The `stackedSortByLabel` prop on `Table.ColHeader` controls the label shown in the
+stacked row header — always set it to a human-readable column name.

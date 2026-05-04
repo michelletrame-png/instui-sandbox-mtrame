@@ -503,7 +503,7 @@ function MobileSnapshot({ agentOpen = false, agentView = 'welcome' }: { agentOpe
 
 export default function AgentScreens({ isDark, onToggleTheme }: PrototypeProps) {
   return (
-    <InfiniteCanvas title="Agent Screens" isDark={isDark} onToggleTheme={onToggleTheme}>
+    <InfiniteCanvas title="Agent Screens" isDark={isDark} onToggleTheme={onToggleTheme} backTo="/">
       <SpecSheet
         title="Agent Screens"
         description="Customer journey: opening the IgniteAI agent, browsing chat history, and sending a message."

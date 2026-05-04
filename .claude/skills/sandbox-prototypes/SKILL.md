@@ -122,7 +122,17 @@ export default function <ComponentName>({ isDark, onToggleTheme }: PrototypeProp
 
 ### Step 3 — Register the prototype
 
-Add an entry to `src/registry.ts`:
+Add an entry to `src/registry.ts`. Use `category` to control which home page
+tab the item appears in, and `status` for its workflow state:
+
+| Field | Values | Required |
+|---|---|---|
+| `category` | `'Spec'` \| `'Prototype'` \| `'Template'` \| `'Reference'` | Always |
+| `status` | `'WIP'` \| `'In Review'` \| `'Complete'` \| `'Archived'` | Specs and Prototypes only |
+
+New prototypes built from a template default to their natural category:
+- Blank / Canvas Page → `category: 'Prototype'`, `status: 'WIP'`
+- Spec Sheet → `category: 'Spec'`, `status: 'WIP'`
 
 ```ts
 {
@@ -130,10 +140,14 @@ Add an entry to `src/registry.ts`:
   title: '<Title>',
   path: '/<id>',
   createdAt: '<today's date as YYYY-MM-DD>',
+  category: 'Prototype',
   status: 'WIP',
   component: lazy(() => import('./prototypes/<id>')),
 },
 ```
+
+Also add `backTo="/"` to the `InfiniteCanvas` component when using the Spec
+Sheet template, so the nav bar shows a back button to the home page.
 
 Insert the new entry at the top of the `prototypes` array so it appears first
 in the home page list.
@@ -145,5 +159,5 @@ in the home page list.
 1. Remove the entry from `src/registry.ts`
 2. Delete the directory `src/prototypes/<id>/`
 
-Confirm the id before deleting. If the prototype has a status of `Complete`,
+Confirm the id before deleting. If the prototype has a `status` of `Complete`,
 warn the user before proceeding.

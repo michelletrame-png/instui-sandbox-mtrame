@@ -437,6 +437,7 @@ Inherits `colSpacing`, `rowSpacing`, `hAlign`, `vAlign`, `startAt`, `visualDebug
 | Mixing raw CSS shorthand pixels with token names: `padding="16px small"` | Use consistent token shorthand: `padding="medium small"` |
 | Wrapping a shadowed `View` in `<Flex.Item>` in a column layout | Place it as a **direct child of `<Flex>`** — column-direction `Flex.Item` defaults to `overflow: auto` which can clip box shadows |
 | Using `<Flex.Item>` when no grow/shrink/align behavior is needed | Make the element a direct child of `<Flex>` — `gap` applies to all direct children, so spacing still works |
+| Bare child (button, avatar, badge) in a `direction="column"` Flex when it should stay at its natural size | Wrap in `<Flex.Item shouldGrow={false}>` — column Flex stretches all direct children cross-axis by default |
 
 ## Flex.Item overflow behavior
 
@@ -463,6 +464,7 @@ Before writing any `<Flex.Item>`, verify each point:
 1. **Does it need grow/shrink/align/order behavior?** If no, remove it and make the child a direct `<Flex>` child.
 2. **Does the child have `shadow` or `borderRadius`?** If yes, add `overflowX="visible" overflowY="visible"` to the `Flex.Item`.
 3. **Is the Flex direction `column`?** If yes, default overflow is `auto` which clips shadows — add `overflowY="visible"` unless scrolling is intentional.
+4. **Is this a fixed-size child in a `direction="column"` layout?** Column Flex stretches all direct children cross-axis by default. If the child should stay at its natural width (e.g., a button, an avatar, a badge), wrap it in `<Flex.Item shouldGrow={false}>`.
 
 Quick check table:
 
@@ -471,4 +473,5 @@ Quick check table:
 | Fill remaining space | `shouldGrow shouldShrink` |
 | Child has `shadow="resting"` or `borderRadius` | `overflowX="visible" overflowY="visible"` |
 | Fixed width sidebar | `width="Npx"` + `shouldShrink` |
+| Fixed-size child in a column layout (button, avatar, badge) | `shouldGrow={false}` |
 | No behavior needed | Don't use `Flex.Item` — direct child instead |

@@ -1,7 +1,8 @@
 import { lazy } from 'react'
 import type { ComponentType } from 'react'
 
-export type PrototypeStatus = 'WIP' | 'In Review' | 'Archived' | 'Complete' | 'Reference' | 'Template'
+export type PrototypeCategory = 'Spec' | 'Prototype' | 'Template' | 'Reference'
+export type PrototypeStatus = 'WIP' | 'In Review' | 'Complete' | 'Archived'
 
 export type PrototypeProps = {
   isDark: boolean
@@ -13,7 +14,8 @@ export type PrototypeMeta = {
   title: string
   path: string
   createdAt: string
-  status: PrototypeStatus
+  category: PrototypeCategory
+  status?: PrototypeStatus
   component: ComponentType<PrototypeProps>
 }
 
@@ -23,6 +25,7 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Agent Screens',
     path: '/agent-screens',
     createdAt: '2026-05-01',
+    category: 'Spec',
     status: 'WIP',
     component: lazy(() => import('./prototypes/agent-screens')),
   },
@@ -31,22 +34,24 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Agent Shell',
     path: '/agent-shell',
     createdAt: '2026-04-28',
+    category: 'Prototype',
     status: 'WIP',
     component: lazy(() => import('./prototypes/agent-shell')),
   },
   {
-    id: 'learner-dashboard',
-    title: 'Learner Dashboard',
-    path: '/learner-dashboard',
+    id: 'learner-overview',
+    title: 'Learner Overview',
+    path: '/learner-overview',
     createdAt: '2026-04-30',
-    status: 'WIP',
-    component: lazy(() => import('./prototypes/learner-dashboard')),
+    category: 'Reference',
+    component: lazy(() => import('./references/learner-overview')),
   },
   {
     id: 'hello-world',
     title: 'Hello World',
     path: '/hello-world',
     createdAt: '2026-04-28',
+    category: 'Prototype',
     status: 'WIP',
     component: lazy(() => import('./prototypes/hello-world')),
   },
@@ -55,7 +60,7 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Canvas Page',
     path: '/canvas-page',
     createdAt: '2026-04-27',
-    status: 'Template',
+    category: 'Template',
     component: lazy(() => import('./templates/CanvasPage').then(m => ({ default: m.CanvasPage }))),
   },
   {
@@ -63,7 +68,7 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Spec Sheet',
     path: '/spec-sheet',
     createdAt: '2026-05-01',
-    status: 'Template',
+    category: 'Template',
     component: lazy(() => import('./templates/SpecSheet')),
   },
   {
@@ -71,7 +76,7 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Blank',
     path: '/blank',
     createdAt: '2026-05-01',
-    status: 'Template',
+    category: 'Template',
     component: lazy(() => import('./templates/Blank')),
   },
   {
@@ -79,7 +84,7 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Kitchen Sink',
     path: '/kitchen-sink',
     createdAt: '2026-04-27',
-    status: 'Reference',
+    category: 'Reference',
     component: lazy(() => import('./references/kitchen-sink')),
   },
 ]
