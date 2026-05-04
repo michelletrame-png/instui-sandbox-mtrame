@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { IconButton } from '@instructure/ui-buttons/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { TextInput } from '@instructure/ui-text-input/latest'
@@ -81,6 +82,7 @@ export function InfiniteCanvas({
   const [zoomInput, setZoomInput] = useState(String(Math.round(initialScale * 100)))
   const spaceRef = useRef(false)
   const panRef = useRef<{ active: boolean; startX: number; startY: number }>({ active: false, startX: 0, startY: 0 })
+  const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const layerRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
@@ -269,12 +271,12 @@ export function InfiniteCanvas({
         <div style={NAV_TITLE_GROUP_STYLE}>
           {backTo && (
             <IconButton
-              href={backTo}
               renderIcon={<ArrowLeftInstUIIcon />}
               screenReaderLabel="Back"
               withBackground={false}
               withBorder={false}
               size="small"
+              onClick={() => navigate(backTo)}
             />
           )}
           {title && <Text size="small" weight="bold">{title}</Text>}
