@@ -151,7 +151,21 @@ export const agentConversationHistoryCode = `<View
           <Flex direction="column" gap="small">
             <Text>12/31/2025</Text>
             <Flex direction="column" gap="none">
-              {conversations.map((chat, i, arr) => (
+              {['Review geometry proofs for the Unit 4 quiz', 'Build a weekly study plan across classes', 'Get feedback on my English essay draft'].map((chat, i, arr) => (
+                <React.Fragment key={chat}>
+                  <Flex alignItems="center" justifyItems="space-between" padding="small none">
+                    <Flex.Item shouldGrow shouldShrink><Link href="#">{chat}</Link></Flex.Item>
+                    <IconButton screenReaderLabel="More options" color="secondary" withBackground={false} withBorder={false} size="small" renderIcon={<EllipsisVerticalInstUIIcon />} />
+                  </Flex>
+                  {i < arr.length - 1 && <View as="div" display="block" borderWidth="small 0 0 0" borderColor="primary" themeOverride={{ borderColorPrimary: sharedTokens.stroke.mutedColor }} />}
+                </React.Fragment>
+              ))}
+            </Flex>
+          </Flex>
+          <Flex direction="column" gap="small">
+            <Text>12/30/2025</Text>
+            <Flex direction="column" gap="none">
+              {['Create a catch up plan for overdue work', 'Practice biology terms with quick flashcards', "Prepare for tomorrow's chemistry lab checklist"].map((chat, i, arr) => (
                 <React.Fragment key={chat}>
                   <Flex alignItems="center" justifyItems="space-between" padding="small none">
                     <Flex.Item shouldGrow shouldShrink><Link href="#">{chat}</Link></Flex.Item>

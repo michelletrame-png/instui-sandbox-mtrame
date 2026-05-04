@@ -151,6 +151,22 @@ Use `src/prototypes/hello-world/index.tsx` as the minimal starting template.
 
 ## Agent process guidelines
 
+### Spec frame files: flat and in sync
+
+**One frame per file. One code export per file. The code string must match the rendered content exactly.**
+
+Frame files (under `src/designs/<name>/frames/` or `src/prototypes/<name>/frames/`) follow three invariants:
+
+1. **Flat JSX only** — no custom sub-components inside a frame function. Only InstUI components used as components. The sole exception is a component with `useState` (e.g. a toggling panel), which must live in its own file with `/* eslint-disable react-refresh/only-export-components */`.
+
+2. **One frame per file** — each file exports exactly one frame function and its companion `*Code` string. Bundling multiple frames in one file makes it easy for the code export and the render to drift apart.
+
+3. **Code export = rendered content** — the `code` string exported alongside a frame must be a faithful JSX representation of what the frame function renders. Same props, same structure, same copy, same animation wrappers. When you modify a frame, always update its `code` export in the same edit. The "InstUI Source" button in the spec viewer shows this string to engineers — silent drift between the preview and the source handoff is the failure mode to prevent.
+
+When auditing or reviewing frame files: read both the function body and its `*Code` export and confirm they match. Do not skip the sync check.
+
+---
+
 ### Atomic multi-location edits
 
 When adding a prop to a component, **always update the signature, its usage inside the component, and all call sites in a single edit.** The PostToolUse TypeScript hook runs after every edit — an intermediate state where a prop is declared but not passed at the call site will produce type errors that block the next edit.

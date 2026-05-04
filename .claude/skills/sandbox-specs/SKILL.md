@@ -74,6 +74,27 @@ Each board's live content goes in its own file under `src/designs/<id>/frames/`.
 **Frame files export plain functions, not React components.** They accept
 `FrameCtx` and return `React.ReactNode`. Hooks stay in `index.tsx` only.
 
+### Three invariants — enforce without exception
+
+1. **One frame per file.** Each file exports exactly one frame function and its
+   companion `*Code` string. Bundling multiple frames in one file makes it easy
+   for the code export and the render to drift apart unnoticed.
+
+2. **Flat JSX only.** No custom sub-components inside a frame function — only
+   InstUI components used directly. The sole exception is a frame that needs
+   `useState` (e.g. a toggling panel); in that case the component goes in its
+   own file with `/* eslint-disable react-refresh/only-export-components */`.
+
+3. **Code export must match the rendered content exactly.** The `*Code` string
+   is what engineers see when they click "InstUI Source" in the spec viewer.
+   It must be a faithful JSX representation of what the frame function renders —
+   same props, same structure, same copy, same animation wrappers. **When you
+   modify a frame, update its `*Code` export in the same edit.** Silent drift
+   between the preview and the source handoff is the primary failure mode.
+
+When reviewing or auditing frame files: read both the function body and its
+`*Code` export and confirm they match before declaring the work done.
+
 ```tsx
 // frames/desktop-agent-closed.tsx
 import React from 'react'

@@ -71,18 +71,14 @@ export default function App() {
         />
         {prototypes.map(p => {
           const viewMode = resolveViewMode(p)
-          const inner = (
-            <Suspense fallback={
-              <Flex justifyItems="center" alignItems="center" height="100vh">
-                <Spinner renderTitle="Loading" size="large" />
-              </Flex>
-            }>
-              <p.component isDark={isDark} onToggleTheme={onToggleTheme} />
-            </Suspense>
+          const loader = (
+            <Flex justifyItems="center" alignItems="center" height="100vh">
+              <Spinner renderTitle="Loading" size="large" />
+            </Flex>
           )
           const element = viewMode === 'spec'
-            ? <InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}>{inner}</InfiniteCanvas>
-            : inner
+            ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
+            : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
           return <Route key={p.id} path={p.path} element={element} />
         })}
       </Routes>

@@ -20,6 +20,14 @@ export type FrameCtx = {
   sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens']
 }
 
+// RULE: frame files must stay flat and in sync.
+//
+// Each board's `content` comes from a plain frame function (no hooks, no sub-components).
+// Each board's `code` export is a JSX string that must exactly match what `content` renders —
+// same props, same structure, same copy. If you change the frame, update its code export too.
+// Reviewers will compare them side by side; silent drift is the failure mode to prevent.
+//
+// One frame per file. One code export per file. Both live together so they stay in sync.
 export type SpecBoard = {
   width: number
   height?: number
