@@ -82,12 +82,29 @@ export function InfiniteCanvas({
   const spaceRef = useRef(false)
   const panRef = useRef<{ active: boolean; startX: number; startY: number }>({ active: false, startX: 0, startY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const layerRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number | null>(null)
+
+  // Apply transform directly to DOM — no React re-render on every frame
+  const applyTransform = useCallback((t: Transform) => {
+    transformRef.current = t
+    if (layerRef.current) {
+      layerRef.current.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
+    }
+    // Throttle React state update (for zoom input display) to one rAF
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null
+        setZoomInput(String(Math.round(transformRef.current.scale * 100)))
+      })
+    }
+  }, [])
 
   const sync = useCallback((t: Transform) => {
-    transformRef.current = t
+    applyTransform(t)
     setTransform(t)
     setZoomInput(String(Math.round(t.scale * 100)))
-  }, [])
+  }, [applyTransform])
 
   const zoomBy = useCallback((factor: number) => {
     const el = containerRef.current
@@ -160,12 +177,14 @@ export function InfiniteCanvas({
       panRef.current.startX = e.clientX
       panRef.current.startY = e.clientY
       const t = transformRef.current
-      sync({ ...t, x: t.x + dx, y: t.y + dy })
+      applyTransform({ ...t, x: t.x + dx, y: t.y + dy })
     }
     function onMouseUp() {
       if (panRef.current.active) {
         panRef.current.active = false
         el!.style.cursor = spaceRef.current || toolRef.current === 'hand' ? 'grab' : ''
+        // Commit final position to React state (needed for zoom buttons etc.)
+        setTransform({ ...transformRef.current })
       }
     }
     function onWheel(e: WheelEvent) {
@@ -178,15 +197,15 @@ export function InfiniteCanvas({
         const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor))
         const k = newScale / t.scale
-        sync({
+        applyTransform({
           x: cx + (t.x - cx) * k,
           y: cy + (t.y - cy) * k,
           scale: newScale,
         })
       } else if (e.shiftKey) {
-        sync({ ...t, x: t.x - (e.deltaX !== 0 ? e.deltaX : e.deltaY) })
+        applyTransform({ ...t, x: t.x - (e.deltaX !== 0 ? e.deltaX : e.deltaY) })
       } else {
-        sync({ ...t, x: t.x - e.deltaX, y: t.y - e.deltaY })
+        applyTransform({ ...t, x: t.x - e.deltaX, y: t.y - e.deltaY })
       }
     }
 
@@ -200,7 +219,7 @@ export function InfiniteCanvas({
       window.removeEventListener('mouseup', onMouseUp)
       el.removeEventListener('wheel', onWheel)
     }
-  }, [sync])
+  }, [sync, applyTransform])
 
   const bgStyle: React.CSSProperties = {
     position: 'relative',
@@ -341,7 +360,7 @@ export function InfiniteCanvas({
         </div>
       </nav>
       <InfiniteCanvasContext.Provider value={{ tool }}>
-        <div style={layerStyle}>{children}</div>
+        <div ref={layerRef} style={layerStyle}>{children}</div>
       </InfiniteCanvasContext.Provider>
     </div>
   )
