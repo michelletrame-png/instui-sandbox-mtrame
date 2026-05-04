@@ -67,8 +67,8 @@ function AgentReasonedToggle({ sharedTokens }: FrameCtx): React.ReactNode {
                       </Flex>
                     </button>
                     {expanded && (
-                      <View as="div" display="block" padding="0 0 0 medium">
-                        <View as="div" display="block" borderWidth="0 0 0 small" borderColor="primary" themeOverride={{ borderColorPrimary: sharedTokens.stroke.baseColor }} padding="0 0 0 medium">
+                      <View as="div" display="block" padding="0 0 0 x-small">
+                        <View as="div" display="block" borderWidth="0 0 0 small" borderColor="primary" themeOverride={{ borderColorPrimary: sharedTokens.stroke.baseColor }} padding="0 0 0 mediumSmall">
                           <Flex direction="column" gap="small">
                             <Text size="small">I am prioritizing topics like cell structure, the cell cycle, and membrane transport because they are the most heavily weighted concepts in your Biology 101, Unit 1 syllabus.</Text>
                             <Flex direction="column" gap="xxx-small">
@@ -132,9 +132,9 @@ export const agentReasonedExpandedCode = `// expanded is a boolean state value â
       </Flex>
     </button>
     {expanded && (
-      <View as="div" display="block" padding="0 0 0 medium">
+      <View as="div" display="block" padding="0 0 0 x-small">
         <View as="div" display="block" borderWidth="0 0 0 small" borderColor="primary"
-          themeOverride={{ borderColorPrimary: sharedTokens.stroke.baseColor }} padding="0 0 0 medium">
+          themeOverride={{ borderColorPrimary: sharedTokens.stroke.baseColor }} padding="0 0 0 mediumSmall">
           <Flex direction="column" gap="small">
             <Text size="small">I am prioritizing topics like cell structure, the cell cycle, and membrane transport because they are the most heavily weighted concepts in your Biology 101, Unit 1 syllabus.</Text>
             <Flex direction="column" gap="xxx-small">
