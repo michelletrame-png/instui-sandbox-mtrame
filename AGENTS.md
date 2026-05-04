@@ -81,7 +81,12 @@ Templates and References omit `status`. Source files for each category live in t
 | `Template` | `src/templates/` |
 | `Reference` | `src/references/<id>/` |
 
-The app handles routing, theme switching, and lazy loading automatically. A prototype only needs to render its own UI — it receives `isDark` and `onToggleTheme` as props and is responsible for its own full-page layout.
+An optional **`viewMode`** field controls how the framework presents the component at runtime:
+
+- `'spec'` — the framework wraps the component in `InfiniteCanvas` (pan/zoom canvas with nav bar, back button to `/`, and theme toggle). The component only needs to return `SpecSheet` content — no InfiniteCanvas import required. `Spec` entries default to this if `viewMode` is omitted.
+- `'prototype'` — the component renders as-is, responsible for its own full-page layout. All other categories default to this.
+
+The app handles routing, theme switching, and lazy loading automatically. A prototype only needs to render its own UI — it receives `isDark` and `onToggleTheme` as props.
 
 ---
 

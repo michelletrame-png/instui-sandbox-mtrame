@@ -3,6 +3,7 @@ import type { ComponentType } from 'react'
 
 export type PrototypeCategory = 'Spec' | 'Prototype' | 'Template' | 'Reference'
 export type PrototypeStatus = 'WIP' | 'In Review' | 'Complete' | 'Archived'
+export type ViewMode = 'spec' | 'prototype'
 
 export type PrototypeProps = {
   isDark: boolean
@@ -16,6 +17,7 @@ export type PrototypeMeta = {
   createdAt: string
   category: PrototypeCategory
   status?: PrototypeStatus
+  viewMode?: ViewMode
   component: ComponentType<PrototypeProps>
 }
 

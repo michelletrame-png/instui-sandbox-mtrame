@@ -85,35 +85,33 @@ path (`../../registry`) and make it a default export.
 
 **If the user chose Spec Sheet:**
 
-Import `SpecSheet`, `SpecSection`, and `SpecBoard` from
-`../../templates/SpecSheet`. The default export wraps `SpecSheet` with sections
-and boards suited to the prototype's purpose. Ask the user what screens/flows
-they want to spec out if they haven't already described them. Each board's
-`content` prop is optional — leave it undefined (shows a dark placeholder) until
-the user is ready to wire in live components.
+Import `SpecSheet` from `../../templates/SpecSheet`. The default export returns
+`SpecSheet` directly — **do not import or wrap InfiniteCanvas**. The framework
+provides the InfiniteCanvas chrome automatically for all `category: 'Spec'`
+entries (pan/zoom canvas, nav bar with back button and theme toggle). Ask the
+user what screens/flows they want to spec out if they haven't already described
+them. Each board's `content` prop is optional — leave it undefined (shows a dark
+placeholder) until the user is ready to wire in live components.
 
 ```tsx
-import { InfiniteCanvas } from '../../templates/InfiniteCanvas'
 import { SpecSheet } from '../../templates/SpecSheet'
 import type { PrototypeProps } from '../../registry'
 
-export default function <ComponentName>({ isDark, onToggleTheme }: PrototypeProps) {
+export default function <ComponentName>(_: PrototypeProps) {
   return (
-    <InfiniteCanvas title="<Prototype title>" isDark={isDark} onToggleTheme={onToggleTheme}>
-      <SpecSheet
-        title="<Prototype title>"
-        description="<What this spec covers>"
-        sections={[
-          {
-            title: 'Desktop',
-            description: 'Desktop browser at 1280px',
-            boards: [
-              { width: 1280, height: 800, caption: 'Default state' },
-            ],
-          },
-        ]}
-      />
-    </InfiniteCanvas>
+    <SpecSheet
+      title="<Prototype title>"
+      description="<What this spec covers>"
+      sections={[
+        {
+          title: 'Desktop',
+          description: 'Desktop browser at 1280px',
+          boards: [
+            { width: 1280, height: 800, caption: 'Default state' },
+          ],
+        },
+      ]}
+    />
   )
 }
 ```
@@ -134,6 +132,8 @@ New prototypes built from a template default to their natural category:
 - Blank / Canvas Page → `category: 'Prototype'`, `status: 'WIP'`
 - Spec Sheet → `category: 'Spec'`, `status: 'WIP'`
 
+The `viewMode` field is optional. `Spec` entries automatically get the InfiniteCanvas view mode — do not set `viewMode` explicitly unless overriding the default.
+
 ```ts
 {
   id: '<id>',
@@ -145,9 +145,6 @@ New prototypes built from a template default to their natural category:
   component: lazy(() => import('./prototypes/<id>')),
 },
 ```
-
-Also add `backTo="/"` to the `InfiniteCanvas` component when using the Spec
-Sheet template, so the nav bar shows a back button to the home page.
 
 Insert the new entry at the top of the `prototypes` array so it appears first
 in the home page list.

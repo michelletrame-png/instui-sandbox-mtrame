@@ -7,7 +7,15 @@ import { Spinner } from '@instructure/ui-spinner/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Home } from './Home'
 import { Showcase } from './references/Showcase'
+import { InfiniteCanvas } from './templates/InfiniteCanvas'
 import { prototypes } from './registry'
+import type { PrototypeMeta, ViewMode } from './registry'
+
+function resolveViewMode(p: PrototypeMeta): ViewMode {
+  if (p.viewMode !== undefined) return p.viewMode
+  if (p.category === 'Spec') return 'spec'
+  return 'prototype'
+}
 
 function ScrollbarStyle() {
   const { sharedTokens } = useComputedTheme()
@@ -61,21 +69,22 @@ export default function App() {
             />
           }
         />
-        {prototypes.map(p => (
-          <Route
-            key={p.id}
-            path={p.path}
-            element={
-              <Suspense fallback={
-                <Flex justifyItems="center" alignItems="center" height="100vh">
-                  <Spinner renderTitle="Loading" size="large" />
-                </Flex>
-              }>
-                <p.component isDark={isDark} onToggleTheme={onToggleTheme} />
-              </Suspense>
-            }
-          />
-        ))}
+        {prototypes.map(p => {
+          const viewMode = resolveViewMode(p)
+          const inner = (
+            <Suspense fallback={
+              <Flex justifyItems="center" alignItems="center" height="100vh">
+                <Spinner renderTitle="Loading" size="large" />
+              </Flex>
+            }>
+              <p.component isDark={isDark} onToggleTheme={onToggleTheme} />
+            </Suspense>
+          )
+          const element = viewMode === 'spec'
+            ? <InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}>{inner}</InfiniteCanvas>
+            : inner
+          return <Route key={p.id} path={p.path} element={element} />
+        })}
       </Routes>
     </InstUISettingsProvider>
   )

@@ -1,22 +1,28 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { IconButton } from '@instructure/ui-buttons/latest'
+import { Text } from '@instructure/ui-text/latest'
+import {
+  SunInstUIIcon,
+  MoonInstUIIcon,
+  ZoomInInstUIIcon,
+  ZoomOutInstUIIcon,
+  ArrowLeftInstUIIcon,
+  HandInstUIIcon,
+  MousePointer2InstUIIcon,
+} from '@instructure/ui-icons'
 
 const MIN_SCALE = 0.05
 const MAX_SCALE = 5
 const NAV_HEIGHT = 44
 
 type Transform = { x: number; y: number; scale: number }
+type Tool = 'hand' | 'select'
 
 const DARK = {
   canvasBg: '#1a1d21',
   dotColor: '#2d3035',
   navBg: 'rgba(13, 15, 18, 0.9)',
   navBorder: 'rgba(255,255,255,0.07)',
-  navText: '#d8dde3',
-  btnBorder: 'rgba(255,255,255,0.12)',
-  btnBg: 'rgba(255,255,255,0.06)',
-  btnColor: '#b0b8c2',
-  hudBg: 'rgba(0,0,0,0.45)',
-  hudColor: '#8a9199',
 }
 
 const LIGHT = {
@@ -24,12 +30,6 @@ const LIGHT = {
   dotColor: '#c0c5cc',
   navBg: 'rgba(246, 247, 249, 0.92)',
   navBorder: 'rgba(0,0,0,0.09)',
-  navText: '#2c3540',
-  btnBorder: 'rgba(0,0,0,0.14)',
-  btnBg: 'rgba(0,0,0,0.05)',
-  btnColor: '#4a5568',
-  hudBg: 'rgba(0,0,0,0.18)',
-  hudColor: '#4a5568',
 }
 
 const LAYER_STYLE: React.CSSProperties = {
@@ -43,37 +43,19 @@ const LAYER_STYLE: React.CSSProperties = {
 const NAV_ACTIONS_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 4,
 }
 
 const NAV_TITLE_GROUP_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
+  gap: 4,
 }
 
-function SunIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="4" />
-      <line x1="12" y1="2" x2="12" y2="4" />
-      <line x1="12" y1="20" x2="12" y2="22" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="2" y1="12" x2="4" y2="12" />
-      <line x1="20" y1="12" x2="22" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  )
-}
-
-function MoonIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
+const ZOOM_LABEL_STYLE: React.CSSProperties = {
+  minWidth: 38,
+  textAlign: 'center',
+  userSelect: 'none',
 }
 
 export function InfiniteCanvas({
@@ -95,6 +77,8 @@ export function InfiniteCanvas({
   const initialY = NAV_HEIGHT + 20
   const [transform, setTransform] = useState<Transform>({ x: 40, y: initialY, scale: initialScale })
   const transformRef = useRef<Transform>({ x: 40, y: initialY, scale: initialScale })
+  const [tool, setTool] = useState<Tool>('hand')
+  const toolRef = useRef<Tool>('hand')
   const spaceRef = useRef(false)
   const panRef = useRef<{ active: boolean; startX: number; startY: number }>({ active: false, startX: 0, startY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
@@ -103,6 +87,31 @@ export function InfiniteCanvas({
     transformRef.current = t
     setTransform(t)
   }, [])
+
+  const zoomBy = useCallback((factor: number) => {
+    const el = containerRef.current
+    const t = transformRef.current
+    const cx = el ? el.getBoundingClientRect().width / 2 : 0
+    const cy = el ? el.getBoundingClientRect().height / 2 : 0
+    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor))
+    const k = newScale / t.scale
+    sync({ x: cx + (t.x - cx) * k, y: cy + (t.y - cy) * k, scale: newScale })
+  }, [sync])
+
+  const selectTool = useCallback((t: Tool) => {
+    toolRef.current = t
+    setTool(t)
+    if (containerRef.current) {
+      containerRef.current.style.cursor = t === 'hand' ? 'grab' : ''
+    }
+  }, [])
+
+  // Sync cursor when tool changes (e.g. on initial mount)
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.cursor = tool === 'hand' ? 'grab' : ''
+    }
+  }, [tool])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -118,7 +127,9 @@ export function InfiniteCanvas({
       if (e.code === 'Space') {
         spaceRef.current = false
         panRef.current.active = false
-        if (containerRef.current) containerRef.current.style.cursor = ''
+        if (containerRef.current) {
+          containerRef.current.style.cursor = toolRef.current === 'hand' ? 'grab' : ''
+        }
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -136,7 +147,7 @@ export function InfiniteCanvas({
     function onMouseDown(e: MouseEvent) {
       const active = document.activeElement as HTMLElement | null
       if (active && active !== document.body) active.blur()
-      if (!spaceRef.current) return
+      if (!spaceRef.current && toolRef.current !== 'hand') return
       e.preventDefault()
       panRef.current = { active: true, startX: e.clientX, startY: e.clientY }
       el!.style.cursor = 'grabbing'
@@ -153,7 +164,7 @@ export function InfiniteCanvas({
     function onMouseUp() {
       if (panRef.current.active) {
         panRef.current.active = false
-        el!.style.cursor = spaceRef.current ? 'grab' : ''
+        el!.style.cursor = spaceRef.current || toolRef.current === 'hand' ? 'grab' : ''
       }
     }
     function onWheel(e: WheelEvent) {
@@ -211,7 +222,7 @@ export function InfiniteCanvas({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 16px',
+    padding: '0 8px',
     backgroundColor: palette.navBg,
     backdropFilter: 'blur(10px)',
     borderBottom: `1px solid ${palette.navBorder}`,
@@ -219,44 +230,12 @@ export function InfiniteCanvas({
     transition: 'background-color 0.2s, border-color 0.2s',
   }
 
-  const navTitleStyle: React.CSSProperties = {
-    color: palette.navText,
-    fontSize: 14,
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    fontWeight: 500,
-    letterSpacing: 0.1,
-    userSelect: 'none',
-    transition: 'color 0.2s',
-  }
-
-  const toggleBtnStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    border: `1px solid ${palette.btnBorder}`,
-    backgroundColor: palette.btnBg,
-    color: palette.btnColor,
-    cursor: 'pointer',
-    padding: 0,
-    transition: 'background-color 0.2s, border-color 0.2s, color 0.2s',
-  }
-
-  const hudStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: palette.hudBg,
-    color: palette.hudColor,
-    fontSize: 12,
-    fontFamily: 'monospace',
-    padding: '4px 8px',
-    borderRadius: 4,
-    pointerEvents: 'none',
-    userSelect: 'none',
-    transition: 'background-color 0.2s, color 0.2s',
+  const sepStyle: React.CSSProperties = {
+    width: 1,
+    height: 18,
+    backgroundColor: palette.navBorder,
+    flexShrink: 0,
+    margin: '0 4px',
   }
 
   const layerStyle: React.CSSProperties = {
@@ -269,21 +248,73 @@ export function InfiniteCanvas({
       <nav style={navStyle}>
         <div style={NAV_TITLE_GROUP_STYLE}>
           {backTo && (
-            <a href={backTo} style={{ ...toggleBtnStyle, textDecoration: 'none', fontSize: 16, lineHeight: 1 }} title="Back">←</a>
+            <IconButton
+              href={backTo}
+              renderIcon={<ArrowLeftInstUIIcon />}
+              screenReaderLabel="Back"
+              withBackground={false}
+              withBorder={false}
+              size="small"
+            />
           )}
-          <span style={navTitleStyle}>{title ?? ''}</span>
+          {title && <Text size="small" weight="bold">{title}</Text>}
         </div>
 
         <div style={NAV_ACTIONS_STYLE}>
+          <IconButton
+            renderIcon={<HandInstUIIcon />}
+            screenReaderLabel="Pan tool"
+            onClick={() => selectTool('hand')}
+            withBackground={false}
+            withBorder={tool === 'hand'}
+            size="small"
+          />
+          <IconButton
+            renderIcon={<MousePointer2InstUIIcon />}
+            screenReaderLabel="Select tool"
+            onClick={() => selectTool('select')}
+            withBackground={false}
+            withBorder={tool === 'select'}
+            size="small"
+          />
+
+          <div style={sepStyle} />
+
+          <IconButton
+            renderIcon={<ZoomOutInstUIIcon />}
+            screenReaderLabel="Zoom out"
+            onClick={() => zoomBy(1 / 1.25)}
+            withBackground={false}
+            withBorder={false}
+            size="small"
+          />
+          <span style={ZOOM_LABEL_STYLE}>
+            <Text size="x-small" color="secondary">{Math.round(transform.scale * 100)}%</Text>
+          </span>
+          <IconButton
+            renderIcon={<ZoomInInstUIIcon />}
+            screenReaderLabel="Zoom in"
+            onClick={() => zoomBy(1.25)}
+            withBackground={false}
+            withBorder={false}
+            size="small"
+          />
+
+          <div style={sepStyle} />
+
           {onToggleTheme && (
-            <button style={toggleBtnStyle} onClick={onToggleTheme} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
-              {isDark ? <SunIcon /> : <MoonIcon />}
-            </button>
+            <IconButton
+              renderIcon={isDark ? <SunInstUIIcon /> : <MoonInstUIIcon />}
+              screenReaderLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              onClick={onToggleTheme}
+              withBackground={false}
+              withBorder={false}
+              size="small"
+            />
           )}
         </div>
       </nav>
       <div style={layerStyle}>{children}</div>
-      <div style={hudStyle}>{Math.round(transform.scale * 100)}%</div>
     </div>
   )
 }
