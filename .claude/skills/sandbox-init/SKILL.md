@@ -71,13 +71,41 @@ reinstalling Node from nodejs.org, which bundles npm.
 
 ---
 
-## Step 4 — Check dependencies are installed
+## Step 4 — Configure BASE_URL for this repo
+
+Run:
+
+```bash
+git remote get-url origin 2>/dev/null || echo ""
+```
+
+Extract the repo name from the URL — the last path segment, with `.git` stripped (e.g. `https://github.com/org/my-sandbox.git` → `my-sandbox`). If there is no remote or the URL is empty, use the directory name from `basename $(pwd)`.
+
+Check whether `.env.local` already contains a correct `BASE_URL` line:
+
+```bash
+grep "^BASE_URL=" .env.local 2>/dev/null
+```
+
+If the file is missing or the `BASE_URL` is not set to `/<repo-name>/`, create or update `.env.local` with:
+
+```
+BASE_URL=/<repo-name>/
+```
+
+Do not modify any other lines in the file if it already exists.
+
+**If the repo name is `instui-sandbox-base`** (the upstream), skip this step — the `vite.config.ts` fallback already covers it and no `.env.local` is needed.
+
+---
+
+## Step 5 — Check dependencies are installed
 
 ```bash
 ls node_modules 2>/dev/null | wc -l
 ```
 
-**Output is greater than 0** → skip to Step 5.
+**Output is greater than 0** → skip to Step 6.
 
 **Output is 0 or the directory doesn't exist** → dependencies need to be installed.
 Tell the user: *"Installing project dependencies — this takes a minute or two the
@@ -102,7 +130,7 @@ npm install
 
 ---
 
-## Step 5 — Start the dev server
+## Step 6 — Start the dev server
 
 Run in the background:
 
@@ -132,7 +160,7 @@ output. Common causes:
 
 ---
 
-## Step 6 — Hand off to the user
+## Step 7 — Hand off to the user
 
 Once the server is confirmed running, tell the user:
 
