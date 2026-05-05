@@ -2,7 +2,7 @@
 
 A sandbox for rapidly prototyping Canvas LMS UI concepts using [Instructure UI (InstUI) v11](https://instructure.design/). Designed to be used with an AI coding agent (Claude Code) that is guided by built-in conventions to produce idiomatic InstUI code.
 
-**Live:** [instructure.github.io/instui-proto-sandbox-poc](https://instructure.github.io/instui-proto-sandbox-poc/)
+**Live:** [instructure.github.io/instui-sandbox-base](https://instructure.github.io/instui-sandbox-base/)
 
 ## How it works
 
