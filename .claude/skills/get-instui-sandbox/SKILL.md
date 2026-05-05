@@ -135,7 +135,21 @@ Tell the user:
 
 ---
 
-## Step 7 — Configure the sandbox
+## Step 7 — Set the base path
+
+Create `.env.local` inside the cloned folder with the repo name as the base path:
+
+```bash
+echo "BASE_URL=/<name>/" > <name>/.env.local
+```
+
+This tells Vite to serve the sandbox under `/<name>/` — required for GitHub Pages
+and for the dev server to generate correct asset URLs. Without it, the app falls
+back to `/instui-sandbox-base/` and loads a blank page.
+
+---
+
+## Step 8 — Configure the sandbox
 
 Open `src/sandbox.config.ts` in the cloned folder and replace `[name]` with the
 name the user chose in Step 5:
@@ -151,7 +165,7 @@ This name appears on the home page under the InstUI logo as "Designs by **[name]
 
 ---
 
-## Step 8 — Open in Claude Code
+## Step 9 — Open in Claude Code
 
 The sandbox needs to be opened as its own project.
 
@@ -171,7 +185,7 @@ folder before the next step.
 
 ---
 
-## Step 9 — Run `/sandbox-init`
+## Step 10 — Run `/sandbox-init`
 
 Once inside the new Claude Code session:
 
