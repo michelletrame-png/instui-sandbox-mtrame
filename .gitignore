@@ -15,6 +15,9 @@ dist-ssr
 # Session eval reports
 .claude/evals/
 
+# Per-fork deploy configuration (created by /deploy skill, not shared upstream)
+.claude/deploy.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

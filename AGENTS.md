@@ -33,6 +33,7 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 | `send-to-figma` | Translate an InstUI React prototype into a Figma design — maps `sharedTokens.*` to Figma variables, InstUI text scales to Figma text styles, and InstUI components to components from the **InstUI Component Library - Beta** |
 | `sandbox-init` | How to check the environment and start the dev server |
 | `sandbox-prototypes` | Create and delete prototypes; picks the right template |
+| `deploy` | Fork setup, GitHub Pages configuration, upstream sync, and static prototype exports with fixed shareable URLs |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.
 
