@@ -167,12 +167,10 @@ This name appears on the home page under the InstUI logo as "Designs by **[name]
 
 ## Step 9 — Open in Claude Code
 
-The sandbox needs to be opened as its own project.
+The sandbox needs to be opened as its own project in a new session.
 
 **Desktop app:**
-1. Go to **File → Open**
-2. Navigate to the `<name>` folder
-3. Click **Open**
+In the bottom-left of any session, click **+ New Session**. When prompted to choose a directory, select the `<name>` folder.
 
 **Terminal:**
 ```bash
