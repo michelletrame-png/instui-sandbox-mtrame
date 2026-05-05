@@ -1,10 +1,11 @@
 ---
 name: sandbox-init
 description: >
-  Checks that this InstUI sandbox project is set up correctly and ready to run.
-  Diagnoses Node.js installation, dependency installation, and dev server health.
-  Invoke when a user wants to get started for the first time, reports an error
-  running the project, or asks "how do I run this?".
+  Sets up and onboards a user to the InstUI sandbox. Checks Node.js, installs
+  dependencies, starts the dev server, and orients the user to the sandbox
+  structure and available skills. Invoke when a user wants to get started for
+  the first time, reports an error running the project, asks "how do I run
+  this?", or has just cloned the repo and needs to get going.
 ---
 
 # InstUI Sandbox — Setup & Health Check
@@ -119,10 +120,6 @@ Tell the user:
 >
 > Open your browser and go to: **http://localhost:5173**
 > (or the URL that appeared in the terminal above)
->
-> You should see a theme switcher in the top-right corner and the learning
-> dashboard below it. If the page is blank or shows an error, let me know
-> and I'll help you fix it.
 
 **If the server crashes immediately**, run `npm run build` to get clean error
 output. Common causes:
@@ -135,22 +132,10 @@ output. Common causes:
 
 ---
 
-## Step 6 — Confirm and orient the user
+## Step 6 — Hand off to the user
 
 Once the server is confirmed running, tell the user:
 
-> A few things to know while you're working:
+> You're all set. Type **/sandbox-design** to start building.
 >
-> - **Keep this terminal open** — closing it stops the server
-> - **To stop the server**: press `Ctrl + C` in the terminal
-> - **To restart it**: run `npm run dev` again
-> - **Changes are live**: when you save a file the browser updates automatically —
->   no need to refresh
-
----
-
-## Quick re-check (for returning users)
-
-If the user has run this project before and just needs to restart, jump straight
-to Step 4 (check node_modules) and Step 5 (start dev server). Skip the Node
-installation steps unless they report an error.
+> If the dev server ever isn't running, just ask and I'll take care of it.

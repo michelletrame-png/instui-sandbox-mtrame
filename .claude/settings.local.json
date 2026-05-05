@@ -36,28 +36,15 @@
       "mcp__plugin_figma_figma__get_metadata",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
-    ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.(ts|tsx|js|jsx)$'; then ESLINT_OUT=$(cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx eslint \"$FILE\" --max-warnings 0 2>&1); STATUS=$?; if [ $STATUS -ne 0 ]; then echo \"$ESLINT_OUT\" >&2; exit 2; fi; fi"
-          },
-          {
-            "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.tsx?$' && echo \"$FILE\" | grep -q '/Users/tom.murphy/VibeCoding/instui-sandbox/src'; then TSC_OUT=$(cd /Users/tom.murphy/VibeCoding/instui-sandbox && npx tsc -p tsconfig.app.json --noEmit 2>&1); STATUS=$?; if [ $STATUS -ne 0 ]; then echo \"TypeScript errors:\\n$TSC_OUT\" >&2; exit 2; fi; fi"
-          },
-          {
-            "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.tsx$'; then if grep -qE '>\\s*[A-Z][a-z].{10,}' \"$FILE\" 2>/dev/null; then echo \"UX copy detected in $FILE. Invoke the uxcopy-check skill on any new human-visible strings before proceeding.\"; fi; fi"
-          }
-        ]
-      }
+      "Bash(git push *)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//Users/tom.murphy/.pyenv/**)",
+      "Bash(command -v pyenv)",
+      "Bash(pyenv versions *)",
+      "Read(//usr/bin/**)",
+      "Bash(conda run *)",
+      "Bash(brew list *)",
+      "Bash(brew install *)"
     ]
   }
 }

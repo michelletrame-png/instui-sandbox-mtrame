@@ -21,19 +21,22 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 
 | Skill | Description |
 |---|---|
-| `instui-tokens` | Token hierarchy, `useComputedTheme()`, `sharedTokens` reference, `themeOverride` patterns |
-| `instui-layout` | `View`, `Flex`, `Grid` — spacing tokens, layout patterns, anti-patterns |
-| `instui-icons` | `*InstUIIcon` system — props, color tokens, size tokens, color inheritance rules |
-| `instui-animation` | `Transition` component, animation types, `DrawerLayout` push panels, theme timing tokens |
-| `get-tokens` | Dynamically look up available keys and values for any token layer (sharedTokens, semantics, components, primitives) |
-| `get-component` | Look up available props, sizes, colors, and configurations for any InstUI component |
-| `get-icons` | Search for the right icon by keyword — finds matching `*InstUIIcon` names from Lucide and custom sets |
+| `instui-reference-tokens` | Token hierarchy, `useComputedTheme()`, `sharedTokens` reference, `themeOverride` patterns |
+| `instui-reference-layout` | `View`, `Flex`, `Grid` — spacing tokens, layout patterns, anti-patterns |
+| `instui-reference-icons` | `*InstUIIcon` system — props, color tokens, size tokens, color inheritance rules |
+| `instui-reference-animation` | `Transition` component, animation types, `DrawerLayout` push panels, theme timing tokens |
+| `instui-get-tokens` | Dynamically look up available keys and values for any token layer (sharedTokens, semantics, components, primitives) |
+| `instui-get-component` | Look up available props, sizes, colors, and configurations for any InstUI component |
+| `instui-get-icons` | Search for the right icon by keyword — finds matching `*InstUIIcon` names from Lucide and custom sets |
 | `send-to-paper` | Translate an InstUI React prototype into a Paper MCP design — token resolution, font mapping, component CSS, icon SVG extraction, Paper layout rules |
 | `send-to-pencil` | Translate an InstUI React prototype into a Pencil MCP design (.pen file) — token → hex resolution, Lucide icon mapping, gradient direction, cross-batch ID management, component → .pen schema |
 | `send-to-figma` | Translate an InstUI React prototype into a Figma design — maps `sharedTokens.*` to Figma variables, InstUI text scales to Figma text styles, and InstUI components to components from the **InstUI Component Library - Beta** |
-| `sandbox-init` | How to check the environment and start the dev server |
-| `sandbox-prototypes` | Create and delete prototypes; picks the right template |
-| `deploy` | Fork setup, GitHub Pages configuration, upstream sync, and static prototype exports with fixed shareable URLs |
+| `sandbox-init` | Set up the environment, start the dev server, and orient new users to the sandbox structure and skills |
+| `sandbox-design` | Intake skill for new work — asks what to build and routes to the right skill |
+| `sandbox-design-prototype` | Create and delete prototypes; picks the right template |
+| `sandbox-design-spec` | Create spec sheets with annotated frames for design handoff |
+| `sandbox-sync` | Commit local changes and pull updates from the upstream base repo |
+| `sandbox-publish` | Set up the GitHub repo and Pages, publish the sandbox, and manage static prototype exports |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.
 
@@ -127,14 +130,11 @@ And for a card surface:
 
 ## UX Writing
 
-`/.claude/skills/` includes two UX writing skills backed by the Instructure style guide at `.claude/skills/ux-writing/references/style-guide.md`.
+`/.claude/skills/` includes a UX writing skill backed by the Instructure style guide at `.claude/skills/ux-writing/references/style-guide.md`.
 
-| Skill | When to use |
-|---|---|
-| `uxcopy-check` | Reviewing or auditing existing copy — errors, labels, tooltips, empty states |
-| `uxcopy-write` | Generating new copy for a UI pattern; accepts a Figma URL or plain description |
+The `instui-ux-copy` skill has two modes: **Review** (check existing strings against the style guide) and **Write** (generate new copy for a UI pattern).
 
-The PostToolUse hook detects human-visible strings in prototype TSX files and reminds you to invoke `uxcopy-check` when it fires. Wait for that prompt — do not invoke `uxcopy-check` proactively. Invoke `sandbox-eval` only when the user explicitly asks for a session quality report.
+The PostToolUse hook detects human-visible strings in prototype TSX files and triggers `instui-ux-copy` in Review mode automatically. Wait for that prompt — do not invoke `instui-ux-copy` proactively. Invoke `sandbox-eval` only when the user explicitly asks for a session quality report.
 
 All AI-generated copy must be reviewed by a human writer before shipping to production.
 

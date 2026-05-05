@@ -13,6 +13,7 @@ import { IconButton } from '@instructure/ui-buttons/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
 import { CopyInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
+import { sandboxOwner } from './sandbox.config'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
 type SortCol = 'title' | 'createdAt' | 'status' | 'category'
@@ -106,7 +107,7 @@ type PromptGroup = {
 
 const promptGroups: PromptGroup[] = [
   {
-    skill: '/design',
+    skill: '/sandbox-design',
     description: 'Start here. Figures out what to build and hands off to the right skill.',
     prompts: [
       'I want to design the assignment submission flow.',
@@ -257,7 +258,7 @@ export function Home() {
             </svg>
             <Heading level="h1" margin="0">Sandbox</Heading>
           </Flex>
-          <Text color="secondary" size="medium">Designs by <Text weight="bold">[name]</Text></Text>
+          <Text color="secondary" size="medium">Designs by <Text weight="bold">{sandboxOwner}</Text></Text>
         </Flex>
 
         <View as="div" display="block" maxWidth="700px" width="100%">
