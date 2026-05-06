@@ -1,14 +1,15 @@
 import { useState, useEffect, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { InstUISettingsProvider } from '@instructure/ui/latest'
-import { canvas, canvasHighContrast, dark, light } from '@instructure/ui-themes'
 import { useComputedTheme } from '@instructure/emotion'
 import { Spinner } from '@instructure/ui-spinner/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Home } from './Home'
 import { Showcase } from './references/Showcase'
 import { InfiniteCanvas } from './components/InfiniteCanvas'
+import { SpecEmbedFrame } from './components/SpecEmbedFrame'
 import { prototypes } from './registry'
+import { THEMES, type ThemeKey } from './themes'
 import type { PrototypeMeta, ViewMode } from './registry'
 
 function resolveViewMode(p: PrototypeMeta): ViewMode {
@@ -35,15 +36,6 @@ function ScrollbarStyle() {
   return null
 }
 
-const THEMES = {
-  light: { label: 'Light', theme: light },
-  canvas: { label: 'Canvas', theme: canvas },
-  dark: { label: 'Dark', theme: dark },
-  canvasHighContrast: { label: 'High Contrast', theme: canvasHighContrast },
-} as const
-
-type ThemeKey = keyof typeof THEMES
-
 const staticPrototypePath = import.meta.env.VITE_STATIC_PROTOTYPE_PATH as string | undefined
 
 export default function App() {
@@ -65,7 +57,13 @@ export default function App() {
   const prototypeRoute = (p: PrototypeMeta, routePath: string) => {
     const viewMode = resolveViewMode(p)
     const element = viewMode === 'spec'
-      ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo={staticPrototypePath ? undefined : "/"} initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
+      ? (
+        <Suspense fallback={loader}>
+          <InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo={staticPrototypePath ? undefined : '/'} initialScale={0.6}>
+            <SpecEmbedFrame specId={p.id} themeKey={themeKey} isDark={isDark} />
+          </InfiniteCanvas>
+        </Suspense>
+      )
       : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
     return <Route key={p.id} path={routePath} element={element} />
   }

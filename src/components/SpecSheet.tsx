@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
@@ -7,10 +7,13 @@ import { Text } from '@instructure/ui-text/latest'
 import { Button, CloseButton } from '@instructure/ui-buttons/latest'
 import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
-import { BoardFrame } from './BoardFrame'
 import { InfiniteCanvas } from './InfiniteCanvas'
-import { InfiniteCanvasContext } from './InfiniteCanvasContext'
 import type { PrototypeProps } from '../registry'
+
+// When SpecSheet runs inside the spec iframe, modals must render in the parent
+// document so they layer above the canvas chrome. We detect this once at module
+// load time — it never changes within a session.
+const isEmbedded = window.parent !== window
 
 export type CopyEntry = {
   label: string
@@ -74,7 +77,6 @@ export function SpecSheet({
   sections: SpecSection[]
 }) {
   const { sharedTokens } = useComputedTheme()
-  const { tool } = useContext(InfiniteCanvasContext)
   const [codeModal, setCodeModal] = useState<{ caption?: string; code: string } | null>(null)
   const [copyModal, setCopyModal] = useState<{ caption?: string; screenLabel: string; copy: CopyEntry[] } | null>(null)
   const [playKeys, setPlayKeys] = useState<Record<string, number>>({})
@@ -148,23 +150,17 @@ export function SpecSheet({
                               overflowY: 'hidden' as const,
                             } : {})}
                           >
-                            <BoardFrame
-                              width={board.width}
-                              height={board.height}
-                              pointerEvents={tool === 'hand' ? 'none' : 'auto'}
-                            >
-                              <div key={playKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
-                                {board.content ?? (
-                                  <View
-                                    as="div"
-                                    display="block"
-                                    background="primary"
-                                    themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
-                                    {...(board.height !== undefined ? { height: '100%' } : { minHeight: '200px' })}
-                                  />
-                                )}
-                              </div>
-                            </BoardFrame>
+                            <div key={playKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
+                              {board.content ?? (
+                                <View
+                                  as="div"
+                                  display="block"
+                                  background="primary"
+                                  themeOverride={{ backgroundPrimary: sharedTokens.background.inverseColor }}
+                                  {...(board.height !== undefined ? { height: '100%' } : { minHeight: '200px' })}
+                                />
+                              )}
+                            </div>
                           </View>
 
                           {/* Action buttons */}
@@ -196,7 +192,17 @@ export function SpecSheet({
                                 size="small"
                                 withBackground={false}
                                 renderIcon={<FileTextInstUIIcon />}
-                                onClick={() => setCopyModal({ caption: board.caption, screenLabel: `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`, copy: board.copy! })}
+                                onClick={() => {
+                                  const screenLabel = `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`
+                                  if (isEmbedded) {
+                                    window.parent.postMessage(
+                                      { type: 'embed:open-copy-modal', caption: board.caption, screenLabel, copy: board.copy! },
+                                      window.location.origin,
+                                    )
+                                  } else {
+                                    setCopyModal({ caption: board.caption, screenLabel, copy: board.copy! })
+                                  }
+                                }}
                               >
                                 UX Copy
                               </Button>
@@ -206,7 +212,16 @@ export function SpecSheet({
                                 size="small"
                                 withBackground={false}
                                 renderIcon={<CodeInstUIIcon />}
-                                onClick={() => setCodeModal({ caption: board.caption, code: board.code! })}
+                                onClick={() => {
+                                  if (isEmbedded) {
+                                    window.parent.postMessage(
+                                      { type: 'embed:open-code-modal', caption: board.caption, code: board.code! },
+                                      window.location.origin,
+                                    )
+                                  } else {
+                                    setCodeModal({ caption: board.caption, code: board.code! })
+                                  }
+                                }}
                               >
                                 InstUI Source
                               </Button>
