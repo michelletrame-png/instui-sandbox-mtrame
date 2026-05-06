@@ -11,9 +11,9 @@ import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
 import { IconButton } from '@instructure/ui-buttons/latest'
-import { CopyInstUIIcon } from '@instructure/ui-icons'
+import { CopyInstUIIcon, ExternalLinkInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
-import { sandboxOwner } from './sandbox.config'
+import { sandboxOwner, sandboxRepoUrl } from './sandbox.config'
 import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
@@ -270,7 +270,18 @@ export function Home() {
             </svg>
             <Heading level="h1" margin="0">Sandbox</Heading>
           </Flex>
-          <Text color="secondary" size="medium">Designs by <Text weight="bold">{sandboxOwner}</Text></Text>
+          <Flex alignItems="center" gap="x-small">
+            {sandboxRepoUrl ? (
+              <Link href={sandboxRepoUrl} target="_blank" rel="noopener noreferrer" renderIcon={<ExternalLinkInstUIIcon />} iconPlacement="start">
+                {sandboxOwner}
+              </Link>
+            ) : (
+              <Text color="secondary" size="medium" weight="bold">{sandboxOwner}</Text>
+            )}
+            {sandboxRepoUrl && (
+              <IconButton size="small" withBackground={false} withBorder={false} screenReaderLabel="Copy repo link" renderIcon={<CopyInstUIIcon />} onClick={() => navigator.clipboard.writeText(sandboxRepoUrl)} />
+            )}
+          </Flex>
         </Flex>
 
         <View as="div" display="block" maxWidth="700px" width="100%">
