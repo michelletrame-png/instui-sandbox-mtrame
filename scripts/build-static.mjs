@@ -5,13 +5,14 @@ import react from '@vitejs/plugin-react'
 const repoName = process.env.REPO_NAME
 const deployId = process.env.DEPLOY_ID
 const prototypePath = process.env.PROTOTYPE_PATH
+const sandboxHash = process.env.SANDBOX_HASH
 
-if (!repoName || !deployId || !prototypePath) {
-  console.error('Missing required env vars: REPO_NAME, DEPLOY_ID, PROTOTYPE_PATH')
+if (!repoName || !deployId || !prototypePath || !sandboxHash) {
+  console.error('Missing required env vars: REPO_NAME, DEPLOY_ID, PROTOTYPE_PATH, SANDBOX_HASH')
   process.exit(1)
 }
 
-const base = `/${repoName}/static/${deployId}/`
+const base = `/${repoName}/static/${sandboxHash}/${deployId}/`
 
 console.log(`Building static export: ${base}`)
 

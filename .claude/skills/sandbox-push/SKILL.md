@@ -59,7 +59,7 @@ git push
 
 Tell the user:
 > Pushed. The live sandbox will update in ~2 minutes at:
-> **`<pagesUrl>/`**
+> **`<pagesUrl>/<hash>/`**
 >
 > Track progress: `https://github.com/instructure/<repo>/actions`
 

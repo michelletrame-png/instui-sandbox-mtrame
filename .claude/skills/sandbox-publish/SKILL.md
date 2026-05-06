@@ -46,8 +46,8 @@ Read `.claude/deploy.json`.
   > to create a GitHub repository and configure GitHub Pages.
   Stop here.
 
-**File exists:** Read `repo.owner`, `repo.name`, `repo.pagesUrl`, and
-`static[]` from it. Use these throughout.
+**File exists:** Read `repo.owner`, `repo.name`, `repo.hash`, `repo.pagesUrl`, and
+`static[]` from it. Use these throughout. The live sandbox URL is `<pagesUrl>/<hash>/`.
 
 ---
 
@@ -103,23 +103,33 @@ Then add the upstream remote:
 git remote add upstream https://github.com/instructure/instui-sandbox-base.git
 ```
 
-### Step 4 — Derive and confirm config
+### Step 4 — Generate sandbox hash
+
+```bash
+openssl rand -hex 4
+```
+
+Save this 8-character hex string as `<hash>`. It will be used to obscure the live sandbox URL and all static export URLs, preventing discovery from a shared prototype link.
+
+### Step 5 — Derive and confirm config
 
 | Field | Value |
 |---|---|
 | `repo.owner` | `instructure` |
 | `repo.name` | the name they chose |
+| `repo.hash` | the generated hash |
 | `repo.pagesUrl` | `https://instructure.github.io/<name>` |
+| Live URL | `https://instructure.github.io/<name>/<hash>/` |
 | `upstream` | `instructure/instui-sandbox-base` |
 
 Confirm:
 > Here's your sandbox configuration:
 > - **Repo:** `https://github.com/instructure/<name>`
-> - **Pages URL:** `https://instructure.github.io/<name>`
+> - **Live sandbox:** `https://instructure.github.io/<name>/<hash>/`
 >
 > Does this look right?
 
-### Step 5 — Write deploy.json
+### Step 6 — Write deploy.json and update sandbox.config.ts
 
 Write `.claude/deploy.json`:
 
@@ -128,6 +138,7 @@ Write `.claude/deploy.json`:
   "repo": {
     "owner": "instructure",
     "name": "<name>",
+    "hash": "<hash>",
     "pagesUrl": "https://instructure.github.io/<name>"
   },
   "upstream": "instructure/instui-sandbox-base",
@@ -135,7 +146,20 @@ Write `.claude/deploy.json`:
 }
 ```
 
-### Step 6 — Verify vite.config.ts is parameterized
+Update `src/sandbox.config.ts` to set the hash:
+
+```typescript
+export const sandboxOwner = '<owner name>'
+export const sandboxHash = '<hash>'
+```
+
+Also update `.env.local` to use the hashed base path:
+
+```
+BASE_URL=/<name>/<hash>/
+```
+
+### Step 8 — Verify vite.config.ts is parameterized
 
 Read `vite.config.ts`. If `base` is a hardcoded string (not using
 `process.env.BASE_URL`), edit it:
@@ -146,7 +170,7 @@ base: process.env.BASE_URL || '/instui-sandbox-base/',
 
 If already parameterized, skip.
 
-### Step 7 — Enable GitHub Pages on the repo
+### Step 9 — Enable GitHub Pages on the repo
 
 Tell the user:
 > One more step: enable GitHub Pages.
@@ -159,9 +183,7 @@ Tell the user:
 >
 > The `gh-pages` branch will be created automatically on your first push.
 
-### Step 8 — Commit and push
-
-If `deploy.json` or `vite.config.ts` were changed in Steps 5–6:
+### Step 10 — Commit and push
 
 > Ready to commit and push these configuration changes. This will trigger
 > your first GitHub Pages deploy. Shall I proceed?
@@ -169,14 +191,14 @@ If `deploy.json` or `vite.config.ts` were changed in Steps 5–6:
 Wait for approval, then:
 
 ```bash
-git add .claude/deploy.json vite.config.ts
+git add .claude/deploy.json src/sandbox.config.ts vite.config.ts .env.local
 git commit -m "chore: configure sandbox for GitHub Pages deployment"
 git push
 ```
 
 Tell the user:
 > Done! Your sandbox will be live at:
-> **`https://instructure.github.io/<name>/`**
+> **`https://instructure.github.io/<name>/<hash>/`**
 >
 > Check build progress: `https://github.com/instructure/<name>/actions`
 
@@ -236,9 +258,9 @@ If entries exist, show as a table:
 
 | Title | Prototype | URL | Deployed |
 |---|---|---|---|
-| Agent Patterns | `agent-patterns` | `https://...` | 2026-05-05 |
+| Learner Overview | `learner-overview` | `https://...` | 2026-05-05 |
 
-URL for each entry = `<repo.pagesUrl>/static/<id>/`
+URL for each entry = `<repo.pagesUrl>/static/<repo.hash>/<id>/`
 
 ---
 
@@ -260,7 +282,7 @@ Default: `<prototype-id>-v1`. Increment if that ID already exists.
 
 Confirm:
 > I'll create a static export of **[Title]** at:
-> `<pagesUrl>/static/<proposed-id>/`
+> `<pagesUrl>/static/<hash>/<proposed-id>/`
 >
 > Use a different ID?
 
@@ -298,12 +320,13 @@ Then trigger the build:
 ```bash
 gh workflow run deploy-static.yml \
   -f deploy_id=<id> \
-  -f prototype_path=<prototypePath>
+  -f prototype_path=<prototypePath> \
+  -f sandbox_hash=<hash>
 ```
 
 Tell the user:
 > Building now. Your export will be live in ~2 minutes at:
-> **`<pagesUrl>/static/<id>/`**
+> **`<pagesUrl>/static/<hash>/<id>/`**
 >
 > Track progress: `https://github.com/instructure/<repo>/actions`
 
@@ -318,8 +341,8 @@ Tell the user:
 Look up the export by `id` or `title`. Confirm the rename:
 > Renaming changes the URL. Anyone with the old link will get a 404.
 >
-> Current URL: `<pagesUrl>/static/<old-id>/`
-> New URL: `<pagesUrl>/static/<new-id>/`
+> Current URL: `<pagesUrl>/static/<hash>/<old-id>/`
+> New URL: `<pagesUrl>/static/<hash>/<new-id>/`
 >
 > Proceed?
 
@@ -329,7 +352,7 @@ Change `id` from `<old-id>` to `<new-id>`. Update `src/static-exports.json` to r
 push, and trigger `deploy-static.yml` with the new `deploy_id`.
 
 Note to user:
-> The old URL (`/static/<old-id>/`) remains live on the `gh-pages` branch
+> The old URL (`/static/<hash>/<old-id>/`) remains live on the `gh-pages` branch
 > until manually removed. Let me know if you'd like cleanup instructions.
 
 ---
@@ -351,7 +374,7 @@ Wait for approval, then delete the files from the `gh-pages` branch using a work
 
 ```bash
 git worktree add /tmp/gh-pages-delete gh-pages
-rm -rf /tmp/gh-pages-delete/static/<id>
+rm -rf /tmp/gh-pages-delete/static/<hash>/<id>
 git -C /tmp/gh-pages-delete add -A
 git -C /tmp/gh-pages-delete commit -m "deploy: remove static export <id>"
 git -C /tmp/gh-pages-delete push
@@ -398,11 +421,12 @@ Include `src/static-exports.json` in the git add/commit for that operation.
 |---|---|---|
 | `repo.owner` | string | GitHub org (`instructure`) or username |
 | `repo.name` | string | Repository name |
+| `repo.hash` | string | 8-char hex — obscures live and static URLs |
 | `repo.pagesUrl` | string | Base Pages URL, no trailing slash |
 | `upstream` | string | `owner/repo` of upstream source |
-| `static[].id` | string | Kebab-case export ID; becomes the URL segment |
+| `static[].id` | string | Kebab-case export ID (URL segment after hash) |
 | `static[].prototypeId` | string | Registry `id` of the prototype |
-| `static[].prototypePath` | string | Registry `path` (e.g. `/agent-patterns`) |
+| `static[].prototypePath` | string | Registry `path` (e.g. `/learner-overview`) |
 | `static[].title` | string | Human-readable title for list display |
 | `static[].deployedAt` | string | ISO 8601 timestamp of last build |
 

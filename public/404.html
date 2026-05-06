@@ -6,8 +6,8 @@
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 2).join('/') +
-        '/?p=' + encodeURIComponent(l.pathname.split('/').slice(2).join('/')) +
+        l.pathname.split('/').slice(0, 3).join('/') +
+        '/?p=' + encodeURIComponent(l.pathname.split('/').slice(3).join('/')) +
         (l.search ? '&q=' + encodeURIComponent(l.search.slice(1)) : '') +
         l.hash
       );
