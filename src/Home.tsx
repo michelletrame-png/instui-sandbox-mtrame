@@ -14,6 +14,7 @@ import { IconButton } from '@instructure/ui-buttons/latest'
 import { CopyInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
 import { sandboxOwner } from './sandbox.config'
+import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
 type SortCol = 'title' | 'createdAt' | 'status' | 'category'
@@ -224,9 +225,11 @@ export function Home() {
   const [tabIndex, setTabIndex] = useState(0)
   const { sharedTokens } = useComputedTheme()
 
+  type StaticExport = { id: string; title: string; url: string; deployedAt: string }
   const workItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
   const templateItems = prototypes.filter(p => p.category === 'Template')
   const referenceItems = prototypes.filter(p => p.category === 'Reference')
+  const publishedItems = (staticExportsData as StaticExport[]).slice().reverse()
 
   const tabPanelView = (children: React.ReactNode) => (
     <View
@@ -291,7 +294,31 @@ export function Home() {
                 </Flex>
               )}
             </Tabs.Panel>
-            <Tabs.Panel renderTitle="Info" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+            <Tabs.Panel renderTitle="Published" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+              {tabPanelView(
+                publishedItems.length === 0
+                  ? <Text color="secondary">No published links yet. Run <Text weight="bold">/sandbox-publish the [design name] to a static link</Text> to share it.</Text>
+                  : <Table caption="Published links" hover>
+                      <Table.Head>
+                        <Table.Row>
+                          <Table.ColHeader id="title" stackedSortByLabel="Title">Title</Table.ColHeader>
+                          <Table.ColHeader id="url" stackedSortByLabel="URL">URL</Table.ColHeader>
+                          <Table.ColHeader id="deployedAt" stackedSortByLabel="Published" width="130px">Published</Table.ColHeader>
+                        </Table.Row>
+                      </Table.Head>
+                      <Table.Body>
+                        {publishedItems.map(p => (
+                          <Table.Row key={p.id}>
+                            <Table.Cell>{p.title}</Table.Cell>
+                            <Table.Cell><Link href={p.url} target="_blank" rel="noopener noreferrer">{p.url}</Link></Table.Cell>
+                            <Table.Cell>{formatDate(p.deployedAt)}</Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table>
+              )}
+            </Tabs.Panel>
+            <Tabs.Panel renderTitle="Info" isSelected={tabIndex === 4} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               <View as="div" display="block" margin="medium 0 0 0">
                 <Flex direction="column" gap="medium">
                   {skills.map(skill => (

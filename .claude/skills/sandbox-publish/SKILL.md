@@ -280,13 +280,15 @@ Append to `static[]`:
 
 ### Step 4 — Commit and trigger
 
+Update `src/static-exports.json` to reflect the new entry (see "Keeping src/static-exports.json in sync" below).
+
 > Ready to commit and kick off the static build. This builds a frozen
 > snapshot of **[Title]** and publishes it to GitHub Pages. Shall I proceed?
 
 Wait for approval, then:
 
 ```bash
-git add .claude/deploy.json
+git add .claude/deploy.json src/static-exports.json
 git commit -m "deploy: add static export for <title> (<id>)"
 git push
 ```
@@ -323,7 +325,7 @@ Look up the export by `id` or `title`. Confirm the rename:
 
 ### Step 2 — Update deploy.json and re-deploy
 
-Change `id` from `<old-id>` to `<new-id>`. Wait for approval, then commit,
+Change `id` from `<old-id>` to `<new-id>`. Update `src/static-exports.json` to reflect the rename. Wait for approval, then commit,
 push, and trigger `deploy-static.yml` with the new `deploy_id`.
 
 Note to user:
@@ -356,13 +358,35 @@ git -C /tmp/gh-pages-delete push
 git worktree remove /tmp/gh-pages-delete
 ```
 
-Then remove the entry from `static[]` in deploy.json and commit to main:
+Then remove the entry from `static[]` in deploy.json, update `src/static-exports.json` to match, and commit to main:
 
 ```bash
-git add .claude/deploy.json
+git add .claude/deploy.json src/static-exports.json
 git commit -m "deploy: remove <id> from static exports"
 git push
 ```
+
+---
+
+## Keeping src/static-exports.json in sync
+
+`src/static-exports.json` is a tracked source file that the home page reads to
+display published links. It must be kept in sync with the `static[]` array in
+deploy.json. **After every create, delete, or rename operation**, rewrite
+`src/static-exports.json` using the Write tool with the full updated array:
+
+```json
+[
+  {
+    "id": "<id>",
+    "title": "<title>",
+    "url": "<pagesUrl>/static/<id>/",
+    "deployedAt": "<deployedAt>"
+  }
+]
+```
+
+Include `src/static-exports.json` in the git add/commit for that operation.
 
 ---
 
