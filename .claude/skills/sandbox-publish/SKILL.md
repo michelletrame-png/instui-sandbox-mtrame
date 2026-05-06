@@ -267,7 +267,7 @@ If entries exist, show as a table:
 |---|---|---|---|
 | Learner Overview | `learner-overview` | `https://...` | 2026-05-05 |
 
-URL for each entry = `<repo.pagesUrl>/static/<repo.hash>/<id>/`
+URL for each entry = `<repo.pagesUrl>/static/<entry.hash>/<entry.id>/`
 
 ---
 
@@ -284,24 +284,33 @@ not named, use the AskUserQuestion tool to ask:
 > Which prototype would you like to export?
 > [list of id + title]
 
-### Step 2 — Propose a deploy ID
+### Step 2 — Generate a hash for this export
+
+```bash
+openssl rand -hex 4
+```
+
+Save this 8-character hex string as `<export-hash>`. It is unique to this export and independent of the live sandbox hash.
+
+### Step 3 — Propose a deploy ID
 
 Default: `<prototype-id>-v1`. Increment if that ID already exists.
 
 Use the AskUserQuestion tool to ask:
 
 > I'll create a static export of **[Title]** at:
-> `<pagesUrl>/static/<hash>/<proposed-id>/`
+> `<pagesUrl>/static/<export-hash>/<proposed-id>/`
 >
 > Use a different ID?
 
-### Step 3 — Update deploy.json
+### Step 4 — Update deploy.json
 
 Append to `static[]`:
 
 ```json
 {
   "id": "<id>",
+  "hash": "<export-hash>",
   "prototypeId": "<prototype-id>",
   "prototypePath": "<path from registry>",
   "title": "<title from registry>",
@@ -309,7 +318,7 @@ Append to `static[]`:
 }
 ```
 
-### Step 4 — Commit and trigger
+### Step 5 — Commit and trigger
 
 Update `src/static-exports.json` to reflect the new entry (see "Keeping src/static-exports.json in sync" below).
 
@@ -332,12 +341,12 @@ Then trigger the build:
 gh workflow run deploy-static.yml \
   -f deploy_id=<id> \
   -f prototype_path=<prototypePath> \
-  -f sandbox_hash=<hash>
+  -f sandbox_hash=<export-hash>
 ```
 
 Tell the user:
 > Building now. Your export will be live in ~2 minutes at:
-> **`<pagesUrl>/static/<hash>/<id>/`**
+> **`<pagesUrl>/static/<export-hash>/<id>/`**
 >
 > Track progress: `https://github.com/instructure/<repo>/actions`
 
@@ -353,18 +362,18 @@ Look up the export by `id` or `title`. Use the AskUserQuestion tool to ask:
 
 > Renaming changes the URL. Anyone with the old link will get a 404.
 >
-> Current URL: `<pagesUrl>/static/<hash>/<old-id>/`
-> New URL: `<pagesUrl>/static/<hash>/<new-id>/`
+> Current URL: `<pagesUrl>/static/<entry.hash>/<old-id>/`
+> New URL: `<pagesUrl>/static/<entry.hash>/<new-id>/`
 >
 > Proceed?
 
 ### Step 2 — Update deploy.json and re-deploy
 
-Change `id` from `<old-id>` to `<new-id>`. Update `src/static-exports.json` to reflect the rename. Wait for approval, then commit,
-push, and trigger `deploy-static.yml` with the new `deploy_id`.
+Change `id` from `<old-id>` to `<new-id>`. The `hash` stays the same — only the `id` segment changes. Update `src/static-exports.json` to reflect the rename. Wait for approval, then commit,
+push, and trigger `deploy-static.yml` with the new `deploy_id` and existing `sandbox_hash`.
 
 Note to user:
-> The old URL (`/static/<hash>/<old-id>/`) remains live on the `gh-pages` branch
+> The old URL (`/static/<entry.hash>/<old-id>/`) remains live on the `gh-pages` branch
 > until manually removed. Let me know if you'd like cleanup instructions.
 
 ---
@@ -388,7 +397,7 @@ Wait for approval, then delete the files from the `gh-pages` branch using a work
 
 ```bash
 git worktree add /tmp/gh-pages-delete gh-pages
-rm -rf /tmp/gh-pages-delete/static/<hash>/<id>
+rm -rf /tmp/gh-pages-delete/static/<entry.hash>/<id>
 git -C /tmp/gh-pages-delete add -A
 git -C /tmp/gh-pages-delete commit -m "deploy: remove static export <id>"
 git -C /tmp/gh-pages-delete push
@@ -417,11 +426,13 @@ deploy.json. **After every create, delete, or rename operation**, rewrite
   {
     "id": "<id>",
     "title": "<title>",
-    "url": "<pagesUrl>/static/<id>/",
+    "url": "<pagesUrl>/static/<hash>/<id>/",
     "deployedAt": "<deployedAt>"
   }
 ]
 ```
+
+Where `<hash>` is the per-export hash stored in `static[].hash` in deploy.json.
 
 Include `src/static-exports.json` in the git add/commit for that operation.
 
@@ -439,6 +450,7 @@ Include `src/static-exports.json` in the git add/commit for that operation.
 | `repo.pagesUrl` | string | Base Pages URL, no trailing slash |
 | `upstream` | string | `owner/repo` of upstream source |
 | `static[].id` | string | Kebab-case export ID (URL segment after hash) |
+| `static[].hash` | string | 8-char hex — unique to this export, independent of `repo.hash` |
 | `static[].prototypeId` | string | Registry `id` of the prototype |
 | `static[].prototypePath` | string | Registry `path` (e.g. `/learner-overview`) |
 | `static[].title` | string | Human-readable title for list display |
