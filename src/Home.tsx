@@ -366,7 +366,7 @@ export function Home() {
                 </Flex>
               )}
             </Tabs.Panel>
-            <Tabs.Panel renderTitle="Info" isSelected={tabIndex === 4} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+            <Tabs.Panel renderTitle="Help" isSelected={tabIndex === 4} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               <View as="div" display="block" margin="medium 0 0 0">
                 <Flex direction="column" gap="medium">
                   {skills.map(skill => (
