@@ -7,6 +7,7 @@ import { Text } from '@instructure/ui-text/latest'
 import { Button, CloseButton } from '@instructure/ui-buttons/latest'
 import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
+import { BoardFrame } from './BoardFrame'
 import { InfiniteCanvas } from './InfiniteCanvas'
 import { InfiniteCanvasContext } from './InfiniteCanvasContext'
 import type { PrototypeProps } from '../registry'
@@ -136,13 +137,9 @@ export function SpecSheet({
                             as="div"
                             display="block"
                             width={`${board.width}px`}
-                            background="primary"
-                            themeOverride={{
-                              backgroundPrimary: sharedTokens.background.containerColor,
-                              borderColorPrimary: sharedTokens.stroke.mutedColor,
-                            }}
                             borderWidth="small"
                             borderColor="primary"
+                            themeOverride={{ borderColorPrimary: sharedTokens.stroke.mutedColor }}
                             borderRadius="0"
                             shadow="resting"
                             overflowX="hidden"
@@ -151,13 +148,12 @@ export function SpecSheet({
                               overflowY: 'hidden' as const,
                             } : {})}
                           >
-                            <div style={{
-                              width: board.width,
-                              ...(board.height !== undefined ? { height: board.height, overflow: 'hidden' } : {}),
-                              position: 'relative',
-                              pointerEvents: tool === 'hand' ? 'none' : 'auto',
-                            }}>
-                              <div key={playKey} style={{ width: '100%', height: '100%' }}>
+                            <BoardFrame
+                              width={board.width}
+                              height={board.height}
+                              pointerEvents={tool === 'hand' ? 'none' : 'auto'}
+                            >
+                              <div key={playKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
                                 {board.content ?? (
                                   <View
                                     as="div"
@@ -168,7 +164,7 @@ export function SpecSheet({
                                   />
                                 )}
                               </div>
-                            </div>
+                            </BoardFrame>
                           </View>
 
                           {/* Action buttons */}

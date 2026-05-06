@@ -23,6 +23,15 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
+    id: 'iframe-test',
+    title: 'iframe Board Test',
+    path: '/iframe-test',
+    createdAt: '2026-05-06',
+    category: 'Spec',
+    status: 'WIP',
+    component: lazy(() => import('./designs/iframe-test')),
+  },
+  {
     id: 'learner-overview',
     title: 'Learner Overview',
     path: '/learner-overview',
@@ -53,7 +62,7 @@ export const prototypes: PrototypeMeta[] = [
     path: '/spec-sheet',
     createdAt: '2026-05-01',
     category: 'Template',
-    component: lazy(() => import('./templates/SpecSheet')),
+    component: lazy(() => import('./components/SpecSheet')),
   },
   {
     id: 'blank',

@@ -7,7 +7,7 @@ import { Spinner } from '@instructure/ui-spinner/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Home } from './Home'
 import { Showcase } from './references/Showcase'
-import { InfiniteCanvas } from './templates/InfiniteCanvas'
+import { InfiniteCanvas } from './components/InfiniteCanvas'
 import { prototypes } from './registry'
 import type { PrototypeMeta, ViewMode } from './registry'
 
