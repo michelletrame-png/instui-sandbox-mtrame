@@ -83,14 +83,15 @@ Display the commit list and explain:
 git merge upstream/main --no-edit
 ```
 
-**On conflict:** Stop immediately. List the conflicting files and say:
+**On conflict:** Stop immediately. List the conflicting files and give specific guidance:
 
-> There are merge conflicts that need to be resolved manually. This usually
-> happens when you and upstream both edited the same file (like
-> `src/registry.ts` or `vite.config.ts`).
->
-> Keep your own changes and accept upstream's for anything you didn't touch.
-> Once resolved, run `git add <files> && git commit` to finish the merge.
+**`src/registry.ts`** → The most common conflict. Upstream may have added a new template or reference entry. Keep all of the user's existing prototype entries and incorporate upstream's new entries alongside them. This is a quick manual merge.
+
+**`vite.config.ts` or other config files** → Keep the user's version for anything they customized; accept upstream's for anything they didn't touch.
+
+Say:
+> There are merge conflicts in [files]. Once you've resolved them, run:
+> `git add <files> && git commit`
 
 Never auto-resolve conflicts.
 
