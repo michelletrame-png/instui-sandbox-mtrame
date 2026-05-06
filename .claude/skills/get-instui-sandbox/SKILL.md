@@ -100,10 +100,8 @@ gh repo view instructure/instui-sandbox-base --json name
 Tell them to post in the **#it** Slack channel:
 
 > **Request:** GitHub Instructure Org Access
-> **Tool:** InstUI Prototyping Tool
-> **Repo needed:** `instructure/instui-sandbox-base`
-> **Action needed:** Please add me to the Instructure GitHub org and grant
-> access to the above repo.
+> **Action needed:** Please add me to the Instructure GitHub org
+> **Reason:** Access to InstUI Prototyping Tool
 
 Stop here. Return when IT confirms access.
 
@@ -111,15 +109,25 @@ Stop here. Return when IT confirms access.
 
 ## Step 5 — Choose a name
 
-Ask:
-> What would you like to call your sandbox?
-> This becomes the folder name on your computer.
->
-> A few suggestions:
-> - Personal sandbox: `instui-sandbox-<your-name>` (e.g. `instui-sandbox-jsmith`)
-> - Team sandbox: `instui-sandbox-<team>` (e.g. `instui-sandbox-ai-platform`)
+Use the AskUserQuestion tool to ask:
 
-Confirm the name before continuing.
+> What type of sandbox is this?
+
+With these options:
+- **Personal** — just for me
+- **Team** — shared with my team
+
+Once they select, use AskUserQuestion to ask:
+
+>  **Personal**: "What's your name or GitHub username?"
+>  **Team**: "What's your team name?"
+
+Take their answer and suggest a full sandbox name:
+
+> Here's your sandbox name: **`instui-sandbox-<nameorteam>`**
+> Is that right, or would you like to change it?
+
+Confirm before continuing.
 
 ---
 
@@ -144,8 +152,7 @@ echo "BASE_URL=/<name>/" > <name>/.env.local
 ```
 
 This tells Vite to serve the sandbox under `/<name>/` — required for GitHub Pages
-and for the dev server to generate correct asset URLs. Without it, the app falls
-back to `/instui-sandbox-base/` and loads a blank page.
+and for the dev server to generate correct asset URLs. 
 
 ---
 
@@ -159,7 +166,7 @@ export const sandboxOwner = '<name>'
 ```
 
 For a personal sandbox (`instui-sandbox-jsmith`) use their name: `'Jane Smith'`.
-For a team sandbox (`instui-sandbox-ai-platform`) use the team name: `'AI Platform'`.
+For a team sandbox (`instui-sandbox-team-name`) use the team name: `'Team Name'`.
 
 This name appears on the home page under the InstUI logo as "Designs by **[name]**".
 
@@ -167,19 +174,8 @@ This name appears on the home page under the InstUI logo as "Designs by **[name]
 
 ## Step 9 — Open in Claude Code
 
-The sandbox needs to be opened as its own project in a new session.
+The sandbox needs to be opened as its own project in a new Claue Code session in the newly created `<name>` folder.
 
-**Desktop app:**
-In the bottom-left of any session, click **+ New Session**. When prompted to choose a directory, select the `<name>` folder.
-
-**Terminal:**
-```bash
-cd <name>
-claude
-```
-
-Tell the user: make sure you're working in the new session inside the sandbox
-folder before the next step.
 
 ---
 
