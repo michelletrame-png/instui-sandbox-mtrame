@@ -30,7 +30,7 @@ export default function HelloWorld({ isDark, onToggleTheme }: PrototypeProps) {
         >
           <Flex direction="column" gap="medium" alignItems="center">
             <Heading level="h1" margin="0">Hello, World!</Heading>
-            <Text color="secondary">Your first InstUI prototype. Start building here.</Text>
+            <Text color="secondary">Your first InstUI prototype.</Text>
             <Button color="primary" onClick={onToggleTheme}>
               {isDark ? 'Switch to Light' : 'Switch to Dark'}
             </Button>
