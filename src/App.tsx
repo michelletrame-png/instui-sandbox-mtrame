@@ -65,7 +65,7 @@ export default function App() {
   const prototypeRoute = (p: PrototypeMeta, routePath: string) => {
     const viewMode = resolveViewMode(p)
     const element = viewMode === 'spec'
-      ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
+      ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo={staticPrototypePath ? undefined : "/"} initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
       : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
     return <Route key={p.id} path={routePath} element={element} />
   }
