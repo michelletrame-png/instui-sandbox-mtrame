@@ -5,7 +5,7 @@ import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button, CloseButton } from '@instructure/ui-buttons/latest'
-import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon } from '@instructure/ui-icons'
+import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
 import { InfiniteCanvas } from './InfiniteCanvas'
 import { InfiniteCanvasContext } from './InfiniteCanvasContext'
@@ -123,6 +123,7 @@ export function SpecSheet({
                     const playKey = playKeys[boardKey] ?? 0
                     return (
                       <Flex.Item key={bi} shouldShrink={false}>
+                        <div data-board-id={boardKey}>
                         <Flex direction="column" gap="medium" width={`${board.width}px`}>
 
                           {/* Board number + caption */}
@@ -171,40 +172,50 @@ export function SpecSheet({
                           </View>
 
                           {/* Action buttons */}
-                          {(board.copy || board.code || board.playable) && (
-                            <Flex gap="x-small">
-                              {board.playable && (
-                                <Button
-                                  size="small"
-                                  withBackground={false}
-                                  renderIcon={<RefreshCwInstUIIcon />}
-                                  onClick={() => replay(boardKey)}
-                                >
-                                  Replay
-                                </Button>
-                              )}
-                              {board.copy && (
-                                <Button
-                                  size="small"
-                                  withBackground={false}
-                                  renderIcon={<FileTextInstUIIcon />}
-                                  onClick={() => setCopyModal({ caption: board.caption, screenLabel: `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`, copy: board.copy! })}
-                                >
-                                  UX Copy
-                                </Button>
-                              )}
-                              {board.code && (
-                                <Button
-                                  size="small"
-                                  withBackground={false}
-                                  renderIcon={<CodeInstUIIcon />}
-                                  onClick={() => setCodeModal({ caption: board.caption, code: board.code! })}
-                                >
-                                  InstUI Source
-                                </Button>
-                              )}
-                            </Flex>
-                          )}
+                          <Flex gap="x-small">
+                            <Button
+                              size="small"
+                              withBackground={false}
+                              renderIcon={<LinkInstUIIcon />}
+                              onClick={() => {
+                                const url = new URL(window.location.href)
+                                url.searchParams.set('board', boardKey)
+                                navigator.clipboard.writeText(url.toString())
+                              }}
+                            >
+                              Copy link
+                            </Button>
+                            {board.playable && (
+                              <Button
+                                size="small"
+                                withBackground={false}
+                                renderIcon={<RefreshCwInstUIIcon />}
+                                onClick={() => replay(boardKey)}
+                              >
+                                Replay
+                              </Button>
+                            )}
+                            {board.copy && (
+                              <Button
+                                size="small"
+                                withBackground={false}
+                                renderIcon={<FileTextInstUIIcon />}
+                                onClick={() => setCopyModal({ caption: board.caption, screenLabel: `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`, copy: board.copy! })}
+                              >
+                                UX Copy
+                              </Button>
+                            )}
+                            {board.code && (
+                              <Button
+                                size="small"
+                                withBackground={false}
+                                renderIcon={<CodeInstUIIcon />}
+                                onClick={() => setCodeModal({ caption: board.caption, code: board.code! })}
+                              >
+                                InstUI Source
+                              </Button>
+                            )}
+                          </Flex>
 
                           {/* Notes */}
                           {board.notes && (
@@ -212,6 +223,7 @@ export function SpecSheet({
                           )}
 
                         </Flex>
+                        </div>
                       </Flex.Item>
                     )
                   })}

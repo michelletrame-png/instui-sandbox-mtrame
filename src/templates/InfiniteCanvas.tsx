@@ -133,6 +133,38 @@ export function InfiniteCanvas({
     }
   }, [tool])
 
+  // Orient to a specific board when ?board=si-bi is in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const boardId = params.get('board')
+    if (!boardId) return
+    requestAnimationFrame(() => {
+      if (!containerRef.current || !layerRef.current) return
+      const boardEl = layerRef.current.querySelector(`[data-board-id="${boardId}"]`) as HTMLElement | null
+      if (!boardEl) return
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const boardRect = boardEl.getBoundingClientRect()
+      const { x: tx, y: ty, scale: s } = transformRef.current
+      // Compute board center in unscaled layer coordinates
+      const bCenterX = (boardRect.left + boardRect.width / 2 - containerRect.left - tx) / s
+      const bCenterY = (boardRect.top + boardRect.height / 2 - containerRect.top - ty) / s
+      // Fit board in viewport with padding, capped at 1x (never zoom in)
+      const PADDING = 80
+      const boardUnscaledW = boardRect.width / s
+      const boardUnscaledH = boardRect.height / s
+      const fitScale = Math.min(
+        (containerRect.width - PADDING * 2) / boardUnscaledW,
+        (containerRect.height - NAV_HEIGHT - PADDING * 2) / boardUnscaledH,
+        1,
+      )
+      const newScale = Math.max(MIN_SCALE, fitScale)
+      // Center board in visible area (below nav bar) at new scale
+      const newTx = containerRect.width / 2 - bCenterX * newScale
+      const newTy = (containerRect.height + NAV_HEIGHT) / 2 - bCenterY * newScale
+      sync({ x: newTx, y: newTy, scale: newScale })
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.code === 'Space' && !e.repeat) {
