@@ -23,33 +23,6 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
-    id: 'agent-patterns',
-    title: 'Agent Patterns',
-    path: '/agent-patterns',
-    createdAt: '2026-05-04',
-    category: 'Spec',
-    viewMode: 'spec',
-    component: lazy(() => import('./designs/agent-patterns')),
-  },
-  {
-    id: 'agent-screens',
-    title: 'Agent Screens',
-    path: '/agent-screens',
-    createdAt: '2026-05-01',
-    category: 'Reference',
-    viewMode: 'spec',
-    component: lazy(() => import('./references/agent-screens')),
-  },
-  {
-    id: 'agent-shell',
-    title: 'Agent Shell',
-    path: '/agent-shell',
-    createdAt: '2026-04-28',
-    category: 'Prototype',
-    status: 'WIP',
-    component: lazy(() => import('./designs/agent-shell')),
-  },
-  {
     id: 'learner-overview',
     title: 'Learner Overview',
     path: '/learner-overview',
