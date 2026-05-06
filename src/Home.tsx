@@ -9,8 +9,8 @@ import { Pill } from '@instructure/ui-pill/latest'
 import { Table } from '@instructure/ui-table/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
-import { IconButton } from '@instructure/ui-buttons/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
+import { IconButton } from '@instructure/ui-buttons/latest'
 import { CopyInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
 import { sandboxOwner } from './sandbox.config'
@@ -99,70 +99,70 @@ function PrototypeTable({ items, showCategory = false, showStatus = false }: {
   )
 }
 
-type PromptGroup = {
-  skill: string
+type SkillInfo = {
+  command: string
+  title: string
   description: string
-  prompts: string[]
+  triggers: string[]
 }
 
-const promptGroups: PromptGroup[] = [
+const skills: SkillInfo[] = [
   {
-    skill: '/sandbox-design',
-    description: 'Start here. Figures out what to build and hands off to the right skill.',
-    prompts: [
-      'I want to design the assignment submission flow.',
-      'Create a spec for the new gradebook empty states — desktop and mobile.',
-      'Build me an interactive prototype of the course dashboard.',
-      'I need to spec out the error states for file upload.',
+    command: '/sandbox-design',
+    title: 'Design',
+    description: 'Start here for any new work. Asks what you want to create, identifies the right output type (spec, prototype, or reference), then hands off to the right skill.',
+    triggers: [
+      '/sandbox-design a submission flow using the canvas page template and this Figma file',
+      '/sandbox-design spec for the gradebook empty states — desktop and mobile',
+      '/sandbox-design an interactive prototype of the course dashboard',
     ],
   },
   {
-    skill: '/get-component',
-    description: 'Look up any InstUI component\'s props before using it.',
-    prompts: [
-      'What props does SimpleSelect accept? I want to make one with a placeholder and a disabled option.',
-      'Show me the props for Tray so I can build a slide-in panel from the right side.',
-      'What are the available sizes and colors for Pill?',
+    command: '/sandbox-init',
+    title: 'Init',
+    description: "Sets up the sandbox environment. Checks Node.js, installs dependencies, starts the dev server, and orients you to how the sandbox works. Run this when you first open a new sandbox or if the dev server isn't running.",
+    triggers: [
+      '/sandbox-init',
     ],
   },
   {
-    skill: '/get-icons',
-    description: 'Find the right icon from the Lucide or Canvas icon sets.',
-    prompts: [
-      'Find an icon for "upload" — I want something that suggests sending a file to the cloud.',
-      'Is there a calendar icon with a clock or time indicator?',
-      'Find a Canvas-specific icon for SpeedGrader.',
+    command: '/sandbox-publish',
+    title: 'Publish',
+    description: 'Everything related to publishing. Creates your GitHub repo and configures GitHub Pages (one-time setup), deploys updates to the live sandbox, and manages frozen static exports with permanent shareable URLs.',
+    triggers: [
+      '/sandbox-publish setup',
+      '/sandbox-publish my sandbox',
+      '/sandbox-publish the learner overview to a static link',
+      '/sandbox-publish delete learner-overview-v1',
     ],
   },
   {
-    skill: '/get-tokens',
-    description: 'Look up design token values for spacing, color, and typography.',
-    prompts: [
-      'What token should I use for a muted border color on a card?',
-      'What are the available borderRadius tokens for cards?',
-      'Show me the spacing scale — I want to pick the right gap between list items.',
+    command: '/sandbox-push',
+    title: 'Push',
+    description: 'Commits any local changes and pushes to your live sandbox. Routes to /sandbox-publish setup if no GitHub repo is configured yet. After pushing, checks for upstream updates and suggests /sandbox-update if any exist.',
+    triggers: [
+      '/sandbox-push',
     ],
   },
   {
-    skill: '/uxcopy-write',
-    description: 'Write UI copy in Instructure voice.',
-    prompts: [
-      'Write an empty state heading and body for a gradebook that has no submissions yet.',
-      'Write button labels and a confirmation dialog for deleting a course module.',
-      'Write a loading message and a success toast for submitting an assignment.',
+    command: '/sandbox-update',
+    title: 'Update',
+    description: "Pulls the latest improvements from the upstream base repo into your sandbox. Commits any local changes first if needed. Never pushes — use /sandbox-publish when you're ready to redeploy.",
+    triggers: [
+      '/sandbox-update',
     ],
   },
   {
-    skill: '/uxcopy-check',
-    description: 'Audit existing UI copy against Instructure voice guidelines.',
-    prompts: [
-      'Check this copy for voice issues: "Empower your students by leveraging our robust grading tools to seamlessly transform their learning journey."',
-      'Review the labels in the 2.0 board of the spec for tone and Instructure standards.',
+    command: '/sandbox-eval',
+    title: 'Eval',
+    description: 'Writes a quality report for the current session to .claude/evals/. Use it to review how a design or prototype session went.',
+    triggers: [
+      '/sandbox-eval',
     ],
   },
 ]
 
-function PromptGroupCard({ group, sharedTokens }: { group: PromptGroup; sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
+function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
   return (
     <View
       as="div"
@@ -174,13 +174,22 @@ function PromptGroupCard({ group, sharedTokens }: { group: PromptGroup; sharedTo
       borderColor="primary"
       padding="medium"
     >
-      <Flex direction="column" gap="small">
-        <Flex direction="column" gap="xx-small">
-          <Text weight="bold" size="medium">{group.skill}</Text>
-          <Text color="secondary" size="small">{group.description}</Text>
+      <Flex direction="column" gap="x-small">
+        <Flex alignItems="center" gap="small">
+          <View
+            as="span"
+            display="inline-block"
+            background="secondary"
+            themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
+            borderRadius={sharedTokens.borderRadius.card.sm}
+            padding="xx-small x-small"
+          >
+            <Text size="small" weight="bold">{skill.command}</Text>
+          </View>
         </Flex>
-        <Flex direction="column" gap="x-small">
-          {group.prompts.map((prompt, i) => (
+        <Text size="small" color="secondary">{skill.description}</Text>
+        <Flex direction="column" gap="xx-small" margin="x-small 0 0 0">
+          {skill.triggers.map((t, i) => (
             <View
               key={i}
               as="div"
@@ -188,11 +197,11 @@ function PromptGroupCard({ group, sharedTokens }: { group: PromptGroup; sharedTo
               background="secondary"
               themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
               borderRadius={sharedTokens.borderRadius.card.sm}
-              padding="x-small small"
+              padding="xx-small x-small"
             >
               <Flex alignItems="center" gap="x-small">
                 <Flex.Item shouldGrow shouldShrink>
-                  <Text size="small">{prompt}</Text>
+                  <Text size="small" color="secondary">{t}</Text>
                 </Flex.Item>
                 <IconButton
                   size="small"
@@ -200,7 +209,7 @@ function PromptGroupCard({ group, sharedTokens }: { group: PromptGroup; sharedTo
                   withBorder={false}
                   screenReaderLabel="Copy prompt"
                   renderIcon={<CopyInstUIIcon />}
-                  onClick={() => navigator.clipboard.writeText(prompt)}
+                  onClick={() => navigator.clipboard.writeText(t)}
                 />
               </Flex>
             </View>
@@ -282,11 +291,11 @@ export function Home() {
                 </Flex>
               )}
             </Tabs.Panel>
-            <Tabs.Panel renderTitle="Prompts & Skills" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+            <Tabs.Panel renderTitle="Info" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               <View as="div" display="block" margin="medium 0 0 0">
                 <Flex direction="column" gap="medium">
-                  {promptGroups.map(group => (
-                    <PromptGroupCard key={group.skill} group={group} sharedTokens={sharedTokens} />
+                  {skills.map(skill => (
+                    <SkillCard key={skill.command} skill={skill} sharedTokens={sharedTokens} />
                   ))}
                 </Flex>
               </View>

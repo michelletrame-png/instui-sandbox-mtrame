@@ -35,7 +35,8 @@ These are not prototypes — they are **authoritative examples**. When in doubt 
 | `sandbox-design` | Intake skill for new work — asks what to build and routes to the right skill |
 | `sandbox-design-prototype` | Create and delete prototypes; picks the right template |
 | `sandbox-design-spec` | Create spec sheets with annotated frames for design handoff |
-| `sandbox-sync` | Commit local changes and pull updates from the upstream base repo |
+| `sandbox-update` | Commit local changes and pull updates from the upstream base repo |
+| `sandbox-push` | Commit and push to the live sandbox; routes to setup if no repo exists; checks for upstream updates after |
 | `sandbox-publish` | Set up the GitHub repo and Pages, publish the sandbox, and manage static prototype exports |
 
 Skills are the agent's primary reference for InstUI API decisions. They encode hard-won knowledge about non-obvious behavior — icon color inheritance, `Flex.Item` overflow clipping, `background` + `themeOverride` wiring — that isn't obvious from the InstUI docs alone.

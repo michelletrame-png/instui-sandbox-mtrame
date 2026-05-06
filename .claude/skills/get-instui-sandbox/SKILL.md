@@ -143,7 +143,7 @@ git -C <name> remote rename origin upstream
 ```
 
 This gives you the right remote setup:
-- **`upstream`** → the base repo, used by `/sandbox-sync` to pull updates
+- **`upstream`** → the base repo, used by `/sandbox-update` to pull updates
 - **No `origin`** until you run `/sandbox-publish`, which creates your own GitHub repo and sets it as `origin`
 
 Tell the user:

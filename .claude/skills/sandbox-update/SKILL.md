@@ -1,12 +1,12 @@
 ---
-name: sandbox-sync
+name: sandbox-update
 description: >
   Commits any local changes and pulls updates from the upstream
   instui-sandbox-base repo into your sandbox. Invoke when the user asks to
-  sync, pull updates, get the latest from upstream, or commit and update.
+  update, pull updates, get the latest from upstream, or commit and update.
 ---
 
-# Sandbox Sync
+# Sandbox Update
 
 Two things happen in order: local work gets committed, then upstream
 improvements get merged in. Either step is skipped if there's nothing to do.
@@ -97,32 +97,13 @@ Never auto-resolve conflicts.
 
 ---
 
-## Step 6 — Push
+## Done
 
-Check whether a personal remote is configured:
+Tell the user:
 
-```bash
-git remote get-url origin 2>/dev/null || echo ""
-```
+> Your sandbox is up to date with the latest from upstream.
 
-**Returns nothing, or returns `https://github.com/instructure/instui-sandbox-base.git`** → no personal repo set up yet. Tell the user:
-
-> Merge complete! Your local sandbox is up to date.
->
-> To push and redeploy, you'll need a GitHub repo first. Run `/sandbox-publish setup` to create one.
-
-Stop here.
-
-**Returns a different URL** → a personal repo is configured. Offer to push:
-
-> Merge complete. Ready to push — this will redeploy your sandbox with the
-> upstream updates. Shall I push?
-
-Wait for approval, then:
-
-```bash
-git push
-```
+Never offer to push. Pushing is a separate action — use `/sandbox-publish` when ready.
 
 ---
 
@@ -130,4 +111,4 @@ git push
 
 - **Never `git push --force`.**
 - **Never auto-resolve merge conflicts.** Stop and explain.
-- **Never push without explicit user approval.**
+- **Never push.** This skill only pulls — pushing is handled by `/sandbox-publish`.
