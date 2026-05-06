@@ -119,8 +119,7 @@ With these options:
 
 Once they select, use AskUserQuestion to ask:
 
->  **Personal**: "What's your name or GitHub username?"
->  **Team**: "What's your team name?"
+>  "What's your name or GitHub username?" OR "What's your team name?"
 
 Take their answer and suggest a full sandbox name:
 
@@ -136,6 +135,16 @@ Confirm before continuing.
 ```bash
 git clone https://github.com/instructure/instui-sandbox-base.git <name>
 ```
+
+Then immediately rename the remote so there's no risk of accidentally pushing to the base repo:
+
+```bash
+git -C <name> remote rename origin upstream
+```
+
+This gives you the right remote setup:
+- **`upstream`** → the base repo, used by `/sandbox-sync` to pull updates
+- **No `origin`** until you run `/sandbox-publish`, which creates your own GitHub repo and sets it as `origin`
 
 Tell the user:
 > Done! Your sandbox folder **`<name>`** is ready on your computer.
@@ -174,7 +183,9 @@ This name appears on the home page under the InstUI logo as "Designs by **[name]
 
 ## Step 9 — Open in Claude Code
 
-The sandbox needs to be opened as its own project in a new Claue Code session in the newly created `<name>` folder.
+The sandbox needs to be opened as its own project in a new Claude Code session in the newly created `<name>` folder. 
+
+**Don't give the users instructions on how to do this because Claude Code's UI changes often.**
 
 
 ---

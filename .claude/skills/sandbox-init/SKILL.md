@@ -71,12 +71,34 @@ reinstalling Node from nodejs.org, which bundles npm.
 
 ---
 
-## Step 4 — Verify BASE_URL is configured
+## Step 4 — Fix remote setup
+
+Check what `origin` points to:
+
+```bash
+git remote get-url origin 2>/dev/null || echo ""
+```
+
+**If it prints `https://github.com/instructure/instui-sandbox-base.git`** → rename it to `upstream` so there's no risk of accidentally pushing to the shared base repo:
+
+```bash
+git remote rename origin upstream
+```
+
+Tell the user: *"Renamed `origin` → `upstream` so you can't accidentally push to the base repo. When you're ready to publish, `/sandbox-publish` will set up your own repo as `origin`."*
+
+**If it prints anything else (a personal or team repo URL)** → `origin` is already the user's own repo. Leave it as-is and continue.
+
+**If it prints nothing** → no `origin` configured (expected after a fresh clone with `/get-instui-sandbox`). Continue.
+
+---
+
+## Step 5 — Verify BASE_URL is configured
 
 Run:
 
 ```bash
-git remote get-url origin 2>/dev/null || echo ""
+git remote get-url upstream 2>/dev/null || git remote get-url origin 2>/dev/null || echo ""
 ```
 
 Extract the repo name — the last path segment, with `.git` stripped. If there is no remote, use `basename $(pwd)`.
@@ -87,9 +109,9 @@ Then check:
 grep "^BASE_URL=" .env.local 2>/dev/null
 ```
 
-**If the repo name is `instui-sandbox-base`** → skip to Step 5. The `vite.config.ts` fallback already covers it.
+**If the repo name is `instui-sandbox-base`** → skip to Step 6. The `vite.config.ts` fallback already covers it.
 
-**If the repo name is anything else AND `.env.local` already contains `BASE_URL=/<repo-name>/`** → skip to Step 5.
+**If the repo name is anything else AND `.env.local` already contains `BASE_URL=/<repo-name>/`** → skip to Step 6.
 
 **Otherwise** → create or update `.env.local`:
 
@@ -101,13 +123,13 @@ If the file already exists with a different `BASE_URL` line, replace that line r
 
 ---
 
-## Step 5 — Check dependencies are installed
+## Step 6 — Check dependencies are installed
 
 ```bash
 ls node_modules 2>/dev/null | wc -l
 ```
 
-**Output is greater than 0** → skip to Step 6.
+**Output is greater than 0** → skip to Step 7.
 
 **Output is 0 or the directory doesn't exist** → dependencies need to be installed.
 Tell the user: *"Installing project dependencies — this takes a minute or two the
@@ -132,7 +154,7 @@ npm install
 
 ---
 
-## Step 6 — Start the dev server
+## Step 7 — Start the dev server
 
 Run in the background:
 
@@ -162,7 +184,7 @@ output. Common causes:
 
 ---
 
-## Step 7 — Hand off to the user
+## Step 8 — Hand off to the user
 
 Once the server is confirmed running, tell the user:
 
