@@ -244,7 +244,7 @@ export function InfiniteCanvas({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 8px',
+    padding: '0 8px 0 16px',
     backgroundColor: palette.navBg,
     backdropFilter: 'blur(10px)',
     borderBottom: `1px solid ${palette.navBorder}`,
