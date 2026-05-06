@@ -338,15 +338,25 @@ Note to user:
 
 ### Step 1 — Confirm
 
-> This removes **[Title]** from your deploy list. The URL will no longer
-> be managed here, but the files stay on the `gh-pages` branch — the link
-> keeps working until manually removed.
+> This will fully remove **[Title]** — the deploy list entry and the files on
+> the `gh-pages` branch. The URL will return a 404 once GitHub Pages catches up.
 >
-> Remove it from the deploy list?
+> Proceed?
 
-### Step 2 — Update and commit
+### Step 2 — Remove files from gh-pages and update deploy.json
 
-Remove the entry from `static[]`. Wait for approval, then:
+Wait for approval, then delete the files from the `gh-pages` branch using a worktree:
+
+```bash
+git worktree add /tmp/gh-pages-delete gh-pages
+rm -rf /tmp/gh-pages-delete/static/<id>
+git -C /tmp/gh-pages-delete add -A
+git -C /tmp/gh-pages-delete commit -m "deploy: remove static export <id>"
+git -C /tmp/gh-pages-delete push
+git worktree remove /tmp/gh-pages-delete
+```
+
+Then remove the entry from `static[]` in deploy.json and commit to main:
 
 ```bash
 git add .claude/deploy.json
@@ -383,5 +393,4 @@ This file is gitignored and never pushed to the upstream repo.
 - **Never commit `.claude/deploy.json` to the upstream repo.**
 - **Always confirm the repo name before running `gh repo create`.** The name
   is hard to change after the fact — get it right first.
-- **Deleting an export from deploy.json does not remove it from the web.**
-  The `gh-pages` branch files persist. Say so explicitly.
+- **Always delete both:** remove the entry from deploy.json AND delete the files from the `gh-pages` branch. Never just update deploy.json and leave the files live.
