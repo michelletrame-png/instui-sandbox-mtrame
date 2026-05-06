@@ -98,6 +98,22 @@ Never auto-resolve conflicts.
 
 ## Step 6 — Push
 
+Check whether a personal remote is configured:
+
+```bash
+git remote get-url origin 2>/dev/null || echo ""
+```
+
+**Returns nothing, or returns `https://github.com/instructure/instui-sandbox-base.git`** → no personal repo set up yet. Tell the user:
+
+> Merge complete! Your local sandbox is up to date.
+>
+> To push and redeploy, you'll need a GitHub repo first. Run `/sandbox-publish setup` to create one.
+
+Stop here.
+
+**Returns a different URL** → a personal repo is configured. Offer to push:
+
 > Merge complete. Ready to push — this will redeploy your sandbox with the
 > upstream updates. Shall I push?
 

@@ -152,9 +152,10 @@ Tell the user:
 > One more step: enable GitHub Pages.
 >
 > 1. Go to `https://github.com/instructure/<name>/settings/pages`
-> 2. Under **Source**, select **Deploy from a branch**
-> 3. Set branch to `gh-pages`, folder to `/ (root)`
-> 4. Click **Save**
+> 2. Under **GitHub Pages visibility**, select **Public**
+> 3. Under **Source**, select **Deploy from a branch**
+> 4. Set branch to `gh-pages`, folder to `/ (root)`
+> 5. Click **Save**
 >
 > The `gh-pages` branch will be created automatically on your first push.
 
