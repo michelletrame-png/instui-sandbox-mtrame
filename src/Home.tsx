@@ -302,15 +302,25 @@ export function Home() {
                       <Table.Head>
                         <Table.Row>
                           <Table.ColHeader id="title" stackedSortByLabel="Title">Title</Table.ColHeader>
-                          <Table.ColHeader id="url" stackedSortByLabel="URL">URL</Table.ColHeader>
                           <Table.ColHeader id="deployedAt" stackedSortByLabel="Published" width="130px">Published</Table.ColHeader>
                         </Table.Row>
                       </Table.Head>
                       <Table.Body>
                         {publishedItems.map(p => (
                           <Table.Row key={p.id}>
-                            <Table.Cell>{p.title}</Table.Cell>
-                            <Table.Cell><Link href={p.url} target="_blank" rel="noopener noreferrer">{p.url}</Link></Table.Cell>
+                            <Table.Cell>
+                              <Flex alignItems="center" gap="x-small">
+                                <Link href={p.url} target="_blank" rel="noopener noreferrer">{p.id}</Link>
+                                <IconButton
+                                  size="small"
+                                  withBackground={false}
+                                  withBorder={false}
+                                  screenReaderLabel="Copy link"
+                                  renderIcon={<CopyInstUIIcon />}
+                                  onClick={() => navigator.clipboard.writeText(p.url)}
+                                />
+                              </Flex>
+                            </Table.Cell>
                             <Table.Cell>{formatDate(p.deployedAt)}</Table.Cell>
                           </Table.Row>
                         ))}
