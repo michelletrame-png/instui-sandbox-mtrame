@@ -154,14 +154,22 @@ Tell the user:
 
 ## Step 7 — Set the base path
 
-Create `.env.local` inside the cloned folder with the repo name as the base path:
+**This step is required — do not skip it.** Create `.env.local` inside the cloned folder using the Write tool (not bash), writing exactly this content:
+
+```
+BASE_URL=/<name>/
+```
+
+Save it to `<name>/.env.local`.
+
+Then verify it was created:
 
 ```bash
-echo "BASE_URL=/<name>/" > <name>/.env.local
+cat <name>/.env.local
 ```
 
 This tells Vite to serve the sandbox under `/<name>/` — required for GitHub Pages
-and for the dev server to generate correct asset URLs. 
+and for the dev server to generate correct asset URLs. Without this file, the dev server will use the wrong base path.
 
 ---
 
