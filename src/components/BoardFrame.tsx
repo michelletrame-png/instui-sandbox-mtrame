@@ -10,7 +10,7 @@ import { patchBoardIframeBCR } from './patchPortal'
 const FRAME_HTML = [
   '<!DOCTYPE html><html><head><meta charset="utf-8">',
   '<style>*,*::before,*::after{box-sizing:border-box}',
-  'html,body{margin:0;padding:0;overflow:hidden}</style>',
+  'html,body,#root{margin:0;padding:0;overflow:hidden;height:100%}</style>',
   '</head><body><div id="root"></div></body></html>',
 ].join('')
 
