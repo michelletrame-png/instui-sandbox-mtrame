@@ -74,6 +74,8 @@ Skip to Step 5 (write deploy.json).
 
 ### Step 2 — Choose a repo name
 
+Use the AskUserQuestion tool to ask:
+
 > Creating a GitHub repository is an important step — choose your name
 > carefully, as it will be the permanent home for your sandbox.
 >
@@ -122,7 +124,8 @@ Save this 8-character hex string as `<hash>`. It will be used to obscure the liv
 | Live URL | `https://instructure.github.io/<name>/<hash>/` |
 | `upstream` | `instructure/instui-sandbox-base` |
 
-Confirm:
+Use the AskUserQuestion tool to ask:
+
 > Here's your sandbox configuration:
 > - **Repo:** `https://github.com/instructure/<name>`
 > - **Live sandbox:** `https://instructure.github.io/<name>/<hash>/`
@@ -185,6 +188,8 @@ Tell the user:
 
 ### Step 10 — Commit and push
 
+Use the AskUserQuestion tool to ask:
+
 > Ready to commit and push these configuration changes. This will trigger
 > your first GitHub Pages deploy. Shall I proceed?
 
@@ -218,7 +223,7 @@ rebuild.
 git status --short
 ```
 
-**Output has changes** → ask for a commit message or propose one, then:
+**Output has changes** → use the AskUserQuestion tool to ask for a commit message or propose one, then:
 
 ```bash
 git add <relevant files>
@@ -228,6 +233,8 @@ git commit -m "<message>"
 **Output is empty** → nothing new to commit, just push.
 
 ### Step 2 — Push
+
+Use the AskUserQuestion tool to ask:
 
 > Ready to push and redeploy the live sandbox. Shall I proceed?
 
@@ -272,7 +279,8 @@ URL for each entry = `<repo.pagesUrl>/static/<repo.hash>/<id>/`
 ### Step 1 — Identify the prototype
 
 Match against `src/registry.ts` by `id` or `title` (case-insensitive). If
-not named, show the list:
+not named, use the AskUserQuestion tool to ask:
+
 > Which prototype would you like to export?
 > [list of id + title]
 
@@ -280,7 +288,8 @@ not named, show the list:
 
 Default: `<prototype-id>-v1`. Increment if that ID already exists.
 
-Confirm:
+Use the AskUserQuestion tool to ask:
+
 > I'll create a static export of **[Title]** at:
 > `<pagesUrl>/static/<hash>/<proposed-id>/`
 >
@@ -303,6 +312,8 @@ Append to `static[]`:
 ### Step 4 — Commit and trigger
 
 Update `src/static-exports.json` to reflect the new entry (see "Keeping src/static-exports.json in sync" below).
+
+Use the AskUserQuestion tool to ask:
 
 > Ready to commit and kick off the static build. This builds a frozen
 > snapshot of **[Title]** and publishes it to GitHub Pages. Shall I proceed?
@@ -338,7 +349,8 @@ Tell the user:
 
 ### Step 1 — Identify and confirm
 
-Look up the export by `id` or `title`. Confirm the rename:
+Look up the export by `id` or `title`. Use the AskUserQuestion tool to ask:
+
 > Renaming changes the URL. Anyone with the old link will get a 404.
 >
 > Current URL: `<pagesUrl>/static/<hash>/<old-id>/`
@@ -362,6 +374,8 @@ Note to user:
 **Triggers:** "delete [export]", "remove [export]"
 
 ### Step 1 — Confirm
+
+Use the AskUserQuestion tool to ask:
 
 > This will fully remove **[Title]** — the deploy list entry and the files on
 > the `gh-pages` branch. The URL will return a 404 once GitHub Pages catches up.

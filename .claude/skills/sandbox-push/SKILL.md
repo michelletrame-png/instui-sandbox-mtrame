@@ -38,7 +38,7 @@ git status --short
 
 **Output is empty** → nothing to commit. Skip to Step 3.
 
-**Output has changes** → tell the user what's pending and ask for a commit message or propose one based on the files. Then:
+**Output has changes** → tell the user what's pending and use the AskUserQuestion tool to ask for a commit message or propose one based on the files. Then:
 
 ```bash
 git add <relevant files>
@@ -48,6 +48,8 @@ git commit -m "<message>"
 ---
 
 ## Step 3 — Push
+
+Use the AskUserQuestion tool to ask:
 
 > Ready to push and redeploy. Shall I proceed?
 

@@ -117,11 +117,11 @@ With these options:
 - **Personal** — just for me
 - **Team** — shared with my team
 
-Once they select, use AskUserQuestion to ask:
+Once they select, use the AskUserQuestion tool to ask:
 
 >  "What's your name or GitHub username?" OR "What's your team name?"
 
-Take their answer and suggest a full sandbox name:
+Take their answer and use the AskUserQuestion tool to ask:
 
 > Here's your sandbox name: **`instui-sandbox-<nameorteam>`**
 > Is that right, or would you like to change it?

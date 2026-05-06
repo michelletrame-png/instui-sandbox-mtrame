@@ -38,13 +38,13 @@ send follow-up questions one at a time.
 Use this as a guide for what to ask:
 
 ### What are they building?
-If the subject is vague ("something for assignments"), ask:
+If the subject is vague ("something for assignments"), use the AskUserQuestion tool to ask:
 > What specifically do you want to show? For example: a particular flow
 > (submitting, grading, reviewing feedback), a specific state (empty, loading,
 > error), or a whole feature area?
 
 ### Spec or prototype?
-If it's not clear, ask:
+If it's not clear, use the AskUserQuestion tool to ask:
 > Do you want a **spec sheet** (artboard frames for design handoff, with UX copy
 > and InstUI source exports) or an **interactive prototype** (a working Canvas
 > page you can click through)?
@@ -63,13 +63,13 @@ When in doubt, suggest a spec — it's easier to add interactivity later than to
 retrofit handoff artifacts onto a prototype.
 
 ### Desktop, mobile, or both?
-If the subject is a full-page layout and they haven't specified:
+If the subject is a full-page layout and they haven't specified, use the AskUserQuestion tool to ask:
 > Do you need desktop (1440px), mobile (390px), or both?
 
 Skip this question for component-level or isolated UI work.
 
 ### Any reference designs?
-Optionally, and only if relevant:
+Optionally, and only if relevant, use the AskUserQuestion tool to ask:
 > Do you have a Figma link, screenshot, or existing screen I should reference?
 
 Only ask this if the user seems to have a specific visual target in mind.
@@ -79,7 +79,7 @@ Only ask this if the user seems to have a specific visual target in mind.
 ## Step 3 — Summarize and confirm
 
 Once you have enough to proceed, summarize your understanding in 3–5 bullet
-points and ask the user to confirm before building:
+points and use the AskUserQuestion tool to ask:
 
 > Here's what I'll create:
 >

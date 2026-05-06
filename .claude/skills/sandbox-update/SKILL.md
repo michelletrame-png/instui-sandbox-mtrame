@@ -21,14 +21,14 @@ git status --short
 
 **Output is empty** → nothing to commit. Skip to Step 2.
 
-**Output has changes** → tell the user what's pending and ask:
+**Output has changes** → use the AskUserQuestion tool to ask:
 
 > You have uncommitted changes. Would you like me to commit them before
 > pulling updates?
 >
 > [list the changed files]
 
-If yes, ask for a commit message or propose one based on the files. Then:
+If yes, use the AskUserQuestion tool to ask for a commit message or propose one based on the files. Then:
 
 ```bash
 git add <relevant files>

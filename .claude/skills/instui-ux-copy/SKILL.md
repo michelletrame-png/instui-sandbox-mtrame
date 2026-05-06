@@ -48,7 +48,7 @@ Read `references/style-guide.md` in full. The style guide is the source of truth
    - ❌ Violations (conflicts with the style guide)
    - ❌ Placeholder — strings that must be replaced before handoff
 
-5. For every ⚠️ and ❌ style item, provide a specific rewrite — never flag without a fix. For ❌ Placeholder items, ask the user for context (UI pattern, user goal, emotional state) then generate real copy using the Write mode below.
+5. For every ⚠️ and ❌ style item, provide a specific rewrite — never flag without a fix. For ❌ Placeholder items, use the AskUserQuestion tool to ask for context (UI pattern, user goal, emotional state) then generate real copy using the Write mode below.
 
 ### Examples
 
@@ -80,7 +80,7 @@ If violations were found, offer to rewrite the affected strings in the TSX file.
 
 ### Instructions
 
-1. Ask the user for:
+1. Use the AskUserQuestion tool to ask for:
    - The UI pattern type (empty state, error message, confirmation modal, tooltip, button label, notification, etc.)
    - A Figma frame link OR a plain description of the screen and what the user is trying to do
    - Any additional context: user's emotional state, where they are in the journey, space constraints

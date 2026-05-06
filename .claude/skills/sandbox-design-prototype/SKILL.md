@@ -10,10 +10,9 @@ description: >
 
 ## Creating a prototype
 
-**Before doing anything else, ask the user which template to start from.**
+**Before doing anything else, use the AskUserQuestion tool to ask the user which template to start from.**
 
-Present the available templates as a short list and wait for their answer before
-creating any files:
+Wait for their answer before creating any files:
 
 > Which template would you like to start from?
 >
