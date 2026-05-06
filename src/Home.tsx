@@ -301,7 +301,7 @@ export function Home() {
                   : <Table caption="Published links" hover>
                       <Table.Head>
                         <Table.Row>
-                          <Table.ColHeader id="title" stackedSortByLabel="Title">Title</Table.ColHeader>
+                          <Table.ColHeader id="title" stackedSortByLabel="Design">Design</Table.ColHeader>
                           <Table.ColHeader id="deployedAt" stackedSortByLabel="Published" width="130px">Published</Table.ColHeader>
                         </Table.Row>
                       </Table.Head>
