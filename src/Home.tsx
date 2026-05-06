@@ -289,26 +289,34 @@ export function Home() {
             <Tabs.Panel renderTitle="Designs" isSelected={tabIndex === 0} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               {tabPanelView(<PrototypeTable items={workItems} showCategory showStatus />)}
             </Tabs.Panel>
-            <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              {tabPanelView(
-                <Flex direction="column" gap="medium">
-                  <Alert variant="info" renderCloseButtonLabel={false} hasShadow={false}>Page wrappers for starting a new design.</Alert>
-                  <PrototypeTable items={templateItems} />
-                </Flex>
-              )}
-            </Tabs.Panel>
-            <Tabs.Panel renderTitle="References" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              {tabPanelView(
-                <Flex direction="column" gap="medium">
-                  <Alert variant="info" renderCloseButtonLabel={false} hasShadow={false}>Example code referenced by skills used to improve code quality.</Alert>
-                  <PrototypeTable items={referenceItems} />
-                </Flex>
-              )}
-            </Tabs.Panel>
-            <Tabs.Panel renderTitle="Published" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+            <Tabs.Panel renderTitle="Published" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               {tabPanelView(
                 publishedItems.length === 0
-                  ? <Text color="secondary">No published links yet. Run <Text weight="bold">/sandbox-publish the [design name] to a static link</Text> to share it.</Text>
+                  ? <Flex direction="column" gap="small">
+                      <Text color="secondary">No links published yet. Share any design at a permanent URL:</Text>
+                      <View
+                        as="div"
+                        display="block"
+                        background="secondary"
+                        themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
+                        borderRadius={sharedTokens.borderRadius.card.sm}
+                        padding="xx-small x-small"
+                      >
+                        <Flex alignItems="center" gap="x-small">
+                          <Flex.Item shouldGrow shouldShrink>
+                            <Text size="small" color="secondary">/sandbox-publish the [design name] to a static link</Text>
+                          </Flex.Item>
+                          <IconButton
+                            size="small"
+                            withBackground={false}
+                            withBorder={false}
+                            screenReaderLabel="Copy prompt"
+                            renderIcon={<CopyInstUIIcon />}
+                            onClick={() => navigator.clipboard.writeText('/sandbox-publish the [design name] to a static link')}
+                          />
+                        </Flex>
+                      </View>
+                    </Flex>
                   : <Table caption="Published links" hover>
                       <Table.Head>
                         <Table.Row>
@@ -337,6 +345,22 @@ export function Home() {
                         ))}
                       </Table.Body>
                     </Table>
+              )}
+            </Tabs.Panel>
+            <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+              {tabPanelView(
+                <Flex direction="column" gap="medium">
+                  <Alert variant="info" renderCloseButtonLabel={false} hasShadow={false}>Page wrappers for starting a new design.</Alert>
+                  <PrototypeTable items={templateItems} />
+                </Flex>
+              )}
+            </Tabs.Panel>
+            <Tabs.Panel renderTitle="References" isSelected={tabIndex === 3} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
+              {tabPanelView(
+                <Flex direction="column" gap="medium">
+                  <Alert variant="info" renderCloseButtonLabel={false} hasShadow={false}>Example code referenced by skills used to improve code quality.</Alert>
+                  <PrototypeTable items={referenceItems} />
+                </Flex>
               )}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Info" isSelected={tabIndex === 4} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
