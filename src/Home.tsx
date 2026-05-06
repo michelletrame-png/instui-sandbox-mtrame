@@ -15,7 +15,8 @@ import { CopyInstUIIcon, ExternalLinkInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
 import { sandboxOwner, sandboxHash } from './sandbox.config'
 
-const sandboxLiveUrl = sandboxHash ? `https://instructure.github.io${import.meta.env.BASE_URL}` : ''
+const _repoName = import.meta.env.BASE_URL.split('/').filter(Boolean)[0]
+const sandboxLiveUrl = sandboxHash && _repoName ? `https://instructure.github.io/${_repoName}/${sandboxHash}/` : ''
 import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
