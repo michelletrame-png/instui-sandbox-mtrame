@@ -154,7 +154,6 @@ Update `src/sandbox.config.ts` to set the hash and repo URL:
 ```typescript
 export const sandboxOwner = '<owner name>'
 export const sandboxHash = '<hash>'
-export const sandboxRepoUrl = 'https://github.com/instructure/<name>'
 ```
 
 Also update `.env.local` to use the hashed base path:

@@ -13,7 +13,9 @@ import { Alert } from '@instructure/ui-alerts/latest'
 import { IconButton } from '@instructure/ui-buttons/latest'
 import { CopyInstUIIcon, ExternalLinkInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
-import { sandboxOwner, sandboxRepoUrl } from './sandbox.config'
+import { sandboxOwner, sandboxHash } from './sandbox.config'
+
+const sandboxLiveUrl = sandboxHash ? `https://instructure.github.io${import.meta.env.BASE_URL}` : ''
 import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
@@ -271,15 +273,15 @@ export function Home() {
             <Heading level="h1" margin="0">Sandbox</Heading>
           </Flex>
           <Flex alignItems="center" gap="x-small">
-            {sandboxRepoUrl ? (
-              <Link href={sandboxRepoUrl} target="_blank" rel="noopener noreferrer" renderIcon={<ExternalLinkInstUIIcon />} iconPlacement="start">
+            {sandboxLiveUrl ? (
+              <Link href={sandboxLiveUrl} target="_blank" rel="noopener noreferrer" renderIcon={<ExternalLinkInstUIIcon />} iconPlacement="start">
                 {sandboxOwner}
               </Link>
             ) : (
               <Text color="secondary" size="medium" weight="bold">{sandboxOwner}</Text>
             )}
-            {sandboxRepoUrl && (
-              <IconButton size="small" withBackground={false} withBorder={false} screenReaderLabel="Copy repo link" renderIcon={<CopyInstUIIcon />} onClick={() => navigator.clipboard.writeText(sandboxRepoUrl)} />
+            {sandboxLiveUrl && (
+              <IconButton size="small" withBackground={false} withBorder={false} screenReaderLabel="Copy live site link" renderIcon={<CopyInstUIIcon />} onClick={() => navigator.clipboard.writeText(sandboxLiveUrl)} />
             )}
           </Flex>
         </Flex>
