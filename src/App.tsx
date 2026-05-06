@@ -44,6 +44,8 @@ const THEMES = {
 
 type ThemeKey = keyof typeof THEMES
 
+const staticPrototypePath = import.meta.env.VITE_STATIC_PROTOTYPE_PATH as string | undefined
+
 export default function App() {
   const [themeKey, setThemeKey] = useState<ThemeKey>('light')
 
@@ -54,33 +56,45 @@ export default function App() {
   // eslint-disable-next-line instui/no-theme-name-detection -- theme toggle logic
   const onToggleTheme = () => setThemeKey(prev => prev === 'dark' ? 'light' : 'dark')
 
+  const loader = (
+    <Flex justifyItems="center" alignItems="center" height="100vh">
+      <Spinner renderTitle="Loading" size="large" />
+    </Flex>
+  )
+
+  const prototypeRoute = (p: PrototypeMeta, routePath: string) => {
+    const viewMode = resolveViewMode(p)
+    const element = viewMode === 'spec'
+      ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
+      : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
+    return <Route key={p.id} path={routePath} element={element} />
+  }
+
   return (
     <InstUISettingsProvider theme={currentTheme}>
       <ScrollbarStyle />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/showcase"
-          element={
-            <Showcase
-              themeName={themeKey}
-              themeNames={themeNames}
-              onThemeChange={(name) => setThemeKey(name as ThemeKey)}
+        {staticPrototypePath ? (
+          // Static single-prototype export — render directly at root, no sub-routes
+          prototypes
+            .filter(p => p.path === staticPrototypePath)
+            .map(p => prototypeRoute(p, '/'))
+        ) : (
+          <>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/showcase"
+              element={
+                <Showcase
+                  themeName={themeKey}
+                  themeNames={themeNames}
+                  onThemeChange={(name) => setThemeKey(name as ThemeKey)}
+                />
+              }
             />
-          }
-        />
-        {prototypes.map(p => {
-          const viewMode = resolveViewMode(p)
-          const loader = (
-            <Flex justifyItems="center" alignItems="center" height="100vh">
-              <Spinner renderTitle="Loading" size="large" />
-            </Flex>
-          )
-          const element = viewMode === 'spec'
-            ? <Suspense fallback={loader}><InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo="/" initialScale={0.6}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></InfiniteCanvas></Suspense>
-            : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
-          return <Route key={p.id} path={p.path} element={element} />
-        })}
+            {prototypes.map(p => prototypeRoute(p, p.path))}
+          </>
+        )}
       </Routes>
     </InstUISettingsProvider>
   )
