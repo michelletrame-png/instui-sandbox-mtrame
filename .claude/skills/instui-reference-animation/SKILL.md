@@ -225,7 +225,9 @@ const { sharedTokens } = useComputedTheme()
 
 Every animating InstUI component — `Transition`, `DrawerLayout`, `SideNavBar` — derives from these. **Use them in all custom keyframe animations** so your motion stays consistent with the design system if the tokens ever change.
 
-`Transition` consumes them automatically and applies:
+There is no fast/slow/medium scale — just these two values. If you need a different speed (a snappy hover response, a slow cinematic reveal), you're making a deliberate design decision to deviate from the system. Own that deviation: hardcode the value, and **apply the reduced-motion guard with extra care** — animations that already deviate from system timing are the ones most likely to be missed during an accessibility audit. When in doubt, skip the animation entirely for reduced-motion users rather than substituting a "toned down" version.
+
+`Transition` consumes the tokens automatically and applies:
 ```css
 transition: opacity 300ms ease-in-out, transform 300ms ease-in-out !important;
 ```
