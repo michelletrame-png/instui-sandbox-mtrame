@@ -109,8 +109,6 @@ export default function EmbedApp() {
         rafId = null
         postToParent({
           type: 'embed:size',
-          // Use body dimensions — consistent with observing body, avoids
-          // documentElement.scrollWidth reflecting viewport rather than content.
           width: document.body.scrollWidth,
           height: document.body.scrollHeight,
           boardRects: getBoardRects(),
@@ -118,24 +116,19 @@ export default function EmbedApp() {
       })
     }
 
-    // Don't let ResizeObserver fire until after the initial render settles.
-    // InstUI's CSS-in-JS applies styles after paint — early observations catch
-    // the DOM before styles land, reporting a bogus narrow width that shrinks
-    // the iframe and locks the layout into that narrow state.
-    // Report size once after styles settle, then stop. Board dimensions are
-    // fixed — there's nothing to keep observing, and a live ResizeObserver
-    // creates a feedback loop as the parent resizes the iframe element.
-    const observer = new ResizeObserver(() => {})
-    observer.observe(document.body)
-    const tid = setTimeout(() => {
-      observer.disconnect()
+    // SpecSheet dispatches 'spec-rendered' (CustomEvent, same window) after its
+    // first paint — lazy component loaded, React committed, CSS-in-JS styles in DOM.
+    let reported = false
+    function onSpecRendered() {
+      if (reported) return
+      reported = true
       reportSize()
-    }, 300)
+    }
+    window.addEventListener('spec-rendered', onSpecRendered)
 
     return () => {
-      clearTimeout(tid)
       if (rafId !== null) cancelAnimationFrame(rafId)
-      observer.disconnect()
+      window.removeEventListener('spec-rendered', onSpecRendered)
     }
   }, [])
 

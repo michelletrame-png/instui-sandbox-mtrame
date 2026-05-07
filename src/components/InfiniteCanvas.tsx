@@ -314,20 +314,28 @@ export function InfiniteCanvas({
         if (!r) return
         applyWheel(r.left + (msg.clientX ?? 0), r.top + (msg.clientY ?? 0), msg.deltaX ?? 0, msg.deltaY ?? 0, !!(msg.ctrlKey || msg.metaKey), !!msg.shiftKey)
       } else if (msg.type === 'embed:middledown') {
-        // Track iframe-local coords only — never call getBoundingClientRect on move
-        // (iframe position shifts after each applyTransform, causing exponential runaway)
-        embedMidRef.current = { x: msg.clientX ?? 0, y: msg.clientY ?? 0 }
-        panRef.current.active = true
+        // Convert iframe-local coords to parent-doc coords once at drag start.
+        // getBoundingClientRect is safe here — the iframe hasn't moved yet this tick.
+        // We do NOT call setTempPan: that triggers a React re-render which sets
+        // pointerEvents:none on the iframe, causing window.mousemove to also fire
+        // and double-pan the canvas.
+        const r = iframe()?.getBoundingClientRect()
+        if (!r) return
+        panRef.current = { active: true, startX: r.left + (msg.clientX ?? 0), startY: r.top + (msg.clientY ?? 0) }
         el!.style.cursor = 'grabbing'
       } else if (msg.type === 'embed:middlemove') {
-        if (!panRef.current.active || !embedMidRef.current) return
-        const dx = (msg.clientX ?? 0) - embedMidRef.current.x
-        const dy = (msg.clientY ?? 0) - embedMidRef.current.y
-        embedMidRef.current = { x: msg.clientX ?? 0, y: msg.clientY ?? 0 }
+        if (!panRef.current.active) return
+        // getBoundingClientRect here reflects the iframe's position AFTER the
+        // previous frame's applyTransform — correct delta for this frame.
+        const r = iframe()?.getBoundingClientRect()
+        if (!r) return
+        const px = r.left + (msg.clientX ?? 0)
+        const py = r.top + (msg.clientY ?? 0)
         const t = transformRef.current
-        applyTransform({ ...t, x: t.x + dx, y: t.y + dy })
+        applyTransform({ ...t, x: t.x + px - panRef.current.startX, y: t.y + py - panRef.current.startY })
+        panRef.current.startX = px
+        panRef.current.startY = py
       } else if (msg.type === 'embed:middleup') {
-        embedMidRef.current = null
         panRef.current.active = false
         el!.style.cursor = tempPanRef.current || toolRef.current === 'hand' ? 'grab' : ''
         setTransform({ ...transformRef.current })

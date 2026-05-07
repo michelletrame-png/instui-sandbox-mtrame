@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
@@ -145,6 +145,14 @@ export function SpecSheet({
   const { sharedTokens } = useComputedTheme()
   const [codeModal, setCodeModal] = useState<{ caption?: string; code: string } | null>(null)
   const [copyModal, setCopyModal] = useState<{ caption?: string; screenLabel: string; copy: CopyEntry[] } | null>(null)
+
+  // Notify EmbedApp (same window) that content has rendered so it can measure
+  // and report the real iframe size to the parent frame.
+  useEffect(() => {
+    if (isEmbedded) {
+      window.dispatchEvent(new CustomEvent('spec-rendered'))
+    }
+  }, [])
 
   return (
     <>
