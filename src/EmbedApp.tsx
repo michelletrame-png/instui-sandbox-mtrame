@@ -71,6 +71,34 @@ export default function EmbedApp() {
   }, [])
 
   useEffect(() => {
+    if (window === window.parent) return
+    let middleHeld = false
+    function onMouseDown(e: MouseEvent) {
+      if (e.button !== 1) return
+      e.preventDefault()
+      middleHeld = true
+      postToParent({ type: 'embed:middledown', clientX: e.clientX, clientY: e.clientY })
+    }
+    function onMouseMove(e: MouseEvent) {
+      if (!middleHeld) return
+      postToParent({ type: 'embed:middlemove', clientX: e.clientX, clientY: e.clientY })
+    }
+    function onMouseUp(e: MouseEvent) {
+      if (e.button !== 1) return
+      middleHeld = false
+      postToParent({ type: 'embed:middleup' })
+    }
+    window.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
+  useEffect(() => {
     postToParent({ type: 'embed:ready' })
 
     let rafId: number | null = null
@@ -94,13 +122,15 @@ export default function EmbedApp() {
     // InstUI's CSS-in-JS applies styles after paint — early observations catch
     // the DOM before styles land, reporting a bogus narrow width that shrinks
     // the iframe and locks the layout into that narrow state.
-    let initialDone = false
+    // Report size once after styles settle, then stop. Board dimensions are
+    // fixed — there's nothing to keep observing, and a live ResizeObserver
+    // creates a feedback loop as the parent resizes the iframe element.
+    const observer = new ResizeObserver(() => {})
+    observer.observe(document.body)
     const tid = setTimeout(() => {
-      initialDone = true
+      observer.disconnect()
       reportSize()
     }, 300)
-    const observer = new ResizeObserver(() => { if (initialDone) reportSize() })
-    observer.observe(document.body)
 
     return () => {
       clearTimeout(tid)

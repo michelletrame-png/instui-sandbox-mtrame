@@ -285,9 +285,9 @@ export function InfiniteCanvas({
         const cx = clientX - rect.left
         const cy = clientY - rect.top
         // Continuous factor so trackpad pinch (many small deltas) feels smooth.
-        // Math.exp(-deltaY * 0.003) gives ~18% per mouse-wheel notch (deltaY≈100)
+        // Math.exp(-deltaY * 0.006) gives ~18% per mouse-wheel notch (deltaY≈100)
         // and ~0.6% per trackpad frame (deltaY≈2), both at the right feel.
-        const factor = Math.exp(-deltaY * 0.003)
+        const factor = Math.exp(-deltaY * 0.006)
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor))
         const k = newScale / t.scale
         applyTransform({
@@ -308,18 +308,30 @@ export function InfiniteCanvas({
     function onMessage(e: MessageEvent) {
       if (e.origin !== window.location.origin) return
       const msg = e.data as { type: string; deltaX?: number; deltaY?: number; clientX?: number; clientY?: number; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean }
-      if (msg.type !== 'embed:wheel') return
-      const iframe = Array.from(document.querySelectorAll('iframe')).find(f => f.contentWindow === e.source)
-      if (!iframe) return
-      const r = iframe.getBoundingClientRect()
-      applyWheel(
-        r.left + (msg.clientX ?? 0),
-        r.top + (msg.clientY ?? 0),
-        msg.deltaX ?? 0,
-        msg.deltaY ?? 0,
-        !!(msg.ctrlKey || msg.metaKey),
-        !!msg.shiftKey,
-      )
+      const iframe = () => Array.from(document.querySelectorAll('iframe')).find(f => f.contentWindow === e.source)
+      if (msg.type === 'embed:wheel') {
+        const r = iframe()?.getBoundingClientRect()
+        if (!r) return
+        applyWheel(r.left + (msg.clientX ?? 0), r.top + (msg.clientY ?? 0), msg.deltaX ?? 0, msg.deltaY ?? 0, !!(msg.ctrlKey || msg.metaKey), !!msg.shiftKey)
+      } else if (msg.type === 'embed:middledown') {
+        // Track iframe-local coords only — never call getBoundingClientRect on move
+        // (iframe position shifts after each applyTransform, causing exponential runaway)
+        embedMidRef.current = { x: msg.clientX ?? 0, y: msg.clientY ?? 0 }
+        panRef.current.active = true
+        el!.style.cursor = 'grabbing'
+      } else if (msg.type === 'embed:middlemove') {
+        if (!panRef.current.active || !embedMidRef.current) return
+        const dx = (msg.clientX ?? 0) - embedMidRef.current.x
+        const dy = (msg.clientY ?? 0) - embedMidRef.current.y
+        embedMidRef.current = { x: msg.clientX ?? 0, y: msg.clientY ?? 0 }
+        const t = transformRef.current
+        applyTransform({ ...t, x: t.x + dx, y: t.y + dy })
+      } else if (msg.type === 'embed:middleup') {
+        embedMidRef.current = null
+        panRef.current.active = false
+        el!.style.cursor = tempPanRef.current || toolRef.current === 'hand' ? 'grab' : ''
+        setTransform({ ...transformRef.current })
+      }
     }
 
     el.addEventListener('mousedown', onMouseDown)
