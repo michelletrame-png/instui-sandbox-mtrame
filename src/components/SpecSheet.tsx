@@ -24,21 +24,23 @@ export type FrameCtx = {
   sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens']
 }
 
-// RULE: frame files must stay flat and in sync.
+// RULE: each board's source-of-truth is its frame file. The "InstUI Source" button
+// emits the literal contents of that file along with a SHA-pinned permalink to the
+// sandbox repo, so a coding agent receiving the snippet can fetch the canonical file
+// for full context (imports, helpers, sibling boards). No parallel `*Code` string to
+// maintain — the file IS the handoff.
 //
-// Each board's `content` comes from a plain frame function (no hooks, no sub-components).
-// Each board's `code` export is a JSX string that must exactly match what `content` renders —
-// same props, same structure, same copy. If you change the frame, update its code export too.
-// Reviewers will compare them side by side; silent drift is the failure mode to prevent.
-//
-// One frame per file. One code export per file. Both live together so they stay in sync.
+// `frame: 'desktop-default'` on a board points to ./frames/desktop-default.tsx
+// relative to the spec's index.tsx. Source contents come from a single
+// `import.meta.glob('./frames/*.tsx', { query: '?raw', import: 'default', eager: true })`
+// in the spec's index.tsx, passed in as `frameSources`.
 export type SpecBoard = {
   width: number
   height?: number
   caption?: string
   notes?: string
   content?: React.ReactNode
-  code?: string
+  frame?: string
   copy?: CopyEntry[]
   playable?: boolean
 }
@@ -51,6 +53,69 @@ export type SpecSection = {
 
 function toSheetsTsv(screenLabel: string, entries: CopyEntry[]): string {
   return ['Screen\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.label}\t${e.text}`)].join('\n')
+}
+
+function buildHandoffPayload({
+  specTitle,
+  sectionTitle,
+  sectionIndex,
+  boardIndex,
+  board,
+  section,
+  basePath,
+  frameSources,
+}: {
+  specTitle: string
+  sectionTitle: string
+  sectionIndex: number
+  boardIndex: number
+  board: SpecBoard
+  section: SpecSection
+  basePath: string
+  frameSources: Record<string, string>
+}): string {
+  const frameKey = `./frames/${board.frame}.tsx`
+  const source = frameSources[frameKey] ?? `// Frame source not found: ${frameKey}\n// Check that the file exists and that the spec's index.tsx passes\n// frameSources={import.meta.glob('./frames/*.tsx', { query: '?raw', import: 'default', eager: true })}\n`
+  const path = `${basePath}/frames/${board.frame}.tsx`
+
+  const repoLines: string[] = []
+  if (__SANDBOX_REPO__ && __SANDBOX_SHA__) {
+    const dirtyNote = __SANDBOX_DIRTY__ ? ' (uncommitted local changes — link may not match)' : ''
+    repoLines.push(`// Repo:    ${__SANDBOX_REPO__} @ ${__SANDBOX_SHA__}${dirtyNote}`)
+    repoLines.push(`// Browse:  https://github.com/${__SANDBOX_REPO__}/blob/${__SANDBOX_SHA__}/${path}`)
+    repoLines.push(`// Raw:     https://raw.githubusercontent.com/${__SANDBOX_REPO__}/${__SANDBOX_SHA__}/${path}`)
+  } else {
+    repoLines.push('// Repo:    (no remote configured — run /sandbox-publish to enable permalinks)')
+  }
+
+  const siblings = section.boards
+    .map((b, i) => ({ b, i }))
+    .filter(({ b, i }) => b.frame && i !== boardIndex)
+    .map(({ b, i }) => `//   ${sectionIndex + 1}.${i}  frames/${b.frame}.tsx${b.caption ? ` — ${b.caption}` : ''}`)
+
+  const siblingBlock = siblings.length > 0
+    ? ['//', '// Sibling boards in this section (read for full flow context):', ...siblings]
+    : []
+
+  const header = [
+    '// ─────────────────────────────────────────────────────────────────────',
+    '// InstUI Spec Sheet — Design Handoff',
+    '// ─────────────────────────────────────────────────────────────────────',
+    `// Spec:    ${specTitle}`,
+    `// Section: ${sectionTitle}`,
+    `// Board:   ${sectionIndex + 1}.${boardIndex}${board.caption ? ` — ${board.caption}` : ''}`,
+    `// Source:  ${path}`,
+    ...repoLines,
+    '//',
+    '// Read the source file before integrating — imports, helpers, and any',
+    '// cross-file references the snippet below relies on live in the file.',
+    ...siblingBlock,
+    '// ─────────────────────────────────────────────────────────────────────',
+    '',
+    '',
+  ].join('\n')
+
+  return header + source
 }
 
 function Separator() {
@@ -71,10 +136,14 @@ export function SpecSheet({
   title,
   description,
   sections,
+  basePath,
+  frameSources,
 }: {
   title: string
   description?: string
   sections: SpecSection[]
+  basePath?: string
+  frameSources?: Record<string, string>
 }) {
   const { sharedTokens } = useComputedTheme()
   const [codeModal, setCodeModal] = useState<{ caption?: string; code: string } | null>(null)
@@ -207,19 +276,29 @@ export function SpecSheet({
                                 UX Copy
                               </Button>
                             )}
-                            {board.code && (
+                            {board.frame && basePath && frameSources && (
                               <Button
                                 size="small"
                                 withBackground={false}
                                 renderIcon={<CodeInstUIIcon />}
                                 onClick={() => {
+                                  const payload = buildHandoffPayload({
+                                    specTitle: title,
+                                    sectionTitle: section.title,
+                                    sectionIndex: si,
+                                    boardIndex: bi,
+                                    board,
+                                    section,
+                                    basePath,
+                                    frameSources,
+                                  })
                                   if (isEmbedded) {
                                     window.parent.postMessage(
-                                      { type: 'embed:open-code-modal', caption: board.caption, code: board.code! },
+                                      { type: 'embed:open-code-modal', caption: board.caption, code: payload },
                                       window.location.origin,
                                     )
                                   } else {
-                                    setCodeModal({ caption: board.caption, code: board.code! })
+                                    setCodeModal({ caption: board.caption, code: payload })
                                   }
                                 }}
                               >

@@ -63,8 +63,16 @@ export default function EmbedApp() {
       })
     }
 
-    const tid = setTimeout(reportSize, 150)
-    const observer = new ResizeObserver(() => reportSize())
+    // Don't let ResizeObserver fire until after the initial render settles.
+    // InstUI's CSS-in-JS applies styles after paint — early observations catch
+    // the DOM before styles land, reporting a bogus narrow width that shrinks
+    // the iframe and locks the layout into that narrow state.
+    let initialDone = false
+    const tid = setTimeout(() => {
+      initialDone = true
+      reportSize()
+    }, 300)
+    const observer = new ResizeObserver(() => { if (initialDone) reportSize() })
     observer.observe(document.documentElement)
 
     return () => {

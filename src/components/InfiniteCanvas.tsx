@@ -80,7 +80,9 @@ export function InfiniteCanvas({
   const [tool, setTool] = useState<Tool>('hand')
   const toolRef = useRef<Tool>('hand')
   const [zoomInput, setZoomInput] = useState(String(Math.round(initialScale * 100)))
-  const spaceRef = useRef(false)
+  const [tempPan, setTempPan] = useState(false)
+  const tempPanRef = useRef(false)
+  const tempPanKeysRef = useRef<Set<string>>(new Set())
   const panRef = useRef<{ active: boolean; startX: number; startY: number }>({ active: false, startX: 0, startY: 0 })
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -179,19 +181,43 @@ export function InfiniteCanvas({
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.code === 'Space' && !e.repeat) {
-        const active = document.activeElement
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return
-        e.preventDefault()
-        spaceRef.current = true
-        if (containerRef.current) containerRef.current.style.cursor = 'grab'
+    function enterTempPan(key: string) {
+      if (tempPanKeysRef.current.has(key)) return
+      tempPanKeysRef.current.add(key)
+      tempPanRef.current = true
+      setTempPan(true)
+      if (containerRef.current) containerRef.current.style.cursor = 'grab'
+    }
+    function exitTempPan(key: string) {
+      tempPanKeysRef.current.delete(key)
+      if (tempPanKeysRef.current.size === 0) {
+        tempPanRef.current = false
+        panRef.current.active = false
+        setTempPan(false)
+        if (containerRef.current) {
+          containerRef.current.style.cursor = toolRef.current === 'hand' ? 'grab' : ''
+        }
       }
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.repeat) return
+      const active = document.activeElement
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return
+      if (e.code === 'Space') { e.preventDefault(); enterTempPan('Space') }
+      else if (e.key === 'Shift') enterTempPan('Shift')
+      else if (e.key === 'Control') enterTempPan('Control')
+    }
     function onKeyUp(e: KeyboardEvent) {
-      if (e.code === 'Space') {
-        spaceRef.current = false
+      if (e.code === 'Space') exitTempPan('Space')
+      else if (e.key === 'Shift') exitTempPan('Shift')
+      else if (e.key === 'Control') exitTempPan('Control')
+    }
+    function onBlur() {
+      if (tempPanKeysRef.current.size > 0) {
+        tempPanKeysRef.current.clear()
+        tempPanRef.current = false
         panRef.current.active = false
+        setTempPan(false)
         if (containerRef.current) {
           containerRef.current.style.cursor = toolRef.current === 'hand' ? 'grab' : ''
         }
@@ -199,9 +225,11 @@ export function InfiniteCanvas({
     }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
     }
   }, [])
 
@@ -212,7 +240,17 @@ export function InfiniteCanvas({
     function onMouseDown(e: MouseEvent) {
       const active = document.activeElement as HTMLElement | null
       if (active && active !== document.body) active.blur()
-      if (!spaceRef.current && toolRef.current !== 'hand') return
+      const isMiddle = e.button === 1
+      if (isMiddle) {
+        e.preventDefault()
+        tempPanKeysRef.current.add('middle')
+        tempPanRef.current = true
+        setTempPan(true)
+        panRef.current = { active: true, startX: e.clientX, startY: e.clientY }
+        el!.style.cursor = 'grabbing'
+        return
+      }
+      if (!tempPanRef.current && toolRef.current !== 'hand') return
       e.preventDefault()
       panRef.current = { active: true, startX: e.clientX, startY: e.clientY }
       el!.style.cursor = 'grabbing'
@@ -226,11 +264,17 @@ export function InfiniteCanvas({
       const t = transformRef.current
       applyTransform({ ...t, x: t.x + dx, y: t.y + dy })
     }
-    function onMouseUp() {
+    function onMouseUp(e: MouseEvent) {
+      if (e.button === 1) {
+        tempPanKeysRef.current.delete('middle')
+        if (tempPanKeysRef.current.size === 0) {
+          tempPanRef.current = false
+          setTempPan(false)
+        }
+      }
       if (panRef.current.active) {
         panRef.current.active = false
-        el!.style.cursor = spaceRef.current || toolRef.current === 'hand' ? 'grab' : ''
-        // Commit final position to React state (needed for zoom buttons etc.)
+        el!.style.cursor = tempPanRef.current || toolRef.current === 'hand' ? 'grab' : ''
         setTransform({ ...transformRef.current })
       }
     }
@@ -333,7 +377,7 @@ export function InfiniteCanvas({
             screenReaderLabel="Pan tool"
             onClick={() => selectTool('hand')}
             withBackground={false}
-            withBorder={tool === 'hand'}
+            withBorder={tool === 'hand' || tempPan}
             size="small"
           />
           <IconButton
@@ -341,7 +385,7 @@ export function InfiniteCanvas({
             screenReaderLabel="Select tool"
             onClick={() => selectTool('select')}
             withBackground={false}
-            withBorder={tool === 'select'}
+            withBorder={tool === 'select' && !tempPan}
             size="small"
           />
 
@@ -406,7 +450,7 @@ export function InfiniteCanvas({
           )}
         </div>
       </nav>
-      <InfiniteCanvasContext.Provider value={{ tool, orientToBoard, centerOnSize }}>
+      <InfiniteCanvasContext.Provider value={{ tool: tempPan ? 'hand' : tool, orientToBoard, centerOnSize }}>
         <div ref={layerRef} style={layerStyle}>{children}</div>
       </InfiniteCanvasContext.Provider>
     </div>

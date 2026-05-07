@@ -153,19 +153,21 @@ Use `src/designs/hello-world/index.tsx` as the minimal starting template.
 
 ## Agent process guidelines
 
-### Spec frame files: flat and in sync
+### Spec frame files: file-as-handoff
 
-**One frame per file. One code export per file. The code string must match the rendered content exactly.**
+**One frame per file. The frame file IS the dev handoff** — there is no parallel `*Code` string to maintain. Clicking "InstUI Source" on a board copies a header (SHA-pinned permalink, sibling frame paths) plus the literal contents of the frame file, so a receiving coding agent can fetch the canonical file from the sandbox repo via `gh` or raw URL.
 
 Frame files (under `src/designs/<name>/frames/`) follow three invariants:
 
-1. **Flat JSX only** — no custom sub-components inside a frame function. Only InstUI components used as components. The sole exception is a component with `useState` (e.g. a toggling panel), which must live in its own file with `/* eslint-disable react-refresh/only-export-components */`.
+1. **One frame per file.** Each file exports exactly one frame function (plus an optional `*Copy` array). Keep files small — one board, one file.
 
-2. **One frame per file** — each file exports exactly one frame function and its companion `*Code` string. Bundling multiple frames in one file makes it easy for the code export and the render to drift apart.
+2. **Self-contained imports.** A frame may import only from `@instructure/*`, `react`, `@instructure/emotion`, or the `FrameCtx` / `CopyEntry` types in `../../../components/SpecSheet`. **Do not** import from elsewhere in the sandbox — outside imports break the handoff contract because the receiving agent reads only the linked file.
 
-3. **Code export = rendered content** — the `code` string exported alongside a frame must be a faithful JSX representation of what the frame function renders. Same props, same structure, same copy, same animation wrappers. When you modify a frame, always update its `code` export in the same edit. The "InstUI Source" button in the spec viewer shows this string to engineers — silent drift between the preview and the source handoff is the failure mode to prevent.
+3. **No capitalized custom components inside the frame.** A `<MyStatusBadge />` tag introduces a name the receiving agent can't resolve from InstUI alone. Lowercase render functions (`function row(item) { return <Flex>...</Flex> }`, called as `{row(item)}`) are fine — they read as inline JS, not as a custom abstraction. Stateful sub-components requiring `useState` are the one exception, kept in the same file or a sibling file in `frames/`.
 
-When auditing or reviewing frame files: read both the function body and its `*Code` export and confirm they match. Do not skip the sync check.
+Helpers, `.map()`, data constants, and inline render functions are encouraged when they make the file clearer.
+
+The spec's `index.tsx` exposes raw frame sources to the SpecSheet via `import.meta.glob('./frames/*.tsx', { query: '?raw', import: 'default', eager: true })` and passes both `basePath` (repo-relative path to the spec folder) and `frameSources` props. Each board's `frame: 'name'` key resolves to `./frames/name.tsx`.
 
 ---
 

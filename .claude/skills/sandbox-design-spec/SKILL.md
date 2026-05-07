@@ -31,10 +31,12 @@ containing one or more **boards**.
 
 ```
 SpecSheet
+  ├── basePath       — repo-relative path to this spec's folder
+  ├── frameSources   — Record<path, source> from import.meta.glob('./frames/*.tsx', { query: '?raw', ... })
   └── Section (e.g. "Desktop", "Mobile", "Component States")
         └── Board (e.g. "Agent Closed", "Empty State")
               ├── content   — live React preview (React.ReactNode)
-              ├── code      — flat InstUI JSX string for dev handoff
+              ├── frame     — key matching ./frames/<frame>.tsx for dev handoff
               ├── copy      — CopyEntry[] for UX copy handoff
               ├── notes     — plain-text annotation shown below the board
               └── playable  — adds a Replay button that restarts animations
@@ -74,32 +76,39 @@ Each board's live content goes in its own file under `src/designs/<id>/frames/`.
 **Frame files export plain functions, not React components.** They accept
 `FrameCtx` and return `React.ReactNode`. Hooks stay in `index.tsx` only.
 
-### Three invariants — enforce without exception
+**The frame file IS the dev handoff.** When an engineer (or their coding
+agent) clicks "InstUI Source" on a board, the SpecSheet emits a header with a
+SHA-pinned permalink to the frame file in your sandbox repo, followed by the
+frame's literal source. There is no parallel `*Code` string to maintain — the
+file is the contract.
 
-1. **One frame per file.** Each file exports exactly one frame function and its
-   companion `*Code` string. Bundling multiple frames in one file makes it easy
-   for the code export and the render to drift apart unnoticed.
+### Three invariants
 
-2. **Flat JSX only.** No custom sub-components inside a frame function — only
-   InstUI components used directly. The sole exception is a frame that needs
-   `useState` (e.g. a toggling panel); in that case the component goes in its
-   own file with `/* eslint-disable react-refresh/only-export-components */`.
+1. **One frame per file.** Each file exports exactly one frame function (plus
+   any companion `*Copy` array). Keep files small — one board, one file.
 
-3. **Code export must match the rendered content exactly.** The `*Code` string
-   is what engineers see when they click "InstUI Source" in the spec viewer.
-   It must be a faithful JSX representation of what the frame function renders —
-   same props, same structure, same copy, same animation wrappers. **When you
-   modify a frame, update its `*Code` export in the same edit.** Silent drift
-   between the preview and the source handoff is the primary failure mode.
+2. **Self-contained imports.** A frame may import from `@instructure/*`,
+   `react`, `@instructure/emotion`, and the local `FrameCtx` type. Do **not**
+   import from elsewhere in the sandbox (`../../components/...`, sibling
+   designs, app utilities). The receiving agent reads only this file as the
+   primary handoff; outside imports break the contract.
 
-When reviewing or auditing frame files: read both the function body and its
-`*Code` export and confirm they match before declaring the work done.
+3. **No capitalized custom components inside the frame.** A `<MyStatusBadge />`
+   tag introduces a name the receiving agent can't resolve from InstUI alone.
+   Lowercase render functions (`function row(item) { return <Flex>...</Flex> }`,
+   called as `{row(item)}`) are fine — they read as inline JS, not as a custom
+   abstraction. Sub-components needed for `useState` are the one exception
+   (covered below).
+
+Helpers, `.map()`, data constants, and inline render functions are all
+encouraged when they make the file clearer. The author writes the file the way
+they actually want; the receiving agent reads the same file directly.
 
 ```tsx
 // frames/desktop-agent-closed.tsx
 import React from 'react'
 import { View } from '@instructure/ui-view/latest'
-import type { FrameCtx } from '../../../components/SpecSheet'
+import type { FrameCtx, CopyEntry } from '../../../components/SpecSheet'
 
 export function desktopAgentClosed({ sharedTokens }: FrameCtx): React.ReactNode {
   return (
@@ -114,12 +123,10 @@ export function desktopAgentClosed({ sharedTokens }: FrameCtx): React.ReactNode 
       overflowX="hidden"
       overflowY="hidden"
     >
-      {/* flat InstUI JSX — no custom sub-components */}
+      {/* InstUI JSX, helpers, .map() — anything self-contained */}
     </View>
   )
 }
-
-export const desktopAgentClosedCode = `<View ...>...</View>`
 
 export const desktopAgentClosedCopy: CopyEntry[] = [
   { label: 'Page title', text: 'Dashboard' },
@@ -127,15 +134,21 @@ export const desktopAgentClosedCopy: CopyEntry[] = [
 ]
 ```
 
-`index.tsx` imports every frame, calls them with `ctx`, and passes the result
-to `SpecSheet`:
+`index.tsx` imports every frame, exposes the raw sources via
+`import.meta.glob`, and passes both into `SpecSheet`:
 
 ```tsx
 // index.tsx
 import { useComputedTheme } from '@instructure/emotion'
 import { SpecSheet } from '../../components/SpecSheet'
 import type { PrototypeProps } from '../../registry'
-import { desktopAgentClosed, desktopAgentClosedCode, desktopAgentClosedCopy } from './frames/desktop-agent-closed'
+import { desktopAgentClosed, desktopAgentClosedCopy } from './frames/desktop-agent-closed'
+
+const frameSources = import.meta.glob('./frames/*.tsx', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
 
 export default function MySpec(_: PrototypeProps) {
   const { sharedTokens } = useComputedTheme()
@@ -145,6 +158,8 @@ export default function MySpec(_: PrototypeProps) {
     <SpecSheet
       title="My Spec"
       description="What this spec covers."
+      basePath="src/designs/my-spec"
+      frameSources={frameSources}
       sections={[
         {
           title: 'Desktop',
@@ -154,7 +169,7 @@ export default function MySpec(_: PrototypeProps) {
               width: 1440, height: 800, caption: 'Default state',
               notes: 'User arrives at the page for the first time.',
               content: desktopAgentClosed(ctx),
-              code: desktopAgentClosedCode,
+              frame: 'desktop-agent-closed',
               copy: desktopAgentClosedCopy,
             },
           ],
@@ -165,14 +180,23 @@ export default function MySpec(_: PrototypeProps) {
 }
 ```
 
+The `frame` value matches the file name without extension —
+`'desktop-agent-closed'` resolves to `./frames/desktop-agent-closed.tsx`.
+`basePath` is the repo-relative path to the spec's folder; it's used to build
+the GitHub permalink in the handoff header.
+
 ### Rules for frame content
 
-- **Flat JSX only.** No custom sub-components inside a frame. Only InstUI
-  components rendered as components.
+- **Self-contained.** Imports come only from `@instructure/*`, `react`,
+  `@instructure/emotion`, or the `FrameCtx`/`CopyEntry` types in
+  `../../../components/SpecSheet`.
+- **No capitalized custom components.** Use lowercase render functions for DRY
+  patterns, not React sub-components. The exception is a stateful sub-component
+  (covered in the next section).
 - **No hooks inside frames.** Compute everything from `sharedTokens` or from
   values derived at the top of the frame function.
-- **One frame per file.** Keep files small — one board's content, its `code`
-  string, and its `copy` array.
+- **One frame per file.** Keep files small — one board's content plus its
+  optional `*Copy` array.
 - **Use `width="100%" height="100%"` on the root View** inside each frame so
   it fills the artboard. The artboard wrapper handles clipping.
 
@@ -358,33 +382,49 @@ No hooks — just plain JS in the function body.
 
 ---
 
-## InstUI source exports
+## InstUI source handoff
 
-The `code` export is a flat JSX string — the same structure as the rendered
-content but without runtime token references resolved. Use template literals
-to show token paths:
+When a board has `frame: 'name'`, clicking "InstUI Source" copies a payload
+that combines a SHA-pinned permalink to the frame file with the frame's
+literal source. Receiving coding agents read the source file directly from
+your sandbox repo via `gh` or a raw URL — no parallel string to maintain.
 
-```ts
-export const myFrameCode = `<View
-  background="secondary"
-  themeOverride={{ backgroundSecondary: sharedTokens.background.pageColor }}
->
-  ...
-</View>`
+The header looks like this:
+
 ```
+// ─────────────────────────────────────────────────────────────────────
+// InstUI Spec Sheet — Design Handoff
+// ─────────────────────────────────────────────────────────────────────
+// Spec:    My Spec
+// Section: Desktop
+// Board:   1.0 — Default state
+// Source:  src/designs/my-spec/frames/desktop-default.tsx
+// Repo:    org/sandbox @ a3f9e21
+// Browse:  https://github.com/org/sandbox/blob/a3f9e21/src/designs/.../desktop-default.tsx
+// Raw:     https://raw.githubusercontent.com/org/sandbox/a3f9e21/src/designs/.../desktop-default.tsx
+//
+// Read the source file before integrating — imports, helpers, and any
+// cross-file references the snippet below relies on live in the file.
+//
+// Sibling boards in this section (read for full flow context):
+//   1.1  frames/desktop-loading.tsx — Loading
+//   1.2  frames/desktop-error.tsx — Error
+// ─────────────────────────────────────────────────────────────────────
+```
+
+Followed by the literal contents of the frame file. The receiving agent's
+expected workflow is to fetch the file at the pinned SHA, review siblings as
+needed, and integrate. The snippet itself is a fallback — the file is the
+contract.
+
+If the sandbox has no remote configured yet, the header omits the URLs and
+notes that `/sandbox-publish` will enable them. If the working tree is dirty
+relative to the pinned SHA, the header includes a warning.
 
 ---
 
 ## Reference implementation
 
-**`src/designs/agent-screens/`** is the canonical example of a complete
-spec sheet:
-
-- 2 sections: Desktop (1440×800) and Mobile (390×835)
-- 8 boards across both sections
-- Frame files under `frames/` — one file per board
-- Board 1.0 exports `code` (InstUI source) and `copy` (UX copy)
-- Board 1.1 exports `code` only
-- SideNavBar placed using the margin-override pattern above
-
-Use it as a reference when building new specs.
+When a canonical spec exists under `src/designs/` it should be referenced
+here. Until then, follow the patterns above and the SpecSheet template at
+`src/components/SpecSheet.tsx`'s default export.

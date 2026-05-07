@@ -165,3 +165,25 @@ scrolling on mobile.
 
 The `stackedSortByLabel` prop on `Table.ColHeader` controls the label shown in the
 stacked row header — always set it to a human-readable column name.
+
+### `TruncateText` — v2 never truncates (broken in InstUI 11.7.2)
+
+**Symptom:** `<TruncateText>` renders the full text at all sizes — nothing ever gets
+truncated, no ellipsis appears.
+
+**Root cause:** The new InstUI theme provides `lineHeight: "150%"` (a string). The
+internal `truncate.js` computes `_maxHeight` by multiplying `lineHeight` by
+`parseFloat(fontSize)` — JS evaluates `"150%" * 16` as `NaN`, so every fit
+comparison is false and truncation never fires. v1 worked because the legacy theme
+returned the unitless number `1.5`.
+
+**Fix:** Import from `@instructure/ui-truncate-text` (no `/latest` suffix) until
+the upstream bug is fixed:
+
+```tsx
+// ✅ import from the stable entry point
+import { TruncateText } from '@instructure/ui-truncate-text'
+
+// ❌ broken in InstUI 11.7.2
+import { TruncateText } from '@instructure/ui-truncate-text/latest'
+```
