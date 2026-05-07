@@ -52,6 +52,22 @@ export function SpecEmbedFrame({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-time mount centering
   }, [])
 
+  // After boardRects are committed to DOM, orient to ?board= param or center on real size.
+  // Runs in a useEffect (not inside the message handler) so placeholder divs exist in the DOM
+  // by the time orientToBoard queries for them.
+  useEffect(() => {
+    if (Object.keys(boardRects).length === 0) return
+    const boardKey = pendingBoardOrient.current
+    if (boardKey && orientToBoard) {
+      pendingBoardOrient.current = null
+      hasAutocentered.current = true
+      orientToBoard(boardKey)
+    } else if (!hasAutocentered.current) {
+      hasAutocentered.current = true
+      centerOnSize?.(iframeWidth, iframeHeight)
+    }
+  }, [boardRects, iframeWidth, iframeHeight, orientToBoard, centerOnSize])
+
   const sendToIframe = useCallback((msg: Record<string, unknown>) => {
     iframeRef.current?.contentWindow?.postMessage(msg, window.location.origin)
   }, [])
@@ -80,15 +96,6 @@ export function SpecEmbedFrame({
           setIframeWidth(msg.width)
           setIframeHeight(msg.height)
           setBoardRects(msg.boardRects)
-          const boardKey = pendingBoardOrient.current
-          if (boardKey && orientToBoard) {
-            hasAutocentered.current = true
-            pendingBoardOrient.current = null
-            requestAnimationFrame(() => requestAnimationFrame(() => orientToBoard(boardKey)))
-          } else if (!hasAutocentered.current) {
-            hasAutocentered.current = true
-            centerOnSize?.(msg.width, msg.height)
-          }
           break
         }
 
