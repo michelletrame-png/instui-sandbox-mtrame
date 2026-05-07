@@ -26,14 +26,14 @@ type Tool = CanvasTool
 const DARK = {
   canvasBg: '#1a1d21',
   dotColor: '#2d3035',
-  navBg: 'rgba(13, 15, 18, 0.9)',
+  navBg: '#0d0f12',
   navBorder: 'rgba(255,255,255,0.07)',
 }
 
 const LIGHT = {
   canvasBg: '#d8dce2',
   dotColor: '#c0c5cc',
-  navBg: 'rgba(246, 247, 249, 0.92)',
+  navBg: '#e8eaed',
   navBorder: 'rgba(0,0,0,0.09)',
 }
 
@@ -43,8 +43,6 @@ const LAYER_STYLE: React.CSSProperties = {
   left: 0,
   transformOrigin: '0 0',
   willChange: 'transform',
-  // Prevent GPU compositing tears between the layer and the canvas background
-  backfaceVisibility: 'hidden',
 }
 
 const NAV_ACTIONS_STYLE: React.CSSProperties = {
@@ -347,10 +345,6 @@ export function InfiniteCanvas({
     backgroundImage: `radial-gradient(circle, ${palette.dotColor} 1px, transparent 1px)`,
     backgroundSize: '24px 24px',
     transition: 'background-color 0.2s, background-image 0.2s',
-    // Force the container onto its own GPU layer so background and content
-    // composite together and don't flicker against each other during transform.
-    isolation: 'isolate',
-    transform: 'translateZ(0)',
   }
 
   const navStyle: React.CSSProperties = {
@@ -365,7 +359,6 @@ export function InfiniteCanvas({
     justifyContent: 'space-between',
     padding: '0 8px 0 16px',
     backgroundColor: palette.navBg,
-    backdropFilter: 'blur(10px)',
     borderBottom: `1px solid ${palette.navBorder}`,
     boxSizing: 'border-box',
     transition: 'background-color 0.2s, border-color 0.2s',
