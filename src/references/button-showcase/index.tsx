@@ -1,7 +1,7 @@
 import { useComputedTheme } from '@instructure/emotion'
 import { SpecSheet } from '../../components/SpecSheet'
 import type { PrototypeProps } from '../../registry'
-import { variantsFrame, variantsFrameCopy } from './frames/variants'
+import { variantsFrame } from './frames/variants'
 import { sizesFrame } from './frames/sizes'
 
 const frameSources = import.meta.glob('./frames/*.tsx', {
@@ -18,7 +18,7 @@ export default function ButtonShowcase(_: PrototypeProps) {
     <SpecSheet
       title="Button Showcase"
       description="Visual reference for InstUI Button colors, variants, and sizes."
-      basePath="src/designs/button-showcase"
+      basePath="src/references/button-showcase"
       frameSources={frameSources}
       sections={[
         {
@@ -30,7 +30,6 @@ export default function ButtonShowcase(_: PrototypeProps) {
               caption: 'All variants',
               content: variantsFrame(ctx),
               frame: 'variants',
-              copy: variantsFrameCopy,
             },
           ],
         },

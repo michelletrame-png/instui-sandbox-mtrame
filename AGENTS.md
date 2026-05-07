@@ -161,7 +161,7 @@ Frame files (under `src/designs/<name>/frames/`) follow three invariants:
 
 1. **One frame per file.** Each file exports exactly one frame function (plus an optional `*Copy` array). Keep files small — one board, one file.
 
-2. **Self-contained imports.** A frame may import only from `@instructure/*`, `react`, `@instructure/emotion`, or the `FrameCtx` / `CopyEntry` types in `../../../components/SpecSheet`. **Do not** import from elsewhere in the sandbox — outside imports break the handoff contract because the receiving agent reads only the linked file.
+2. **Self-contained imports.** A frame may import only from `@instructure/*`, `react`, `@instructure/emotion`, or the `FrameCtx` type in `../../../components/SpecSheet`. **Do not** import from elsewhere in the sandbox — outside imports break the handoff contract because the receiving agent reads only the linked file.
 
 3. **No capitalized custom components inside the frame.** A `<MyStatusBadge />` tag introduces a name the receiving agent can't resolve from InstUI alone. Lowercase render functions (`function row(item) { return <Flex>...</Flex> }`, called as `{row(item)}`) are fine — they read as inline JS, not as a custom abstraction. Stateful sub-components requiring `useState` are the one exception, kept in the same file or a sibling file in `frames/`.
 

@@ -73,7 +73,7 @@ export default function EmbedApp() {
       reportSize()
     }, 300)
     const observer = new ResizeObserver(() => { if (initialDone) reportSize() })
-    observer.observe(document.documentElement)
+    observer.observe(document.body)
 
     return () => {
       clearTimeout(tid)

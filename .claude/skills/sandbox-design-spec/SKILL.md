@@ -108,7 +108,7 @@ they actually want; the receiving agent reads the same file directly.
 // frames/desktop-agent-closed.tsx
 import React from 'react'
 import { View } from '@instructure/ui-view/latest'
-import type { FrameCtx, CopyEntry } from '../../../components/SpecSheet'
+import type { FrameCtx } from '../../../components/SpecSheet'
 
 export function desktopAgentClosed({ sharedTokens }: FrameCtx): React.ReactNode {
   return (
@@ -127,12 +127,10 @@ export function desktopAgentClosed({ sharedTokens }: FrameCtx): React.ReactNode 
     </View>
   )
 }
-
-export const desktopAgentClosedCopy: CopyEntry[] = [
-  { label: 'Page title', text: 'Dashboard' },
-  { label: 'AI button: screen reader label', text: 'Open AI assistant' },
-]
 ```
+
+Note: there is no `*Copy` export. The "UX Copy" button extracts copy from
+the rendered DOM at click time (see *UX copy exports* below).
 
 `index.tsx` imports every frame, exposes the raw sources via
 `import.meta.glob`, and passes both into `SpecSheet`:
@@ -142,7 +140,7 @@ export const desktopAgentClosedCopy: CopyEntry[] = [
 import { useComputedTheme } from '@instructure/emotion'
 import { SpecSheet } from '../../components/SpecSheet'
 import type { PrototypeProps } from '../../registry'
-import { desktopAgentClosed, desktopAgentClosedCopy } from './frames/desktop-agent-closed'
+import { desktopAgentClosed } from './frames/desktop-agent-closed'
 
 const frameSources = import.meta.glob('./frames/*.tsx', {
   query: '?raw',
@@ -170,7 +168,6 @@ export default function MySpec(_: PrototypeProps) {
               notes: 'User arrives at the page for the first time.',
               content: desktopAgentClosed(ctx),
               frame: 'desktop-agent-closed',
-              copy: desktopAgentClosedCopy,
             },
           ],
         },
@@ -188,7 +185,7 @@ the GitHub permalink in the handoff header.
 ### Rules for frame content
 
 - **Self-contained.** Imports come only from `@instructure/*`, `react`,
-  `@instructure/emotion`, or the `FrameCtx`/`CopyEntry` types in
+  `@instructure/emotion`, or the `FrameCtx` type in
   `../../../components/SpecSheet`.
 - **No capitalized custom components.** Use lowercase render functions for DRY
   patterns, not React sub-components. The exception is a stateful sub-component
@@ -233,18 +230,36 @@ TypeScript type but exists at runtime in v2, so the cast is necessary.
 
 ## UX copy exports
 
-Each `CopyEntry` has a `label` and a `text`. Labels should describe the
-element's role in the UI, not just its position:
+The "UX Copy" button on each board extracts copy directly from the rendered
+DOM at click time — no `*Copy` array to maintain. The walker captures three
+categories:
 
-```ts
-{ label: 'Page title', text: 'Dashboard' }
-{ label: 'Empty state heading', text: 'No courses yet' }
-{ label: 'Submit button', text: 'Save changes' }
-{ label: 'Error: required field', text: 'This field is required.' }
+| Kind | Source |
+|---|---|
+| `visible` | Text inside headings, buttons, links, paragraphs, etc. Plus `title` (tooltip) attributes. |
+| `screen-reader` | `aria-label`, resolved `aria-labelledby` / `aria-describedby`, `alt` on images, and visually-hidden text (InstUI's `ScreenReaderContent`, `screenReaderLabel`). |
+| `form` | `placeholder` and current `value` on inputs/textareas. |
+
+Auto-generated labels describe the element's role: "Heading (h1)", "Button",
+"Image alt", "Input placeholder", "Button: aria-label", etc. To override the
+auto-label, add `data-copy-label="..."` on the wrapping element:
+
+```tsx
+<View data-copy-label="Empty state heading">
+  <Heading level="h2">No courses yet</Heading>
+</View>
 ```
 
-The "UX Copy" modal in the spec viewer can export all entries to a
-tab-separated format compatible with Google Sheets.
+To skip an element entirely (and its subtree), add `data-copy-skip` on it.
+
+The Sheets export is `Screen \t Kind \t Label \t Text` — writers can filter
+by kind to review just the visible copy or just the a11y strings.
+
+**Implication:** what's on the screen is the spec. If a string appears
+visually but isn't extractable (for example, baked into an SVG), the export
+won't list it — that's a signal it should be made into real text. A button
+with no visible text and no `aria-label` won't appear at all, surfacing the
+a11y gap incidentally.
 
 ---
 

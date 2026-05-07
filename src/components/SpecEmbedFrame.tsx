@@ -19,7 +19,7 @@ type IframeMessage =
   | { type: 'embed:open-copy-modal'; caption?: string; screenLabel: string; copy: CopyEntry[] }
 
 function toSheetsTsv(screenLabel: string, entries: CopyEntry[]): string {
-  return ['Screen\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.label}\t${e.text}`)].join('\n')
+  return ['Screen\tKind\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.kind}\t${e.label}\t${e.text}`)].join('\n')
 }
 
 export function SpecEmbedFrame({
@@ -199,6 +199,9 @@ export function SpecEmbedFrame({
                   />
                 )}
                 <Flex gap="medium" alignItems="start" padding="small none">
+                  <View as="div" display="block" minWidth="100px">
+                    <Text size="x-small" color="secondary" weight="bold">{entry.kind}</Text>
+                  </View>
                   <View as="div" display="block" minWidth="180px">
                     <Text size="small" color="secondary">{entry.label}</Text>
                   </View>

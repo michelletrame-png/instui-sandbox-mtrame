@@ -3,7 +3,7 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button } from '@instructure/ui-buttons/latest'
-import type { FrameCtx, CopyEntry } from '../../../components/SpecSheet'
+import type { FrameCtx } from '../../../components/SpecSheet'
 
 const COLORS = ['primary', 'secondary', 'success', 'danger'] as const
 const VARIANTS = [
@@ -47,8 +47,3 @@ export function variantsFrame({ sharedTokens }: FrameCtx): React.ReactNode {
     </View>
   )
 }
-
-export const variantsFrameCopy: CopyEntry[] = [
-  { label: 'Primary filled button', text: 'Save changes' },
-  { label: 'Danger ghost button', text: 'Delete' },
-]

@@ -35,9 +35,9 @@ export const prototypes: PrototypeMeta[] = [
     title: 'Button Showcase',
     path: '/button-showcase',
     createdAt: '2026-05-07',
-    category: 'Spec',
-    status: 'WIP',
-    component: lazy(() => import('./designs/button-showcase')),
+    category: 'Reference',
+    viewMode: 'spec',
+    component: lazy(() => import('./references/button-showcase')),
   },
   {
     id: 'hello-world',

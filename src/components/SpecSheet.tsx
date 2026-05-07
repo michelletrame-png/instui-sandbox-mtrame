@@ -8,17 +8,16 @@ import { Button, CloseButton } from '@instructure/ui-buttons/latest'
 import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
 import { InfiniteCanvas } from './InfiniteCanvas'
+import { extractCopyFromDOM } from './extractCopy'
+import type { CopyEntry } from './extractCopy'
 import type { PrototypeProps } from '../registry'
+
+export type { CopyEntry, CopyKind } from './extractCopy'
 
 // When SpecSheet runs inside the spec iframe, modals must render in the parent
 // document so they layer above the canvas chrome. We detect this once at module
 // load time — it never changes within a session.
 const isEmbedded = window.parent !== window
-
-export type CopyEntry = {
-  label: string
-  text: string
-}
 
 export type FrameCtx = {
   sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens']
@@ -41,7 +40,6 @@ export type SpecBoard = {
   notes?: string
   content?: React.ReactNode
   frame?: string
-  copy?: CopyEntry[]
   playable?: boolean
 }
 
@@ -52,7 +50,7 @@ export type SpecSection = {
 }
 
 function toSheetsTsv(screenLabel: string, entries: CopyEntry[]): string {
-  return ['Screen\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.label}\t${e.text}`)].join('\n')
+  return ['Screen\tKind\tLabel\tText', ...entries.map(e => `${screenLabel}\t${e.kind}\t${e.label}\t${e.text}`)].join('\n')
 }
 
 function buildHandoffPayload({
@@ -219,7 +217,7 @@ export function SpecSheet({
                               overflowY: 'hidden' as const,
                             } : {})}
                           >
-                            <div key={playKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
+                            <div key={playKey} data-copy-root={boardKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
                               {board.content ?? (
                                 <View
                                   as="div"
@@ -256,20 +254,22 @@ export function SpecSheet({
                                 Replay
                               </Button>
                             )}
-                            {board.copy && (
+                            {board.content && (
                               <Button
                                 size="small"
                                 withBackground={false}
                                 renderIcon={<FileTextInstUIIcon />}
                                 onClick={() => {
                                   const screenLabel = `${si + 1}.${bi}${board.caption ? ` ${board.caption}` : ''}`
+                                  const root = document.querySelector<HTMLElement>(`[data-copy-root="${boardKey}"]`)
+                                  const copy = root ? extractCopyFromDOM(root) : []
                                   if (isEmbedded) {
                                     window.parent.postMessage(
-                                      { type: 'embed:open-copy-modal', caption: board.caption, screenLabel, copy: board.copy! },
+                                      { type: 'embed:open-copy-modal', caption: board.caption, screenLabel, copy },
                                       window.location.origin,
                                     )
                                   } else {
-                                    setCopyModal({ caption: board.caption, screenLabel, copy: board.copy! })
+                                    setCopyModal({ caption: board.caption, screenLabel, copy })
                                   }
                                 }}
                               >
@@ -390,6 +390,9 @@ export function SpecSheet({
                   />
                 )}
                 <Flex gap="medium" alignItems="start" padding="small none">
+                  <View as="div" display="block" minWidth="100px">
+                    <Text size="x-small" color="secondary" weight="bold">{entry.kind}</Text>
+                  </View>
                   <View as="div" display="block" minWidth="180px">
                     <Text size="small" color="secondary">{entry.label}</Text>
                   </View>

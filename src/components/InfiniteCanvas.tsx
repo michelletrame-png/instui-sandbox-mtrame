@@ -77,8 +77,8 @@ export function InfiniteCanvas({
   const initialY = NAV_HEIGHT + 20
   const [transform, setTransform] = useState<Transform>({ x: 40, y: initialY, scale: initialScale })
   const transformRef = useRef<Transform>({ x: 40, y: initialY, scale: initialScale })
-  const [tool, setTool] = useState<Tool>('hand')
-  const toolRef = useRef<Tool>('hand')
+  const [tool, setTool] = useState<Tool>('select')
+  const toolRef = useRef<Tool>('select')
   const [zoomInput, setZoomInput] = useState(String(Math.round(initialScale * 100)))
   const [tempPan, setTempPan] = useState(false)
   const tempPanRef = useRef(false)
