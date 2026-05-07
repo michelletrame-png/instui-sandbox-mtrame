@@ -321,7 +321,10 @@ export function InfiniteCanvas({
         // and double-pan the canvas.
         const r = iframe()?.getBoundingClientRect()
         if (!r) return
-        panRef.current = { active: true, startX: r.left + (msg.clientX ?? 0), startY: r.top + (msg.clientY ?? 0) }
+        // iframe clientX/Y are in the iframe's own pixel space; multiply by canvas
+        // scale to convert to screen coords (at s=1 this is a no-op).
+        const s = transformRef.current.scale
+        panRef.current = { active: true, startX: r.left + (msg.clientX ?? 0) * s, startY: r.top + (msg.clientY ?? 0) * s }
         el!.style.cursor = 'grabbing'
       } else if (msg.type === 'embed:middlemove') {
         if (!panRef.current.active) return
@@ -329,8 +332,9 @@ export function InfiniteCanvas({
         // previous frame's applyTransform — correct delta for this frame.
         const r = iframe()?.getBoundingClientRect()
         if (!r) return
-        const px = r.left + (msg.clientX ?? 0)
-        const py = r.top + (msg.clientY ?? 0)
+        const s = transformRef.current.scale
+        const px = r.left + (msg.clientX ?? 0) * s
+        const py = r.top + (msg.clientY ?? 0) * s
         const t = transformRef.current
         applyTransform({ ...t, x: t.x + px - panRef.current.startX, y: t.y + py - panRef.current.startY })
         panRef.current.startX = px
