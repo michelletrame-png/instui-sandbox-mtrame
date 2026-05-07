@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconButton } from '@instructure/ui-buttons/latest'
 import { Text } from '@instructure/ui-text/latest'
@@ -379,6 +379,12 @@ export function InfiniteCanvas({
     margin: '0 4px',
   }
 
+  const contextValue = useMemo(() => ({
+    tool: tempPan ? 'hand' as const : tool,
+    orientToBoard,
+    centerOnSize,
+  }), [tempPan, tool, orientToBoard, centerOnSize])
+
   const layerStyle: React.CSSProperties = {
     ...LAYER_STYLE,
     transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
@@ -480,7 +486,7 @@ export function InfiniteCanvas({
           )}
         </div>
       </nav>
-      <InfiniteCanvasContext.Provider value={{ tool: tempPan ? 'hand' : tool, orientToBoard, centerOnSize }}>
+      <InfiniteCanvasContext.Provider value={contextValue}>
         <div ref={layerRef} style={layerStyle}>{children}</div>
       </InfiniteCanvasContext.Provider>
     </div>
