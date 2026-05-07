@@ -278,14 +278,13 @@ export function InfiniteCanvas({
         setTransform({ ...transformRef.current })
       }
     }
-    function onWheel(e: WheelEvent) {
-      e.preventDefault()
+    function applyWheel(clientX: number, clientY: number, deltaX: number, deltaY: number, zoom: boolean, shift: boolean) {
       const t = transformRef.current
-      if (e.ctrlKey || e.metaKey) {
+      if (zoom) {
         const rect = el!.getBoundingClientRect()
-        const cx = e.clientX - rect.left
-        const cy = e.clientY - rect.top
-        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1
+        const cx = clientX - rect.left
+        const cy = clientY - rect.top
+        const factor = deltaY < 0 ? 1.1 : 1 / 1.1
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor))
         const k = newScale / t.scale
         applyTransform({
@@ -293,22 +292,44 @@ export function InfiniteCanvas({
           y: cy + (t.y - cy) * k,
           scale: newScale,
         })
-      } else if (e.shiftKey) {
-        applyTransform({ ...t, x: t.x - (e.deltaX !== 0 ? e.deltaX : e.deltaY) })
+      } else if (shift) {
+        applyTransform({ ...t, x: t.x - (deltaX !== 0 ? deltaX : deltaY) })
       } else {
-        applyTransform({ ...t, x: t.x - e.deltaX, y: t.y - e.deltaY })
+        applyTransform({ ...t, x: t.x - deltaX, y: t.y - deltaY })
       }
+    }
+    function onWheel(e: WheelEvent) {
+      e.preventDefault()
+      applyWheel(e.clientX, e.clientY, e.deltaX, e.deltaY, e.ctrlKey || e.metaKey, e.shiftKey)
+    }
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return
+      const msg = e.data as { type: string; deltaX?: number; deltaY?: number; clientX?: number; clientY?: number; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean }
+      if (msg.type !== 'embed:wheel') return
+      const iframe = Array.from(document.querySelectorAll('iframe')).find(f => f.contentWindow === e.source)
+      if (!iframe) return
+      const r = iframe.getBoundingClientRect()
+      applyWheel(
+        r.left + (msg.clientX ?? 0),
+        r.top + (msg.clientY ?? 0),
+        msg.deltaX ?? 0,
+        msg.deltaY ?? 0,
+        !!(msg.ctrlKey || msg.metaKey),
+        !!msg.shiftKey,
+      )
     }
 
     el.addEventListener('mousedown', onMouseDown)
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
     el.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('message', onMessage)
     return () => {
       el.removeEventListener('mousedown', onMouseDown)
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
       el.removeEventListener('wheel', onWheel)
+      window.removeEventListener('message', onMessage)
     }
   }, [sync, applyTransform])
 

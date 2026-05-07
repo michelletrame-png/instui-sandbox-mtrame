@@ -52,6 +52,25 @@ export default function EmbedApp() {
   }, [])
 
   useEffect(() => {
+    if (window === window.parent) return
+    function onWheel(e: WheelEvent) {
+      e.preventDefault()
+      postToParent({
+        type: 'embed:wheel',
+        deltaX: e.deltaX,
+        deltaY: e.deltaY,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        shiftKey: e.shiftKey,
+      })
+    }
+    window.addEventListener('wheel', onWheel, { passive: false })
+    return () => window.removeEventListener('wheel', onWheel)
+  }, [])
+
+  useEffect(() => {
     postToParent({ type: 'embed:ready' })
 
     const reportSize = () => {
