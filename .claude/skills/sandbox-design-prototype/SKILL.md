@@ -39,14 +39,14 @@ From the prototype name, derive:
 | `id` | kebab-case, lowercase | `my-feature` |
 | `title` | Title Case as given | `My Feature` |
 | `path` | `/` + id | `/my-feature` |
-| `directory` | `src/prototypes/<id>/` | `src/prototypes/my-feature/` |
+| `directory` | `src/designs/<id>/` | `src/prototypes/my-feature/` |
 | `componentName` | PascalCase | `MyFeature` |
 
 ---
 
 ### Step 2 — Create the prototype file
 
-Create `src/prototypes/<id>/index.tsx`.
+Create `src/designs/<id>/index.tsx`.
 
 **If the user chose Blank:**
 
@@ -84,7 +84,7 @@ path (`../../registry`) and make it a default export.
 
 **If the user chose Spec Sheet:**
 
-Import `SpecSheet` from `../../templates/SpecSheet`. The default export returns
+Import `SpecSheet` from `../../components/SpecSheet`. The default export returns
 `SpecSheet` directly — **do not import or wrap InfiniteCanvas**. The framework
 provides the InfiniteCanvas chrome automatically for all `category: 'Spec'`
 entries (pan/zoom canvas, nav bar with back button and theme toggle). Ask the
@@ -94,7 +94,7 @@ placeholder) until the user is ready to wire in live components.
 
 ```tsx
 import { useComputedTheme } from '@instructure/emotion'
-import { SpecSheet } from '../../templates/SpecSheet'
+import { SpecSheet } from '../../components/SpecSheet'
 import type { PrototypeProps } from '../../registry'
 
 export default function <ComponentName>(_: PrototypeProps) {
@@ -122,14 +122,14 @@ export default function <ComponentName>(_: PrototypeProps) {
 **Boards with live content — use the frames pattern:**
 
 When boards have live JSX content, each board's content goes in its own file under
-`src/prototypes/<id>/frames/`. Each frame file exports a plain function — not a React
+`src/designs/<id>/frames/`. Each frame file exports a plain function — not a React
 component — that accepts `FrameCtx` and returns `React.ReactNode`. Hooks stay only in
 the main `index.tsx`.
 
 ```tsx
 // frames/my-screen.tsx
 import { View } from '@instructure/ui-view/latest'
-import type { FrameCtx } from '../../../templates/SpecSheet'
+import type { FrameCtx } from '../../../components/SpecSheet'
 
 export function myScreen({ sharedTokens }: FrameCtx): React.ReactNode {
   return (
@@ -175,7 +175,7 @@ The `viewMode` field is optional. `Spec` entries automatically get the InfiniteC
   createdAt: '<today's date as YYYY-MM-DD>',
   category: 'Prototype',
   status: 'WIP',
-  component: lazy(() => import('./prototypes/<id>')),
+  component: lazy(() => import('./designs/<id>')),
 },
 ```
 
@@ -187,7 +187,7 @@ in the home page list.
 ## Deleting a prototype
 
 1. Remove the entry from `src/registry.ts`
-2. Delete the directory `src/prototypes/<id>/`
+2. Delete the directory `src/designs/<id>/`
 
 Confirm the id before deleting. If the prototype has a `status` of `Complete`,
 warn the user before proceeding.

@@ -55,7 +55,7 @@ These fire as **warnings**, not errors. They are guidance for authors, not hard 
 
 ## How prototypes work
 
-Each prototype lives in its own directory under `src/prototypes/<name>/` and exports a default React component with this signature:
+Each prototype lives in its own directory under `src/designs/<name>/` and exports a default React component with this signature:
 
 ```tsx
 export default function MyPrototype({ isDark, onToggleTheme }: PrototypeProps) { ... }
@@ -74,7 +74,7 @@ Items are registered in `src/registry.ts` with two separate fields:
   createdAt: '2026-04-28',
   category: 'Prototype',
   status: 'WIP',
-  component: lazy(() => import('./prototypes/my-prototype')),
+  component: lazy(() => import('./designs/my-prototype')),
 }
 ```
 
@@ -82,7 +82,7 @@ Templates and References omit `status`. Source files for each category live in t
 
 | Category | Source directory |
 |---|---|
-| `Spec` / `Prototype` | `src/prototypes/<id>/` |
+| `Spec` / `Prototype` | `src/designs/<id>/` |
 | `Template` | `src/templates/` |
 | `Reference` | `src/references/<id>/` |
 
@@ -143,11 +143,11 @@ All AI-generated copy must be reviewed by a human writer before shipping to prod
 
 ## Adding a new prototype
 
-1. Create `src/prototypes/<name>/index.tsx` — export a default component with `PrototypeProps`
+1. Create `src/designs/<name>/index.tsx` — export a default component with `PrototypeProps`
 2. Add an entry to `src/registry.ts`
 3. The route, home page listing, and lazy loading are handled automatically
 
-Use `src/prototypes/hello-world/index.tsx` as the minimal starting template.
+Use `src/designs/hello-world/index.tsx` as the minimal starting template.
 
 ---
 
@@ -157,7 +157,7 @@ Use `src/prototypes/hello-world/index.tsx` as the minimal starting template.
 
 **One frame per file. One code export per file. The code string must match the rendered content exactly.**
 
-Frame files (under `src/designs/<name>/frames/` or `src/prototypes/<name>/frames/`) follow three invariants:
+Frame files (under `src/designs/<name>/frames/`) follow three invariants:
 
 1. **Flat JSX only** — no custom sub-components inside a frame function. Only InstUI components used as components. The sole exception is a component with `useState` (e.g. a toggling panel), which must live in its own file with `/* eslint-disable react-refresh/only-export-components */`.
 

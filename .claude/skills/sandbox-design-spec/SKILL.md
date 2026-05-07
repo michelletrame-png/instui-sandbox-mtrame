@@ -99,7 +99,7 @@ When reviewing or auditing frame files: read both the function body and its
 // frames/desktop-agent-closed.tsx
 import React from 'react'
 import { View } from '@instructure/ui-view/latest'
-import type { FrameCtx } from '../../../templates/SpecSheet'
+import type { FrameCtx } from '../../../components/SpecSheet'
 
 export function desktopAgentClosed({ sharedTokens }: FrameCtx): React.ReactNode {
   return (
@@ -133,7 +133,7 @@ to `SpecSheet`:
 ```tsx
 // index.tsx
 import { useComputedTheme } from '@instructure/emotion'
-import { SpecSheet } from '../../templates/SpecSheet'
+import { SpecSheet } from '../../components/SpecSheet'
 import type { PrototypeProps } from '../../registry'
 import { desktopAgentClosed, desktopAgentClosedCode, desktopAgentClosedCopy } from './frames/desktop-agent-closed'
 
