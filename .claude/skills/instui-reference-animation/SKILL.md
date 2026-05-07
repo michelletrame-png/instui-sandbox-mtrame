@@ -215,16 +215,17 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 
 ## Theme Tokens
 
-`Transition` reads timing from the active theme automatically. You do not need to set durations manually.
+Two shared tokens define the canonical animation timing for the entire system:
 
 ```ts
-// Available via useComputedTheme() if needed
-const { components } = useComputedTheme()
-// components['Transition'].duration  → '300ms'
-// components['Transition'].timing    → 'ease-in-out'
+const { sharedTokens } = useComputedTheme()
+// sharedTokens.transitions.duration  → '300ms'
+// sharedTokens.transitions.timing    → 'ease-in-out'
 ```
 
-The global CSS applied by `Transition`:
+Every animating InstUI component — `Transition`, `DrawerLayout`, `SideNavBar` — derives from these. **Use them in all custom keyframe animations** so your motion stays consistent with the design system if the tokens ever change.
+
+`Transition` consumes them automatically and applies:
 ```css
 transition: opacity 300ms ease-in-out, transform 300ms ease-in-out !important;
 ```
@@ -274,18 +275,22 @@ import { Global } from '@instructure/emotion'
 ### Staggered reveal — the full correct pattern
 
 ```tsx
+import { useComputedTheme } from '@instructure/emotion'
 import { Global } from '@instructure/emotion'
 import { Text } from '@instructure/ui-text/latest'
 import { Button } from '@instructure/ui-buttons/latest'
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-const fadeIn = (i: number): React.CSSProperties =>
-  prefersReducedMotion
-    ? {}
-    : { opacity: 0, animation: `fade-in 300ms ease-out ${i * 150}ms both` }
-
 function AgentResponse() {
+  const { sharedTokens } = useComputedTheme()
+  const { duration, timing } = sharedTokens.transitions
+
+  const fadeIn = (i: number): React.CSSProperties =>
+    prefersReducedMotion
+      ? {}
+      : { opacity: 0, animation: `fade-in ${duration} ${timing} ${i * 150}ms both` }
+
   return (
     <>
       <Global styles={`
@@ -304,9 +309,9 @@ function AgentResponse() {
 }
 ```
 
+- `fadeIn` lives inside the component so it can read `sharedTokens.transitions` — `prefersReducedMotion` stays module-level since it never changes
 - `animation-fill-mode: both` keeps each element invisible during its delay and visible after completion
 - `150ms` stagger between elements; adjust to taste
-- `300ms ease-out` matches InstUI's `Transition` duration
 
 ### Re-triggering animations: use `elementRef` + direct DOM mutation
 
