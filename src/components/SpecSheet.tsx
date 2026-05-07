@@ -237,7 +237,8 @@ export function SpecSheet({
                               withBackground={false}
                               renderIcon={<LinkInstUIIcon />}
                               onClick={() => {
-                                const url = new URL(window.location.href)
+                                const href = isEmbedded ? window.parent.location.href : window.location.href
+                                const url = new URL(href)
                                 url.searchParams.set('board', boardKey)
                                 navigator.clipboard.writeText(url.toString())
                               }}
