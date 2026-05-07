@@ -243,7 +243,7 @@ export function SpecSheet({
                                 navigator.clipboard.writeText(url.toString())
                               }}
                             >
-                              Copy link
+                              Link
                             </Button>
                             {board.playable && (
                               <Button
@@ -303,7 +303,7 @@ export function SpecSheet({
                                   }
                                 }}
                               >
-                                InstUI Source
+                                Source
                               </Button>
                             )}
                           </Flex>

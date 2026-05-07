@@ -64,7 +64,11 @@ export function SpecEmbedFrame({
       orientToBoard(boardKey)
     } else if (!hasAutocentered.current) {
       hasAutocentered.current = true
-      centerOnSize?.(iframeWidth, iframeHeight)
+      if (boardRects['0-0'] && orientToBoard) {
+        orientToBoard('0-0', 0.6)
+      } else {
+        centerOnSize?.(iframeWidth, iframeHeight)
+      }
     }
   }, [boardRects, iframeWidth, iframeHeight, orientToBoard, centerOnSize])
 

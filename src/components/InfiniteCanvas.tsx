@@ -150,7 +150,7 @@ export function InfiniteCanvas({
     sync({ x: newTx, y: newTy, scale: newScale })
   }, [sync])
 
-  const orientToBoard = useCallback((boardId: string) => {
+  const orientToBoard = useCallback((boardId: string, scale?: number) => {
     if (!containerRef.current || !layerRef.current) return
     const boardEl = layerRef.current.querySelector(`[data-board-id="${boardId}"]`) as HTMLElement | null
     if (!boardEl) return
@@ -167,7 +167,7 @@ export function InfiniteCanvas({
       (containerRect.height - NAV_HEIGHT - PADDING * 2) / boardUnscaledH,
       1,
     )
-    const newScale = Math.max(MIN_SCALE, fitScale)
+    const newScale = Math.max(MIN_SCALE, scale ?? fitScale)
     const newTx = containerRect.width / 2 - bCenterX * newScale
     const newTy = (containerRect.height + NAV_HEIGHT) / 2 - bCenterY * newScale
     sync({ x: newTx, y: newTy, scale: newScale })

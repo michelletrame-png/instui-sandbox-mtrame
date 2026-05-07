@@ -4,6 +4,6 @@ export type CanvasTool = 'hand' | 'select'
 
 export const InfiniteCanvasContext = createContext<{
   tool: CanvasTool
-  orientToBoard?: (boardId: string) => void
+  orientToBoard?: (boardId: string, scale?: number) => void
   centerOnSize?: (width: number, height: number) => void
 }>({ tool: 'hand' })
