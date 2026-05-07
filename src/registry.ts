@@ -23,15 +23,6 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
-    id: 'popup-test',
-    title: 'Popup Positioning Test',
-    path: '/popup-test',
-    createdAt: '2026-05-06',
-    category: 'Spec',
-    status: 'WIP',
-    component: lazy(() => import('./designs/popup-test')),
-  },
-  {
     id: 'learner-overview',
     title: 'Learner Overview',
     path: '/learner-overview',
