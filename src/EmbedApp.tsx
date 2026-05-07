@@ -73,12 +73,20 @@ export default function EmbedApp() {
   useEffect(() => {
     postToParent({ type: 'embed:ready' })
 
+    let rafId: number | null = null
     const reportSize = () => {
-      postToParent({
-        type: 'embed:size',
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-        boardRects: getBoardRects(),
+      // Debounce via rAF: coalesce multiple ResizeObserver firings in one frame
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        postToParent({
+          type: 'embed:size',
+          // Use body dimensions — consistent with observing body, avoids
+          // documentElement.scrollWidth reflecting viewport rather than content.
+          width: document.body.scrollWidth,
+          height: document.body.scrollHeight,
+          boardRects: getBoardRects(),
+        })
       })
     }
 
@@ -96,6 +104,7 @@ export default function EmbedApp() {
 
     return () => {
       clearTimeout(tid)
+      if (rafId !== null) cancelAnimationFrame(rafId)
       observer.disconnect()
     }
   }, [])
