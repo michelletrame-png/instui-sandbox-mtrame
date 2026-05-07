@@ -121,7 +121,7 @@ export function SpecEmbedFrame({
   return (
     <>
       {/* Container sized to full iframe content — placeholders enable InfiniteCanvas board orientation */}
-      <div style={{ position: 'relative', width: iframeWidth, height: iframeHeight }}>
+      <div style={{ position: 'relative', width: iframeWidth, height: iframeHeight, contain: 'layout paint' }}>
         <iframe
           ref={iframeRef}
           src={src}

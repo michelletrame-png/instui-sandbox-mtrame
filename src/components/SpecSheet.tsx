@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button, CloseButton } from '@instructure/ui-buttons/latest'
-import { FileTextInstUIIcon, CodeInstUIIcon, RefreshCwInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
+import { FileTextInstUIIcon, CodeInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
 import { InfiniteCanvas } from './InfiniteCanvas'
 import { extractCopyFromDOM } from './extractCopy'
@@ -40,7 +40,6 @@ export type SpecBoard = {
   notes?: string
   content?: React.ReactNode
   frame?: string
-  playable?: boolean
 }
 
 export type SpecSection = {
@@ -146,11 +145,6 @@ export function SpecSheet({
   const { sharedTokens } = useComputedTheme()
   const [codeModal, setCodeModal] = useState<{ caption?: string; code: string } | null>(null)
   const [copyModal, setCopyModal] = useState<{ caption?: string; screenLabel: string; copy: CopyEntry[] } | null>(null)
-  const [playKeys, setPlayKeys] = useState<Record<string, number>>({})
-
-  const replay = useCallback((key: string) => {
-    setPlayKeys(prev => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }))
-  }, [])
 
   return (
     <>
@@ -190,7 +184,6 @@ export function SpecSheet({
                 <Flex gap="xx-large" alignItems="start">
                   {section.boards.map((board, bi) => {
                     const boardKey = `${si}-${bi}`
-                    const playKey = playKeys[boardKey] ?? 0
                     return (
                       <Flex.Item key={bi} shouldShrink={false}>
                         <div data-board-id={boardKey}>
@@ -217,7 +210,7 @@ export function SpecSheet({
                               overflowY: 'hidden' as const,
                             } : {})}
                           >
-                            <div key={playKey} data-copy-root={boardKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
+                            <div data-copy-root={boardKey} style={{ width: '100%', ...(board.height !== undefined ? { height: '100%' } : {}) }}>
                               {board.content ?? (
                                 <View
                                   as="div"
@@ -245,16 +238,6 @@ export function SpecSheet({
                             >
                               Link
                             </Button>
-                            {board.playable && (
-                              <Button
-                                size="small"
-                                withBackground={false}
-                                renderIcon={<RefreshCwInstUIIcon />}
-                                onClick={() => replay(boardKey)}
-                              >
-                                Replay
-                              </Button>
-                            )}
                             {board.content && (
                               <Button
                                 size="small"

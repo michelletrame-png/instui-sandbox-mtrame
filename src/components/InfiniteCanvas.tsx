@@ -14,8 +14,8 @@ import {
   MousePointer2InstUIIcon,
 } from '@instructure/ui-icons'
 
-const MIN_SCALE = 0.05
-const MAX_SCALE = 5
+const MIN_SCALE = 0.3
+const MAX_SCALE = 1.5
 const NAV_HEIGHT = 44
 
 import { InfiniteCanvasContext, type CanvasTool } from './InfiniteCanvasContext'
