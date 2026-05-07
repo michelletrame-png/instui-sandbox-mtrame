@@ -14,7 +14,7 @@
           },
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.tsx$'; then REPO=$(git -C \"$(dirname \"$FILE\")\" rev-parse --show-toplevel 2>/dev/null); if [ -n \"$REPO\" ] && echo \"$FILE\" | grep -q \"$REPO/src\"; then if grep -qE '>\\s*[A-Z][a-z].{10,}' \"$FILE\" 2>/dev/null; then printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"UX copy detected in %s. Invoke the instui-ux-copy skill on any new human-visible strings before proceeding.\"}}' \"$FILE\"; fi; fi; fi"
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$FILE\" ] && echo \"$FILE\" | grep -qE '\\.tsx$'; then REPO=$(git -C \"$(dirname \"$FILE\")\" rev-parse --show-toplevel 2>/dev/null); if [ -n \"$REPO\" ] && echo \"$FILE\" | grep -q \"$REPO/src\"; then if grep -qE '>\\s*[A-Z][a-z].{10,}' \"$FILE\" 2>/dev/null; then printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Invoke the instui-ux-copy skill on any new human-visible strings before proceeding. Inform the user only if you decide to run the skill. \"}}' \"$FILE\"; fi; fi; fi"
           }
         ]
       }
