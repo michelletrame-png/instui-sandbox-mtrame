@@ -43,6 +43,8 @@ const LAYER_STYLE: React.CSSProperties = {
   left: 0,
   transformOrigin: '0 0',
   willChange: 'transform',
+  // Prevent GPU compositing tears between the layer and the canvas background
+  backfaceVisibility: 'hidden',
 }
 
 const NAV_ACTIONS_STYLE: React.CSSProperties = {
@@ -284,7 +286,10 @@ export function InfiniteCanvas({
         const rect = el!.getBoundingClientRect()
         const cx = clientX - rect.left
         const cy = clientY - rect.top
-        const factor = deltaY < 0 ? 1.1 : 1 / 1.1
+        // Continuous factor so trackpad pinch (many small deltas) feels smooth.
+        // Math.exp(-deltaY * 0.003) gives ~18% per mouse-wheel notch (deltaY≈100)
+        // and ~0.6% per trackpad frame (deltaY≈2), both at the right feel.
+        const factor = Math.exp(-deltaY * 0.003)
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, t.scale * factor))
         const k = newScale / t.scale
         applyTransform({
@@ -342,6 +347,10 @@ export function InfiniteCanvas({
     backgroundImage: `radial-gradient(circle, ${palette.dotColor} 1px, transparent 1px)`,
     backgroundSize: '24px 24px',
     transition: 'background-color 0.2s, background-image 0.2s',
+    // Force the container onto its own GPU layer so background and content
+    // composite together and don't flicker against each other during transform.
+    isolation: 'isolate',
+    transform: 'translateZ(0)',
   }
 
   const navStyle: React.CSSProperties = {
