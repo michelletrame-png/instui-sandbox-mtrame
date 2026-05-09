@@ -342,6 +342,7 @@ export function SpecSheet({
             borderRadius="0"
             padding="medium"
           >
+            {/* eslint-disable-next-line instui/no-style-layout -- <pre> browser reset, no View equivalent */}
             <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {codeModal?.code}
             </pre>

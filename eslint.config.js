@@ -42,6 +42,9 @@ export default defineConfig([
       'instui/no-flex-item-without-behavior': 'warn',
       'instui/view-background-needs-override': 'warn',
       'instui/button-text-max-words': 'warn',
+      'instui/no-style-layout': 'warn',
+      'instui/no-bare-html': 'warn',
+      'instui/no-internal-imports': 'error',
     },
   },
 ])

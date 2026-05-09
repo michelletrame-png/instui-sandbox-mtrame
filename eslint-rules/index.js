@@ -17,6 +17,9 @@ import flexItemShadowClip from './rules/flex-item-shadow-clip.js'
 import noFlexItemWithoutBehavior from './rules/no-flex-item-without-behavior.js'
 import viewBackgroundNeedsOverride from './rules/view-background-needs-override.js'
 import buttonTextMaxWords from './rules/button-text-max-words.js'
+import noStyleLayout from './rules/no-style-layout.js'
+import noBareHtml from './rules/no-bare-html.js'
+import noInternalImports from './rules/no-internal-imports.js'
 
 export default {
   rules: {
@@ -32,5 +35,8 @@ export default {
     'no-flex-item-without-behavior': noFlexItemWithoutBehavior,
     'view-background-needs-override': viewBackgroundNeedsOverride,
     'button-text-max-words': buttonTextMaxWords,
+    'no-style-layout': noStyleLayout,
+    'no-bare-html': noBareHtml,
+    'no-internal-imports': noInternalImports,
   },
 }

@@ -164,6 +164,16 @@ const skills: SkillInfo[] = [
       '/sandbox-eval',
     ],
   },
+  {
+    command: '/sandbox-audit',
+    title: 'Audit',
+    description: "Audits a prototype or spec for token misuse, accessibility issues, and copy quality. Lists available prototypes if you don't name one.",
+    triggers: [
+      '/sandbox-audit',
+      '/sandbox-audit agent patterns',
+      '/sandbox-audit the learner overview spec',
+    ],
+  },
 ]
 
 function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
