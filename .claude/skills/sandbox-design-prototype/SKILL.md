@@ -184,6 +184,31 @@ in the home page list.
 
 ---
 
+### Step 4 — Run the design auditor
+
+After the prototype file is complete and registered, invoke the `design-auditor`
+sub-agent on the prototype file before returning to the user:
+
+```
+Agent({
+  description: "Design audit",
+  subagent_type: "design-auditor",
+  prompt: "Audit src/designs/<id>/index.tsx and return a structured report."
+})
+```
+
+For spec sheets, pass the `index.tsx` and all files in `src/designs/<id>/frames/`.
+
+Read the report the auditor returns. For each `⚠` item:
+- Fix it immediately if it is a clear, one-line correction (wrong token pairing,
+  missing `screenReaderLabel`, placeholder text)
+- Flag it to the user with the line number if it requires a design decision
+
+Do not mention the audit to the user unless there are ⚠ items to discuss. A
+clean audit is silent.
+
+---
+
 ## Deleting a prototype
 
 1. Remove the entry from `src/registry.ts`
