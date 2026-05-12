@@ -5,6 +5,7 @@ import { useComputedTheme } from '@instructure/emotion'
 import { Spinner } from '@instructure/ui-spinner/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Home } from './Home'
+import GradingWorkspaceMVP from './designs/gradebook/workspace.mvp'
 import { Showcase } from './references/Showcase'
 import { InfiniteCanvas } from './components/InfiniteCanvas'
 import { SpecEmbedFrame } from './components/SpecEmbedFrame'
@@ -80,6 +81,10 @@ export default function App() {
         ) : (
           <>
             <Route path="/" element={<Home />} />
+            <Route
+              path="/gradebook-workspace-mvp"
+              element={<GradingWorkspaceMVP isDark={isDark} onToggleTheme={onToggleTheme} />}
+            />
             <Route
               path="/showcase"
               element={

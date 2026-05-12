@@ -44,7 +44,9 @@
       "Read(//usr/bin/**)",
       "Bash(conda run *)",
       "Bash(brew list *)",
-      "Bash(brew install *)"
+      "Bash(brew install *)",
+      "Bash(git remote:*)",
+      "Bash(npm install:*)"
     ]
   }
 }

@@ -23,6 +23,24 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
+    id: 'gradebook-mvp',
+    title: 'Gradebook MVP',
+    path: '/gradebook-mvp',
+    createdAt: '2026-05-06',
+    category: 'Prototype',
+    status: 'WIP',
+    component: lazy(() => import('./designs/gradebook/index.mvp')),
+  },
+  {
+    id: 'create-assignment-mvp',
+    title: 'Create Assignment MVP',
+    path: '/create-assignment-mvp',
+    createdAt: '2026-05-06',
+    category: 'Prototype',
+    status: 'WIP',
+    component: lazy(() => import('./designs/create-assignment/index.mvp')),
+  },
+  {
     id: 'learner-overview',
     title: 'Learner Overview',
     path: '/learner-overview',

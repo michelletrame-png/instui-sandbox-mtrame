@@ -1,2 +1,2 @@
-export const sandboxOwner = '[name]'
+export const sandboxOwner = 'Michelle Trame'
 export const sandboxHash = ''

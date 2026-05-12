@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [react()],
-    base: env.BASE_URL || process.env.BASE_URL || '/instui-sandbox-base/',
+    base: env.BASE_URL || process.env.BASE_URL || '/instui-sandbox-mtrame/',
     define: {
       __SANDBOX_SHA__: JSON.stringify(sandboxSha),
       __SANDBOX_REPO__: JSON.stringify(sandboxRepo),
