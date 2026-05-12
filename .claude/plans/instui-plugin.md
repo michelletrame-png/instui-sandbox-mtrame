@@ -19,8 +19,8 @@ No sandbox required. No sandbox concepts leak in.
 
 ## How marketplace repos work
 
-A Claude plugin is a GitHub repository that follows a specific directory convention.
-Consuming projects reference it in their `.claude/settings.json`:
+A Claude plugin is a GitHub repository with a `.claude-plugin/plugin.json` manifest at
+its root. Consuming projects reference it in their `.claude/settings.json`:
 
 ```json
 {
@@ -46,6 +46,31 @@ schedule.
 This is the distribution model: the plugin lives at a public GitHub URL, projects
 reference it by repo + version, and Claude Code handles the rest. No install script,
 no copy-paste, no local files to maintain.
+
+### Plugin chaining
+
+As of Claude Code v2.1.110, plugins can declare dependencies on other plugins via the
+`dependencies` array in `.claude-plugin/plugin.json`:
+
+```json
+{
+  "name": "instui-sandbox",
+  "version": "1.0",
+  "dependencies": [
+    {
+      "repo": "instructure/instui-claude-plugin",
+      "version": "11.7"
+    }
+  ]
+}
+```
+
+When a user installs the sandbox plugin, Claude Code automatically installs the instui
+plugin as well. A designer runs one command and gets both — they never need to know the
+instui plugin exists separately.
+
+The dependency direction is sandbox → instui plugin (the sandbox depends on the instui
+plugin, not the other way around). The instui plugin has no knowledge of the sandbox.
 
 The one exception today is **hooks** — hook entries in `settings.json` require a merge
 step into the consuming project's own settings and aren't automatically inherited from
@@ -115,7 +140,8 @@ Keep as-is (already general):
 
 ```
 instui-plugin/
-  PLUGIN.md                          # manifest + usage instructions
+  .claude-plugin/
+    plugin.json                      # manifest: name, version, dependencies
 
   skills/
     instui-get-component/

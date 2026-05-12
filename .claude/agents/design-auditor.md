@@ -101,6 +101,16 @@ Grep for `<Button`. For each match, check whether the children are exclusively
 an `*InstUIIcon` component with no accompanying text. If so, flag it — the
 button has no accessible name.
 
+**`IconButton` used as a close button instead of `CloseButton`**
+
+Grep for `XInstUIIcon` used inside an `<IconButton`. If found, flag it — `CloseButton`
+from `@instructure/ui-buttons/latest` is the correct component for any X/dismiss button.
+It handles icon rendering, sizing, border/background removal, and screen reader labeling
+automatically. Manual composition with `IconButton` + `XInstUIIcon` is always wrong.
+
+Also grep for `withBorder={false}` and `withBackground={false}` together on an
+`<IconButton` — this is the signature of a hand-rolled close button.
+
 **Click handlers on non-interactive elements**
 
 Grep for `onClick` on `View`, `Text`, `Flex`, `Heading`, or `Flex.Item`. Flag
