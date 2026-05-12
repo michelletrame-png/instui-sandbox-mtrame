@@ -1,0 +1,1 @@
+import{B as e}from"./v2-C9oVrVvN.js";var t=()=>{let t=e().newTheme,n=t?.primitives,r=t?.semantics?.call(t,n);return{primitives:n,semantics:r,components:Object.keys(t?.components).reduce((e,n)=>{var i;return{...e,[n]:(i=t.components)[n]?.call(i,r)}},{}),sharedTokens:t?.sharedTokens?.call(t,r)}};export{t};

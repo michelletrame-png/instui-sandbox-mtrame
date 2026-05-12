@@ -1,0 +1,44 @@
+name: Deploy Static Export
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_id:
+        description: 'Static deploy ID (e.g. learner-overview-v1)'
+        required: true
+      prototype_path:
+        description: 'Prototype path (e.g. /learner-overview)'
+        required: true
+      sandbox_hash:
+        description: 'Sandbox hash (from src/sandbox.config.ts sandboxHash)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    if: github.repository != 'instructure/instui-sandbox-base'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: node scripts/build-static.mjs
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+          DEPLOY_ID: ${{ inputs.deploy_id }}
+          PROTOTYPE_PATH: ${{ inputs.prototype_path }}
+          SANDBOX_HASH: ${{ inputs.sandbox_hash }}
+
+      - run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          npx gh-pages -d dist-static --dest static/${{ inputs.sandbox_hash }}/${{ inputs.deploy_id }} --add --dotfiles
