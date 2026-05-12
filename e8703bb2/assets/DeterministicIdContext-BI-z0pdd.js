@@ -1,0 +1,1 @@
+import{G as e,U as t}from"./v2-C9oVrVvN.js";var n=(e,t)=>(t.has(e)?t.set(e,t.get(e)+1):t.set(e,0),`${e}___${t.get(e)}`),r=e(t()),i=`__INSTUI_GLOBAL_INSTANCE_COUNTER__`;function a(){if(globalThis[i])return globalThis[i];let e=new Map;return globalThis[i]=e,e}var o=a(),s=r.createContext(o);export{o as n,n as r,s as t};
