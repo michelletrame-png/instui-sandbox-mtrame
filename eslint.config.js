@@ -45,6 +45,7 @@ export default defineConfig([
       'instui/no-style-layout': 'warn',
       'instui/no-bare-html': 'warn',
       'instui/no-internal-imports': 'error',
+      'instui/no-text-dividers': 'warn',
     },
   },
 ])

@@ -20,6 +20,7 @@ import buttonTextMaxWords from './rules/button-text-max-words.js'
 import noStyleLayout from './rules/no-style-layout.js'
 import noBareHtml from './rules/no-bare-html.js'
 import noInternalImports from './rules/no-internal-imports.js'
+import noTextDividers from './rules/no-text-dividers.js'
 
 export default {
   rules: {
@@ -38,5 +39,6 @@ export default {
     'no-style-layout': noStyleLayout,
     'no-bare-html': noBareHtml,
     'no-internal-imports': noInternalImports,
+    'no-text-dividers': noTextDividers,
   },
 }
