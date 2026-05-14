@@ -11,7 +11,7 @@ import { Table } from '@instructure/ui-table/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
-import { IconButton } from '@instructure/ui-buttons/latest'
+import { IconButton, CloseButton } from '@instructure/ui-buttons/latest'
 import { TextInput } from '@instructure/ui-text-input/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { CopyInstUIIcon, ExternalLinkInstUIIcon, SearchInstUIIcon } from '@instructure/ui-icons'
@@ -264,7 +264,7 @@ export function Home() {
       display="block"
       background="primary"
       themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-      borderRadius={sharedTokens.borderRadius.card.sm}
+      borderRadius={sharedTokens.borderRadius.card.lg}
       shadow="resting"
       padding="medium"
       margin="medium 0 0 0"
@@ -321,7 +321,8 @@ export function Home() {
                       <TextInput
                         renderLabel={<ScreenReaderContent>Search designs</ScreenReaderContent>}
                         placeholder="Search designs"
-                        renderBeforeInput={<SearchInstUIIcon />}
+                        renderBeforeInput={<SearchInstUIIcon inline={false} />}
+                        renderAfterInput={searchDesigns ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchDesigns('')} /> : undefined}
                         size="small"
                         value={searchDesigns}
                         onChange={(_e, value) => setSearchDesigns(value)}
@@ -388,7 +389,9 @@ export function Home() {
                       <TextInput
                         renderLabel={<ScreenReaderContent>Search published</ScreenReaderContent>}
                         placeholder="Search published"
-                        renderBeforeInput={<SearchInstUIIcon />}
+                        renderBeforeInput={<SearchInstUIIcon inline={false} />}
+                        renderAfterInput={searchPublished ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchPublished('')} /> : undefined}
+                        size="small"
                         value={searchPublished}
                         onChange={(_e, value) => setSearchPublished(value)}
                       />
