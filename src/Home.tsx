@@ -230,7 +230,7 @@ export function Home() {
   const [searchDesigns, setSearchDesigns] = useState('')
   const [searchPublished, setSearchPublished] = useState('')
   const [filterCategory, setFilterCategory] = useState<PrototypeCategory | ''>('')
-  const [filterStatus, setFilterStatus] = useState<PrototypeStatus | ''>('')
+  const [filterStatus, setFilterStatus] = useState<PrototypeStatus | ''>('Active')
   const { sharedTokens } = useComputedTheme()
 
   type StaticExport = { id: string; title: string; url: string; deployedAt: string }
@@ -238,7 +238,7 @@ export function Home() {
   const workItems = allWorkItems
     .filter(p => !searchDesigns || p.title.toLowerCase().includes(searchDesigns.toLowerCase()))
     .filter(p => !filterCategory || p.category === filterCategory)
-    .filter(p => filterStatus ? p.status === filterStatus : p.status !== 'Archived')
+    .filter(p => !filterStatus || p.status === filterStatus)
   const templateItems = prototypes.filter(p => p.category === 'Template')
   const referenceItems = prototypes.filter(p => p.category === 'Reference')
   const allPublishedItems = (staticExportsData as StaticExport[]).slice().reverse()
