@@ -322,6 +322,7 @@ export function Home() {
                         renderLabel={<ScreenReaderContent>Search designs</ScreenReaderContent>}
                         placeholder="Search designs"
                         renderBeforeInput={<SearchInstUIIcon />}
+                        size="small"
                         value={searchDesigns}
                         onChange={(_e, value) => setSearchDesigns(value)}
                       />
@@ -330,6 +331,7 @@ export function Home() {
                       renderLabel={<ScreenReaderContent>Filter by category</ScreenReaderContent>}
                       value={filterCategory}
                       onChange={(_e, { value }) => setFilterCategory((value ?? '') as PrototypeCategory | '')}
+                      size="small"
                       width="160px"
                     >
                       <SimpleSelect.Option id="cat-all" value="">All categories</SimpleSelect.Option>
@@ -340,6 +342,7 @@ export function Home() {
                       renderLabel={<ScreenReaderContent>Filter by status</ScreenReaderContent>}
                       value={filterStatus}
                       onChange={(_e, { value }) => setFilterStatus((value ?? '') as PrototypeStatus | '')}
+                      size="small"
                       width="160px"
                     >
                       <SimpleSelect.Option id="status-all" value="">All statuses</SimpleSelect.Option>
