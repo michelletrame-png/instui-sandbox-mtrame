@@ -40,6 +40,13 @@ export default {
           checkString(expr.value, node)
         }
       },
+
+      // Catches prop string values: subtitle="AP Biology · 20 pts"
+      JSXAttribute(node) {
+        if (node.value && node.value.type === 'Literal' && typeof node.value.value === 'string') {
+          checkString(node.value.value, node)
+        }
+      },
     }
   },
 }

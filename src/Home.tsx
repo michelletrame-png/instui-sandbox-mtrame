@@ -5,13 +5,16 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Link } from '@instructure/ui-link/latest'
+import { ScreenReaderContent } from '@instructure/ui-a11y-content'
 import { Pill } from '@instructure/ui-pill/latest'
 import { Table } from '@instructure/ui-table/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
 import { IconButton } from '@instructure/ui-buttons/latest'
-import { CopyInstUIIcon, ExternalLinkInstUIIcon } from '@instructure/ui-icons'
+import { TextInput } from '@instructure/ui-text-input/latest'
+import { SimpleSelect } from '@instructure/ui-simple-select/latest'
+import { CopyInstUIIcon, ExternalLinkInstUIIcon, SearchInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
 import { sandboxOwner, sandboxHash } from './sandbox.config'
 
@@ -236,13 +239,24 @@ function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: Re
 
 export function Home() {
   const [tabIndex, setTabIndex] = useState(0)
+  const [searchDesigns, setSearchDesigns] = useState('')
+  const [searchPublished, setSearchPublished] = useState('')
+  const [filterCategory, setFilterCategory] = useState<PrototypeCategory | ''>('')
+  const [filterStatus, setFilterStatus] = useState<PrototypeStatus | ''>('')
   const { sharedTokens } = useComputedTheme()
 
   type StaticExport = { id: string; title: string; url: string; deployedAt: string }
-  const workItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
+  const allWorkItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
+  const workItems = allWorkItems
+    .filter(p => !searchDesigns || p.title.toLowerCase().includes(searchDesigns.toLowerCase()))
+    .filter(p => !filterCategory || p.category === filterCategory)
+    .filter(p => filterStatus ? p.status === filterStatus : p.status !== 'Archived')
   const templateItems = prototypes.filter(p => p.category === 'Template')
   const referenceItems = prototypes.filter(p => p.category === 'Reference')
-  const publishedItems = (staticExportsData as StaticExport[]).slice().reverse()
+  const allPublishedItems = (staticExportsData as StaticExport[]).slice().reverse()
+  const publishedItems = searchPublished
+    ? allPublishedItems.filter(p => p.id.toLowerCase().includes(searchPublished.toLowerCase()))
+    : allPublishedItems
 
   const tabPanelView = (children: React.ReactNode) => (
     <View
@@ -300,11 +314,48 @@ export function Home() {
         <View as="div" display="block" maxWidth="700px" width="100%">
           <Tabs onRequestTabChange={(_e, { index }) => setTabIndex(index)}>
             <Tabs.Panel renderTitle="Designs" isSelected={tabIndex === 0} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              {tabPanelView(<PrototypeTable items={workItems} showCategory showStatus />)}
+              {tabPanelView(
+                <Flex direction="column" gap="medium">
+                  <Flex gap="small" alignItems="end" wrap="wrap">
+                    <Flex.Item shouldGrow shouldShrink>
+                      <TextInput
+                        renderLabel={<ScreenReaderContent>Search designs</ScreenReaderContent>}
+                        placeholder="Search designs"
+                        renderBeforeInput={<SearchInstUIIcon />}
+                        value={searchDesigns}
+                        onChange={(_e, value) => setSearchDesigns(value)}
+                      />
+                    </Flex.Item>
+                    <SimpleSelect
+                      renderLabel={<ScreenReaderContent>Filter by category</ScreenReaderContent>}
+                      value={filterCategory}
+                      onChange={(_e, { value }) => setFilterCategory((value ?? '') as PrototypeCategory | '')}
+                      width="160px"
+                    >
+                      <SimpleSelect.Option id="cat-all" value="">All categories</SimpleSelect.Option>
+                      <SimpleSelect.Option id="cat-spec" value="Spec">Spec</SimpleSelect.Option>
+                      <SimpleSelect.Option id="cat-prototype" value="Prototype">Prototype</SimpleSelect.Option>
+                    </SimpleSelect>
+                    <SimpleSelect
+                      renderLabel={<ScreenReaderContent>Filter by status</ScreenReaderContent>}
+                      value={filterStatus}
+                      onChange={(_e, { value }) => setFilterStatus((value ?? '') as PrototypeStatus | '')}
+                      width="160px"
+                    >
+                      <SimpleSelect.Option id="status-all" value="">All statuses</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-wip" value="WIP">WIP</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-review" value="In Review">In Review</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-complete" value="Complete">Complete</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-archived" value="Archived">Archived</SimpleSelect.Option>
+                    </SimpleSelect>
+                  </Flex>
+                  <PrototypeTable items={workItems} showCategory showStatus />
+                </Flex>
+              )}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Published" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               {tabPanelView(
-                publishedItems.length === 0
+                allPublishedItems.length === 0
                   ? <Flex direction="column" gap="small">
                       <Text color="secondary">No links published yet. Share any design at a permanent URL:</Text>
                       <View
@@ -330,7 +381,15 @@ export function Home() {
                         </Flex>
                       </View>
                     </Flex>
-                  : <Table caption="Published links" hover>
+                  : <Flex direction="column" gap="medium">
+                      <TextInput
+                        renderLabel={<ScreenReaderContent>Search published</ScreenReaderContent>}
+                        placeholder="Search published"
+                        renderBeforeInput={<SearchInstUIIcon />}
+                        value={searchPublished}
+                        onChange={(_e, value) => setSearchPublished(value)}
+                      />
+                      <Table caption="Published links" hover>
                       <Table.Head>
                         <Table.Row>
                           <Table.ColHeader id="title" stackedSortByLabel="Design">Design</Table.ColHeader>
@@ -358,6 +417,7 @@ export function Home() {
                         ))}
                       </Table.Body>
                     </Table>
+                    </Flex>
               )}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
