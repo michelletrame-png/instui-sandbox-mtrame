@@ -148,15 +148,17 @@ If the file contains human-visible JSX string literals and there is no
 Do NOT flag anything already enforced by the ESLint ruleset. These are handled
 at write time and will not reach the auditor:
 
-- Hardcoded hex colors → `no-hardcoded-hex`
-- Inline layout styles on non-media elements → `no-style-layout`
-- Raw layout styles on `<div>`/`<span>` → `no-raw-div-layout`
-- Bare `<button>`, `<a>`, `<h1>`–`<h6>` → `no-bare-html`
-- Pixel values in View/Flex/Grid spacing props → `no-pixel-spacing`
-- Missing `themeOverride` on `background="primary/secondary"` → `view-background-needs-override`
-- Inline border styles → `no-style-border`
-- Inline color styles → `no-style-color`
-- `primitives.*` direct access → `no-primitives-access`
+- Hardcoded hex colors → `instui/no-hardcoded-hex`
+- Inline layout styles on non-media elements → `instui/no-style-layout`
+- Raw layout styles on `<div>`/`<span>` → `instui/no-raw-div-layout`
+- Bare `<button>`, `<a>`, `<h1>`–`<h6>` → `instui/no-bare-html`
+- Pixel values in View/Flex/Grid spacing props → `instui/no-pixel-spacing`
+- Missing `themeOverride` on `background="primary/secondary"` → `instui/view-background-needs-override`
+- Inline border styles → `instui/no-style-border`
+- Inline color styles → `instui/no-style-color`
+- `primitives.*` direct access → `instui/no-primitives-access`
+- Internal package imports → `instui/no-internal-imports`
+- Text dividers (·, •, ` | `, ` / `) in JSX text or prop strings → `instui/no-text-dividers` (use `InlineList` from `@instructure/ui-list/latest`)
 - Standard aria/alt/label violations → `jsx-a11y`
 - TypeScript type errors → TypeScript hook
 
