@@ -23,21 +23,12 @@ const sandboxLiveUrl = sandboxHash && _repoName ? `https://instructure.github.io
 import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
-type SortCol = 'title' | 'createdAt' | 'status' | 'category'
+type SortCol = 'title' | 'createdAt' | 'category'
 type SortDir = 'ascending' | 'descending'
 
 const statusOrder: Record<PrototypeStatus, number> = {
-  WIP: 0,
-  'In Review': 1,
-  Complete: 2,
-  Archived: 3,
-}
-
-const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'primary'> = {
-  WIP: 'warning',
-  'In Review': 'info',
-  Complete: 'success',
-  Archived: 'primary',
+  Active: 0,
+  Archived: 1,
 }
 
 const categoryColor: Record<PrototypeCategory, 'warning' | 'info' | 'success' | 'primary'> = {
@@ -57,15 +48,14 @@ function sortPrototypes(list: PrototypeMeta[], col: SortCol, dir: SortDir) {
     if (col === 'title') cmp = a.title.localeCompare(b.title)
     else if (col === 'createdAt') cmp = a.createdAt.localeCompare(b.createdAt)
     else if (col === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '')
-    else if (col === 'status') cmp = (statusOrder[a.status ?? 'Archived'] ?? 99) - (statusOrder[b.status ?? 'Archived'] ?? 99)
+    else if (col === 'status') cmp = (statusOrder[a.status ?? 'Active'] ?? 99) - (statusOrder[b.status ?? 'Active'] ?? 99)
     return dir === 'ascending' ? cmp : -cmp
   })
 }
 
-function PrototypeTable({ items, showCategory = false, showStatus = false }: {
+function PrototypeTable({ items, showCategory = false }: {
   items: PrototypeMeta[]
   showCategory?: boolean
-  showStatus?: boolean
 }) {
   const [sortCol, setSortCol] = useState<SortCol>('createdAt')
   const [sortDir, setSortDir] = useState<SortDir>('descending')
@@ -88,7 +78,6 @@ function PrototypeTable({ items, showCategory = false, showStatus = false }: {
         <Table.Row>
           <Table.ColHeader id="title" sortDirection={sortCol === 'title' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Title">Title</Table.ColHeader>
           {showCategory && <Table.ColHeader id="category" sortDirection={sortCol === 'category' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Category" width="110px">Category</Table.ColHeader>}
-          {showStatus && <Table.ColHeader id="status" sortDirection={sortCol === 'status' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Status" width="120px">Status</Table.ColHeader>}
           <Table.ColHeader id="createdAt" sortDirection={sortCol === 'createdAt' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Created">Created</Table.ColHeader>
         </Table.Row>
       </Table.Head>
@@ -97,7 +86,6 @@ function PrototypeTable({ items, showCategory = false, showStatus = false }: {
           <Table.Row key={p.id}>
             <Table.Cell><Link as={RouterLink} to={p.path}>{p.title}</Link></Table.Cell>
             {showCategory && <Table.Cell><Pill color={categoryColor[p.category]}>{p.category}</Pill></Table.Cell>}
-            {showStatus && <Table.Cell>{p.status && <Pill color={statusColor[p.status]}>{p.status}</Pill>}</Table.Cell>}
             <Table.Cell>{formatDate(p.createdAt)}</Table.Cell>
           </Table.Row>
         ))}
@@ -347,13 +335,11 @@ export function Home() {
                       width="160px"
                     >
                       <SimpleSelect.Option id="status-all" value="">All statuses</SimpleSelect.Option>
-                      <SimpleSelect.Option id="status-wip" value="WIP">WIP</SimpleSelect.Option>
-                      <SimpleSelect.Option id="status-review" value="In Review">In Review</SimpleSelect.Option>
-                      <SimpleSelect.Option id="status-complete" value="Complete">Complete</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-active" value="Active">Active</SimpleSelect.Option>
                       <SimpleSelect.Option id="status-archived" value="Archived">Archived</SimpleSelect.Option>
                     </SimpleSelect>
                   </Flex>
-                  <PrototypeTable items={workItems} showCategory showStatus />
+                  <PrototypeTable items={workItems} showCategory />
                 </Flex>
               )}
             </Tabs.Panel>

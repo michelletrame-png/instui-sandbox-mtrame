@@ -39,7 +39,7 @@ Register it in `src/registry.ts`:
   path: '/my-prototype',
   createdAt: '2026-04-28',
   category: 'Prototype',
-  status: 'WIP',
+  status: 'Active',
   component: lazy(() => import('./designs/my-prototype')),
 }
 ```
