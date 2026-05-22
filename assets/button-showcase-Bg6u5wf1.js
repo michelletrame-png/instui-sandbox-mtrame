@@ -1,4 +1,4 @@
-import{G as e,T as t,U as n,t as r}from"./v2-C9oVrVvN.js";import{t as i}from"./useComputedTheme-BEikr0mC.js";import{n as a,t as o}from"./v2-CqqNO6dh.js";import{n as s}from"./v2-BIKKOvBE.js";import{SpecSheet as c}from"./SpecSheet-CxEo401j.js";var l=`import React from 'react'
+import{G as e,T as t,U as n,t as r}from"./v2-C9oVrVvN.js";import{t as i}from"./useComputedTheme-BEikr0mC.js";import{n as a,t as o}from"./v2-CqqNO6dh.js";import{n as s}from"./v2-BIKKOvBE.js";import{SpecSheet as c}from"./SpecSheet-CS60UHWU.js";var l=`import React from 'react'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Text } from '@instructure/ui-text/latest'

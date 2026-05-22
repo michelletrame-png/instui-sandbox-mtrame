@@ -1,1 +1,0 @@
-import{G as e,U as t}from"./v2-C9oVrVvN.js";import{r as n,t as r}from"./DeterministicIdContext-BI-z0pdd.js";var i=e(t());function a(e){let t=(0,i.useContext)(r);return(r=e)=>n(r,t)}export{a as t};
