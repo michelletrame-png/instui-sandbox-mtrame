@@ -119,6 +119,40 @@ Never auto-resolve conflicts.
 
 ---
 
+## Step 7 — Check for outdated plugins
+
+```bash
+claude plugin outdated 2>&1
+```
+
+**Output is empty or says all plugins are up to date** → skip to Done.
+
+**Output lists one or more outdated plugins** → show the list and ask:
+
+> The following plugins have updates available:
+>
+> [list each plugin with current and available versions]
+>
+> Would you like me to update them now?
+
+If yes:
+
+```bash
+claude plugin update --all 2>&1
+```
+
+Or update individually if the user wants to pick:
+
+```bash
+claude plugin update <plugin-id> 2>&1
+```
+
+Tell the user which plugins were updated.
+
+If no → skip updates and continue to Done.
+
+---
+
 ## Done
 
 Tell the user:
