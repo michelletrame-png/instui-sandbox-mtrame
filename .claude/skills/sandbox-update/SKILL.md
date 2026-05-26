@@ -39,7 +39,29 @@ If no → leave local changes as-is and continue.
 
 ---
 
-## Step 2 — Ensure upstream remote exists
+## Step 2 — Check GitHub org access
+
+The sandbox uses the `instructure-internal` org for the InstUI plugin. If the user can't access it, Claude Code won't be able to fetch plugin updates.
+
+```bash
+gh repo view instructure-internal/aip-instui-plugin --json name 2>&1
+```
+
+**Returns JSON** → continue to Step 3.
+
+**Returns an error** → tell the user:
+
+> You're missing access to the `instructure-internal` GitHub org, which is required for the InstUI plugin. Post in **#it** on Slack:
+>
+> **Request:** GitHub Org Access
+> **Action needed:** Please add me to the `instructure-internal` GitHub org
+> **Reason:** Access to InstUI Plugin
+
+Stop here. Return when IT confirms access.
+
+---
+
+## Step 3 — Ensure upstream remote exists
 
 ```bash
 git remote -v
@@ -53,7 +75,7 @@ git remote add upstream https://github.com/instructure/instui-sandbox-base.git
 
 ---
 
-## Step 3 — Fetch and check for upstream changes
+## Step 4 — Fetch and check for upstream changes
 
 ```bash
 git fetch upstream
@@ -67,7 +89,7 @@ Stop here.
 
 ---
 
-## Step 4 — Show what's coming
+## Step 5 — Show what's coming
 
 Display the commit list and explain:
 
@@ -77,7 +99,7 @@ Display the commit list and explain:
 
 ---
 
-## Step 5 — Merge
+## Step 6 — Merge
 
 ```bash
 git merge upstream/main --no-edit

@@ -4,7 +4,6 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
-import instui from './eslint-rules/index.js'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -24,27 +23,6 @@ export default defineConfig([
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
-    },
-  },
-  {
-    files: ['**/*.{ts,tsx}'],
-    plugins: { instui },
-    rules: {
-      'instui/no-hardcoded-hex': 'warn',
-      'instui/no-hardcoded-border-radius': 'warn',
-      'instui/no-theme-name-detection': 'warn',
-      'instui/no-style-color': 'warn',
-      'instui/no-style-border': 'warn',
-      'instui/no-primitives-access': 'warn',
-      'instui/no-raw-div-layout': 'warn',
-      'instui/no-pixel-spacing': 'warn',
-      'instui/flex-item-shadow-clip': 'warn',
-      'instui/no-flex-item-without-behavior': 'warn',
-      'instui/view-background-needs-override': 'warn',
-      'instui/no-style-layout': 'warn',
-      'instui/no-bare-html': 'warn',
-      'instui/no-internal-imports': 'error',
-      'instui/no-text-dividers': 'warn',
     },
   },
 ])

@@ -1,4 +1,15 @@
 {
+  "extraKnownMarketplaces": {
+    "aip-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "instructure-internal/aip-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "aip-instui@aip-plugins": true
+  },
   "hooks": {
     "PostToolUse": [
       {
