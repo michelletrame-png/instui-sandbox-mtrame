@@ -5,6 +5,7 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button, IconButton } from '@instructure/ui-buttons/latest'
+import { TextArea } from '@instructure/ui-text-area/latest'
 import { Popover } from '@instructure/ui-popover/latest'
 import { Avatar } from '@instructure/ui-avatar/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
@@ -354,13 +355,16 @@ function StudentPicker({
 export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: PrototypeProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { sharedTokens } = useComputedTheme()
+  const { sharedTokens, semantics } = useComputedTheme()
 
   /* eslint-disable instui/no-hardcoded-hex */
   const border      = sharedTokens.stroke.baseColor          ?? '#c7cdd1'
   const containerBg = sharedTokens.background.containerColor ?? '#ffffff'
   const pageBg      = sharedTokens.background.pageColor      ?? '#f5f7f8'
   const mutedBg     = sharedTokens.background.mutedColor     ?? '#f5f7f8'
+  const accentBlue  = sharedTokens.stroke.accentBlue         ?? '#0770A3'
+  const textBase    = semantics.color.text.base              ?? '#273540'
+  const textMuted   = semantics.color.text.muted             ?? '#586874'
   /* eslint-enable instui/no-hardcoded-hex */
 
   // Read URL params
@@ -961,20 +965,20 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                                 style={{
                                   flex: 1, height: 48, minWidth: 0, borderRadius: 6, cursor: 'pointer',
                                   background: containerBg, fontFamily: 'inherit',
-                                  border: isSelected ? `3px solid #0770A3` : `1px solid ${border}`,
+                                  border: isSelected ? `3px solid ${accentBlue}` : `1px solid ${border}`,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   padding: '0 4px',
                                 }}
                               >
-                                <span style={{ fontSize: criterion.levels.length > 4 ? 14 : 18, fontWeight: 700, color: '#273540' }}>{level.pts}</span>
+                                <span style={{ fontSize: criterion.levels.length > 4 ? 14 : 18, fontWeight: 700, color: textBase }}>{level.pts}</span>
                               </button>
                             )
                           })}
                         </div>
                         {selectedIdx !== undefined && (
-                          <div style={{ borderRadius: 8, border: `3px solid #0770A3`, padding: '10px 14px' }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#273540', marginBottom: 3 }}>{criterion.levels[selectedIdx].label}</div>
-                            <div style={{ fontSize: 12, color: '#586874' }}>{criterion.levels[selectedIdx].description}</div>
+                          <div style={{ borderRadius: 8, border: `3px solid ${accentBlue}`, padding: '10px 14px' }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: textBase, marginBottom: 3 }}>{criterion.levels[selectedIdx].label}</div>
+                            <div style={{ fontSize: 12, color: textMuted }}>{criterion.levels[selectedIdx].description}</div>
                           </div>
                         )}
                       </View>
@@ -1010,15 +1014,13 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                   {comments.length > 0 && (
                     <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {comments.map(c => (
-                        /* eslint-disable instui/no-hardcoded-hex */
-                        <div key={c.id} style={{ padding: 10, borderRadius: 8, background: mutedBg, borderLeft: '3px solid #0770A3' }}>
+                        <div key={c.id} style={{ padding: 10, borderRadius: 8, background: mutedBg, borderLeft: `3px solid ${sharedTokens.stroke.accentBlue}` }}>
                           <Flex alignItems="center" justifyItems="space-between" margin="0 0 xx-small 0">
                             <Text size="x-small" weight="bold">{c.author}</Text>
                             <Text size="x-small" color="secondary">{c.time}</Text>
                           </Flex>
                           <Text size="small">{c.text}</Text>
                         </div>
-                        /* eslint-enable instui/no-hardcoded-hex */
                       ))}
                     </div>
                   )}
@@ -1040,25 +1042,15 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     </View>
                   )}
 
-                  {/* eslint-disable instui/no-style-border */}
-                  <textarea
-                    style={{
-                      width: '100%', borderRadius: 8, padding: '8px 10px',
-                      border: `1px solid ${sendError ? sharedTokens.stroke.errorColor : border}`,
-                      fontSize: 13, resize: 'none', outline: 'none', minHeight: 72, fontFamily: 'inherit',
-                      color: 'inherit', background: 'transparent', boxSizing: 'border-box',
-                    }}
+                  <TextArea
+                    label={<ScreenReaderContent>Feedback comment</ScreenReaderContent>}
                     placeholder="Write feedback for this student…"
                     value={pendingText}
                     onChange={e => { setPendingText(e.target.value); if (sendError) setSendError(false) }}
-                    rows={3}
+                    height="72px"
+                    resize="none"
+                    messages={sendError ? [{ type: 'error', text: 'Please write a comment before sending.' }] : undefined}
                   />
-                  {/* eslint-enable instui/no-style-border */}
-                  {sendError && (
-                    <View as="div" display="block" margin="xxx-small 0 0 0">
-                      <Text size="x-small" color="danger">Please write a comment before sending.</Text>
-                    </View>
-                  )}
 
                   <View as="div" display="block" margin="x-small 0 0 0">
                     <Flex justifyItems="end" gap="x-small">

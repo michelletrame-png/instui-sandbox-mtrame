@@ -22,6 +22,7 @@ export function CommentLibraryModal({
   const border      = sharedTokens.stroke.baseColor          ?? '#c7cdd1'
   const mutedBg     = sharedTokens.background.mutedColor     ?? '#f5f7f8'
   const containerBg = sharedTokens.background.containerColor ?? '#ffffff'
+  const accentBlue  = sharedTokens.stroke.accentBlue         ?? '#0770A3'
   /* eslint-enable instui/no-hardcoded-hex */
 
   const [query,    setQuery]  = useState('')
@@ -87,7 +88,7 @@ export function CommentLibraryModal({
                   fontFamily: 'inherit', fontSize: 13, border: 'none',
                   marginBottom: 2,
                   background: folder === f.id
-                    ? (f.ai ? '#6B40CC' : '#0770A3')
+                    ? (f.ai ? '#6B40CC' : accentBlue)
                     : 'transparent',
                   color: folder === f.id
                     ? '#fff'
@@ -125,7 +126,7 @@ export function CommentLibraryModal({
                         display: 'block', width: '100%', textAlign: 'left',
                         padding: '10px 12px',
                         border: isSel
-                          ? `2px solid ${isAI ? '#6B40CC' : '#0770A3'}`
+                          ? `2px solid ${isAI ? '#6B40CC' : accentBlue}`
                           : `1px solid ${isAI ? '#C4B0F0' : border}`,
                         borderLeft: isAI && !isSel ? `3px solid #C4B0F0` : undefined,
                         borderRadius: 4, cursor: 'pointer',
@@ -142,7 +143,7 @@ export function CommentLibraryModal({
                         </div>
                       )}
                       {isSel && !isAI && (
-                        <div style={{ fontSize: 10, fontWeight: 700, color: '#0770A3', marginBottom: 4 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: accentBlue, marginBottom: 4 }}>
                           ✓ SELECTED
                         </div>
                       )}

@@ -28,7 +28,7 @@ export const prototypes: PrototypeMeta[] = [
     path: '/gradebook-mvp',
     createdAt: '2026-05-06',
     category: 'Prototype',
-    status: 'WIP',
+    status: 'Active',
     component: lazy(() => import('./designs/gradebook/index.mvp')),
   },
   {
@@ -37,7 +37,7 @@ export const prototypes: PrototypeMeta[] = [
     path: '/create-assignment-mvp',
     createdAt: '2026-05-06',
     category: 'Prototype',
-    status: 'WIP',
+    status: 'Active',
     component: lazy(() => import('./designs/create-assignment/index.mvp')),
   },
   {
