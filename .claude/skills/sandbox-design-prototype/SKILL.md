@@ -159,11 +159,11 @@ tab the item appears in, and `status` for its workflow state:
 | Field | Values | Required |
 |---|---|---|
 | `category` | `'Spec'` \| `'Prototype'` \| `'Template'` \| `'Reference'` | Always |
-| `status` | `'WIP'` \| `'In Review'` \| `'Complete'` \| `'Archived'` | Specs and Prototypes only |
+| `status` | `'Active'` \| `'Archived'` | Specs and Prototypes only |
 
 New prototypes built from a template default to their natural category:
-- Blank / Canvas Page → `category: 'Prototype'`, `status: 'WIP'`
-- Spec Sheet → `category: 'Spec'`, `status: 'WIP'`
+- Blank / Canvas Page → `category: 'Prototype'`, `status: 'Active'`
+- Spec Sheet → `category: 'Spec'`, `status: 'Active'`
 
 The `viewMode` field is optional. `Spec` entries automatically get the InfiniteCanvas view mode — do not set `viewMode` explicitly unless overriding the default.
 
@@ -174,7 +174,7 @@ The `viewMode` field is optional. `Spec` entries automatically get the InfiniteC
   path: '/<id>',
   createdAt: '<today's date as YYYY-MM-DD>',
   category: 'Prototype',
-  status: 'WIP',
+  status: 'Active',
   component: lazy(() => import('./designs/<id>')),
 },
 ```
@@ -184,10 +184,35 @@ in the home page list.
 
 ---
 
+### Step 4 — Run the design auditor
+
+After the prototype file is complete and registered, invoke the `design-auditor`
+sub-agent on the prototype file before returning to the user:
+
+```
+Agent({
+  description: "Design audit",
+  subagent_type: "design-auditor",
+  prompt: "Audit src/designs/<id>/index.tsx and return a structured report."
+})
+```
+
+For spec sheets, pass the `index.tsx` and all files in `src/designs/<id>/frames/`.
+
+Read the report the auditor returns. For each `⚠` item:
+- Fix it immediately if it is a clear, one-line correction (wrong token pairing,
+  missing `screenReaderLabel`, placeholder text)
+- Flag it to the user with the line number if it requires a design decision
+
+Do not mention the audit to the user unless there are ⚠ items to discuss. A
+clean audit is silent.
+
+---
+
 ## Deleting a prototype
 
 1. Remove the entry from `src/registry.ts`
 2. Delete the directory `src/designs/<id>/`
 
-Confirm the id before deleting. If the prototype has a `status` of `Complete`,
+Confirm the id before deleting. If the prototype has a `status` of `Active`,
 warn the user before proceeding.

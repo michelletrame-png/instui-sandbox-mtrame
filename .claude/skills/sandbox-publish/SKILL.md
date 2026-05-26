@@ -339,6 +339,7 @@ Then trigger the build:
 
 ```bash
 gh workflow run deploy-static.yml \
+  --repo <repo.owner>/<repo.name> \
   -f deploy_id=<id> \
   -f prototype_path=<prototypePath> \
   -f sandbox_hash=<export-hash>

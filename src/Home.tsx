@@ -5,13 +5,16 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Heading } from '@instructure/ui-heading/latest'
 import { Link } from '@instructure/ui-link/latest'
+import { ScreenReaderContent } from '@instructure/ui-a11y-content'
 import { Pill } from '@instructure/ui-pill/latest'
 import { Table } from '@instructure/ui-table/latest'
 import { Tabs } from '@instructure/ui-tabs/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Alert } from '@instructure/ui-alerts/latest'
-import { IconButton } from '@instructure/ui-buttons/latest'
-import { CopyInstUIIcon, ExternalLinkInstUIIcon } from '@instructure/ui-icons'
+import { IconButton, CloseButton } from '@instructure/ui-buttons/latest'
+import { TextInput } from '@instructure/ui-text-input/latest'
+import { SimpleSelect } from '@instructure/ui-simple-select/latest'
+import { CopyInstUIIcon, ExternalLinkInstUIIcon, SearchInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
 import { sandboxOwner, sandboxHash } from './sandbox.config'
 
@@ -20,21 +23,12 @@ const sandboxLiveUrl = sandboxHash && _repoName ? `https://instructure.github.io
 import staticExportsData from './static-exports.json'
 import type { PrototypeMeta, PrototypeCategory, PrototypeStatus } from './registry'
 
-type SortCol = 'title' | 'createdAt' | 'status' | 'category'
+type SortCol = 'title' | 'createdAt' | 'category'
 type SortDir = 'ascending' | 'descending'
 
 const statusOrder: Record<PrototypeStatus, number> = {
-  WIP: 0,
-  'In Review': 1,
-  Complete: 2,
-  Archived: 3,
-}
-
-const statusColor: Record<PrototypeStatus, 'warning' | 'info' | 'success' | 'primary'> = {
-  WIP: 'warning',
-  'In Review': 'info',
-  Complete: 'success',
-  Archived: 'primary',
+  Active: 0,
+  Archived: 1,
 }
 
 const categoryColor: Record<PrototypeCategory, 'warning' | 'info' | 'success' | 'primary'> = {
@@ -54,15 +48,14 @@ function sortPrototypes(list: PrototypeMeta[], col: SortCol, dir: SortDir) {
     if (col === 'title') cmp = a.title.localeCompare(b.title)
     else if (col === 'createdAt') cmp = a.createdAt.localeCompare(b.createdAt)
     else if (col === 'category') cmp = (a.category ?? '').localeCompare(b.category ?? '')
-    else if (col === 'status') cmp = (statusOrder[a.status ?? 'Archived'] ?? 99) - (statusOrder[b.status ?? 'Archived'] ?? 99)
+    else if (col === 'status') cmp = (statusOrder[a.status ?? 'Active'] ?? 99) - (statusOrder[b.status ?? 'Active'] ?? 99)
     return dir === 'ascending' ? cmp : -cmp
   })
 }
 
-function PrototypeTable({ items, showCategory = false, showStatus = false }: {
+function PrototypeTable({ items, showCategory = false }: {
   items: PrototypeMeta[]
   showCategory?: boolean
-  showStatus?: boolean
 }) {
   const [sortCol, setSortCol] = useState<SortCol>('createdAt')
   const [sortDir, setSortDir] = useState<SortDir>('descending')
@@ -85,7 +78,6 @@ function PrototypeTable({ items, showCategory = false, showStatus = false }: {
         <Table.Row>
           <Table.ColHeader id="title" sortDirection={sortCol === 'title' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Title">Title</Table.ColHeader>
           {showCategory && <Table.ColHeader id="category" sortDirection={sortCol === 'category' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Category" width="110px">Category</Table.ColHeader>}
-          {showStatus && <Table.ColHeader id="status" sortDirection={sortCol === 'status' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Status" width="120px">Status</Table.ColHeader>}
           <Table.ColHeader id="createdAt" sortDirection={sortCol === 'createdAt' ? sortDir : 'none'} onRequestSort={handleSort} stackedSortByLabel="Created">Created</Table.ColHeader>
         </Table.Row>
       </Table.Head>
@@ -94,7 +86,6 @@ function PrototypeTable({ items, showCategory = false, showStatus = false }: {
           <Table.Row key={p.id}>
             <Table.Cell><Link as={RouterLink} to={p.path}>{p.title}</Link></Table.Cell>
             {showCategory && <Table.Cell><Pill color={categoryColor[p.category]}>{p.category}</Pill></Table.Cell>}
-            {showStatus && <Table.Cell>{p.status && <Pill color={statusColor[p.status]}>{p.status}</Pill>}</Table.Cell>}
             <Table.Cell>{formatDate(p.createdAt)}</Table.Cell>
           </Table.Row>
         ))}
@@ -164,6 +155,16 @@ const skills: SkillInfo[] = [
       '/sandbox-eval',
     ],
   },
+  {
+    command: '/sandbox-audit',
+    title: 'Audit',
+    description: "Audits a prototype or spec for token misuse, accessibility issues, and copy quality. Lists available prototypes if you don't name one.",
+    triggers: [
+      '/sandbox-audit',
+      '/sandbox-audit agent patterns',
+      '/sandbox-audit the learner overview spec',
+    ],
+  },
 ]
 
 function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: ReturnType<typeof useComputedTheme>['sharedTokens'] }) {
@@ -226,13 +227,24 @@ function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: Re
 
 export function Home() {
   const [tabIndex, setTabIndex] = useState(0)
+  const [searchDesigns, setSearchDesigns] = useState('')
+  const [searchPublished, setSearchPublished] = useState('')
+  const [filterCategory, setFilterCategory] = useState<PrototypeCategory | ''>('')
+  const [filterStatus, setFilterStatus] = useState<PrototypeStatus | ''>('Active')
   const { sharedTokens } = useComputedTheme()
 
   type StaticExport = { id: string; title: string; url: string; deployedAt: string }
-  const workItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
+  const allWorkItems = prototypes.filter(p => p.category === 'Spec' || p.category === 'Prototype')
+  const workItems = allWorkItems
+    .filter(p => !searchDesigns || p.title.toLowerCase().includes(searchDesigns.toLowerCase()))
+    .filter(p => !filterCategory || p.category === filterCategory)
+    .filter(p => !filterStatus || p.status === filterStatus)
   const templateItems = prototypes.filter(p => p.category === 'Template')
   const referenceItems = prototypes.filter(p => p.category === 'Reference')
-  const publishedItems = (staticExportsData as StaticExport[]).slice().reverse()
+  const allPublishedItems = (staticExportsData as StaticExport[]).slice().reverse()
+  const publishedItems = searchPublished
+    ? allPublishedItems.filter(p => p.id.toLowerCase().includes(searchPublished.toLowerCase()))
+    : allPublishedItems
 
   const tabPanelView = (children: React.ReactNode) => (
     <View
@@ -240,7 +252,7 @@ export function Home() {
       display="block"
       background="primary"
       themeOverride={{ backgroundPrimary: sharedTokens.background.containerColor }}
-      borderRadius={sharedTokens.borderRadius.card.sm}
+      borderRadius={sharedTokens.borderRadius.card.lg}
       shadow="resting"
       padding="medium"
       margin="medium 0 0 0"
@@ -290,11 +302,50 @@ export function Home() {
         <View as="div" display="block" maxWidth="700px" width="100%">
           <Tabs onRequestTabChange={(_e, { index }) => setTabIndex(index)}>
             <Tabs.Panel renderTitle="Designs" isSelected={tabIndex === 0} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
-              {tabPanelView(<PrototypeTable items={workItems} showCategory showStatus />)}
+              {tabPanelView(
+                <Flex direction="column" gap="medium">
+                  <Flex gap="small" alignItems="end" wrap="wrap">
+                    <Flex.Item shouldGrow shouldShrink>
+                      <TextInput
+                        renderLabel={<ScreenReaderContent>Search designs</ScreenReaderContent>}
+                        placeholder="Search designs"
+                        renderBeforeInput={<SearchInstUIIcon inline={false} />}
+                        renderAfterInput={searchDesigns ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchDesigns('')} /> : undefined}
+                        size="small"
+                        value={searchDesigns}
+                        onChange={(_e, value) => setSearchDesigns(value)}
+                      />
+                    </Flex.Item>
+                    <SimpleSelect
+                      renderLabel={<ScreenReaderContent>Filter by category</ScreenReaderContent>}
+                      value={filterCategory}
+                      onChange={(_e, { value }) => setFilterCategory((value ?? '') as PrototypeCategory | '')}
+                      size="small"
+                      width="160px"
+                    >
+                      <SimpleSelect.Option id="cat-all" value="">All categories</SimpleSelect.Option>
+                      <SimpleSelect.Option id="cat-spec" value="Spec">Spec</SimpleSelect.Option>
+                      <SimpleSelect.Option id="cat-prototype" value="Prototype">Prototype</SimpleSelect.Option>
+                    </SimpleSelect>
+                    <SimpleSelect
+                      renderLabel={<ScreenReaderContent>Filter by status</ScreenReaderContent>}
+                      value={filterStatus}
+                      onChange={(_e, { value }) => setFilterStatus((value ?? '') as PrototypeStatus | '')}
+                      size="small"
+                      width="160px"
+                    >
+                      <SimpleSelect.Option id="status-all" value="">All statuses</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-active" value="Active">Active</SimpleSelect.Option>
+                      <SimpleSelect.Option id="status-archived" value="Archived">Archived</SimpleSelect.Option>
+                    </SimpleSelect>
+                  </Flex>
+                  <PrototypeTable items={workItems} showCategory />
+                </Flex>
+              )}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Published" isSelected={tabIndex === 1} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               {tabPanelView(
-                publishedItems.length === 0
+                allPublishedItems.length === 0
                   ? <Flex direction="column" gap="small">
                       <Text color="secondary">No links published yet. Share any design at a permanent URL:</Text>
                       <View
@@ -320,7 +371,17 @@ export function Home() {
                         </Flex>
                       </View>
                     </Flex>
-                  : <Table caption="Published links" hover>
+                  : <Flex direction="column" gap="medium">
+                      <TextInput
+                        renderLabel={<ScreenReaderContent>Search published</ScreenReaderContent>}
+                        placeholder="Search published"
+                        renderBeforeInput={<SearchInstUIIcon inline={false} />}
+                        renderAfterInput={searchPublished ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchPublished('')} /> : undefined}
+                        size="small"
+                        value={searchPublished}
+                        onChange={(_e, value) => setSearchPublished(value)}
+                      />
+                      <Table caption="Published links" hover>
                       <Table.Head>
                         <Table.Row>
                           <Table.ColHeader id="title" stackedSortByLabel="Design">Design</Table.ColHeader>
@@ -348,6 +409,7 @@ export function Home() {
                         ))}
                       </Table.Body>
                     </Table>
+                    </Flex>
               )}
             </Tabs.Panel>
             <Tabs.Panel renderTitle="Templates" isSelected={tabIndex === 2} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>

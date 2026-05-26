@@ -168,7 +168,8 @@ export function SpecSheet({
         <Flex direction="column" gap="large">
 
           {/* Page header */}
-          <Flex direction="column" gap="x-small">
+          {/* eslint-disable-next-line instui/no-style-layout -- no View prop for maxWidth */}
+          <Flex direction="column" gap="x-small" style={{ maxWidth: '640px' }}>
             <Heading level="h1" variant="titlePageDesktop" margin="0">{title}</Heading>
             {description && <Text size="descriptionPage">{description}</Text>}
           </Flex>
@@ -181,7 +182,8 @@ export function SpecSheet({
               <Flex direction="column" gap="xx-large">
 
                 {/* Section header */}
-                <Flex direction="column" gap="x-small">
+                {/* eslint-disable-next-line instui/no-style-layout -- no View prop for maxWidth */}
+                <Flex direction="column" gap="x-small" style={{ maxWidth: '640px' }}>
                   <Heading level="h2" margin="0">{section.title}</Heading>
                   {section.description && (
                     <Text size="content" color="secondary">{section.description}</Text>
@@ -342,6 +344,7 @@ export function SpecSheet({
             borderRadius="0"
             padding="medium"
           >
+            {/* eslint-disable-next-line instui/no-style-layout -- <pre> browser reset, no View equivalent */}
             <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {codeModal?.code}
             </pre>

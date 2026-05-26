@@ -2,7 +2,7 @@ import { lazy } from 'react'
 import type { ComponentType } from 'react'
 
 export type PrototypeCategory = 'Spec' | 'Prototype' | 'Template' | 'Reference'
-export type PrototypeStatus = 'WIP' | 'In Review' | 'Complete' | 'Archived'
+export type PrototypeStatus = 'Active' | 'Archived'
 export type ViewMode = 'spec' | 'prototype'
 
 export type PrototypeProps = {
@@ -63,7 +63,7 @@ export const prototypes: PrototypeMeta[] = [
     path: '/hello-world',
     createdAt: '2026-04-28',
     category: 'Prototype',
-    status: 'WIP',
+    status: 'Active',
     component: lazy(() => import('./designs/hello-world')),
   },
   {

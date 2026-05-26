@@ -74,7 +74,7 @@ export function InfiniteCanvas({
   backTo?: string
 }) {
   const palette = isDark ? DARK : LIGHT
-  const initialY = NAV_HEIGHT + 20
+  const initialY = 20
   const [transform, setTransform] = useState<Transform>({ x: 40, y: initialY, scale: initialScale })
   const transformRef = useRef<Transform>({ x: 40, y: initialY, scale: initialScale })
   const [tool, setTool] = useState<Tool>('select')
@@ -141,12 +141,12 @@ export function InfiniteCanvas({
     const PADDING = 60
     const fitScale = Math.min(
       (rect.width - PADDING * 2) / contentWidth,
-      (rect.height - NAV_HEIGHT - PADDING * 2) / contentHeight,
+      (rect.height - PADDING * 2) / contentHeight,
       1,
     )
     const newScale = Math.max(MIN_SCALE, fitScale)
     const newTx = (rect.width - contentWidth * newScale) / 2
-    const newTy = NAV_HEIGHT + (rect.height - NAV_HEIGHT - contentHeight * newScale) / 2
+    const newTy = (rect.height - contentHeight * newScale) / 2
     sync({ x: newTx, y: newTy, scale: newScale })
   }, [sync])
 
@@ -164,12 +164,12 @@ export function InfiniteCanvas({
     const boardUnscaledH = boardRect.height / s
     const fitScale = Math.min(
       (containerRect.width - PADDING * 2) / boardUnscaledW,
-      (containerRect.height - NAV_HEIGHT - PADDING * 2) / boardUnscaledH,
+      (containerRect.height - PADDING * 2) / boardUnscaledH,
       1,
     )
     const newScale = Math.max(MIN_SCALE, scale ?? fitScale)
     const newTx = containerRect.width / 2 - bCenterX * newScale
-    const newTy = (containerRect.height + NAV_HEIGHT) / 2 - bCenterY * newScale
+    const newTy = containerRect.height / 2 - bCenterY * newScale
     sync({ x: newTx, y: newTy, scale: newScale })
   }, [sync])
 
@@ -361,22 +361,14 @@ export function InfiniteCanvas({
   }, [sync, applyTransform])
 
   const bgStyle: React.CSSProperties = {
-    position: 'relative',
     width: '100%',
     height: '100vh',
-    overflow: 'hidden',
-    backgroundColor: palette.canvasBg,
-    backgroundImage: `radial-gradient(circle, ${palette.dotColor} 1px, transparent 1px)`,
-    backgroundSize: '24px 24px',
-    transition: 'background-color 0.2s, background-image 0.2s',
+    display: 'flex',
+    flexDirection: 'column',
   }
 
   const navStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    flexShrink: 0,
     height: NAV_HEIGHT,
     display: 'flex',
     alignItems: 'center',
@@ -386,6 +378,16 @@ export function InfiniteCanvas({
     borderBottom: `1px solid ${palette.navBorder}`,
     boxSizing: 'border-box',
     transition: 'background-color 0.2s, border-color 0.2s',
+  }
+
+  const canvasAreaStyle: React.CSSProperties = {
+    flex: 1,
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: palette.canvasBg,
+    backgroundImage: `radial-gradient(circle, ${palette.dotColor} 1px, transparent 1px)`,
+    backgroundSize: '24px 24px',
+    transition: 'background-color 0.2s, background-image 0.2s',
   }
 
   const sepStyle: React.CSSProperties = {
@@ -408,7 +410,7 @@ export function InfiniteCanvas({
   }
 
   return (
-    <div ref={containerRef} style={bgStyle}>
+    <div style={bgStyle}>
       <nav style={navStyle}>
         <div style={NAV_TITLE_GROUP_STYLE}>
           {backTo && (
@@ -503,9 +505,11 @@ export function InfiniteCanvas({
           )}
         </div>
       </nav>
-      <InfiniteCanvasContext.Provider value={contextValue}>
-        <div ref={layerRef} style={layerStyle}>{children}</div>
-      </InfiniteCanvasContext.Provider>
+      <div ref={containerRef} style={canvasAreaStyle}>
+        <InfiniteCanvasContext.Provider value={contextValue}>
+          <div ref={layerRef} style={layerStyle}>{children}</div>
+        </InfiniteCanvasContext.Provider>
+      </div>
     </div>
   )
 }

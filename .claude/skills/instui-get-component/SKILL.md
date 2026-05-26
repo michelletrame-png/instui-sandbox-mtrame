@@ -166,6 +166,50 @@ scrolling on mobile.
 The `stackedSortByLabel` prop on `Table.ColHeader` controls the label shown in the
 stacked row header — always set it to a human-readable column name.
 
+### `CloseButton` — use instead of `IconButton` + `XInstUIIcon`
+
+Any time a button's sole purpose is to close or dismiss something, use `CloseButton`
+from `@instructure/ui-buttons/latest`. Never compose this manually with `IconButton`
+and `XInstUIIcon` — `CloseButton` handles icon rendering, sizing, border/background
+removal, and screen reader labeling in one component.
+
+**Required prop:** `screenReaderLabel` — always set to a string that describes what
+is being closed (e.g. `"Close"`, `"Close modal"`, `"Dismiss alert"`).
+
+**`placement` prop** — controls how the button positions itself relative to its parent:
+
+| Value | When to use |
+|---|---|
+| `'static'` (default) | Inside a Flex layout — positioned by the flex container |
+| `'end'` | Absolutely positions itself at the inline-end of its nearest positioned ancestor |
+| `'start'` | Absolutely positions itself at the inline-start of its nearest positioned ancestor |
+
+When using `placement="end"` or `placement="start"`, the parent must have
+`position: relative` (use `<View position="relative">` or `style={{ position: 'relative' }}`).
+The `offset` prop (`'none' | 'x-small' | 'small' | 'medium'`) controls inset from the edge.
+
+**Correct patterns:**
+
+```tsx
+// ✅ In a Modal header via Flex
+<Flex alignItems="center" justifyItems="space-between">
+  <Heading level="h2" margin="0">Title</Heading>
+  <CloseButton screenReaderLabel="Close" onClick={onClose} />
+</Flex>
+
+// ✅ Absolutely positioned in a card
+<View as="div" position="relative" padding="medium">
+  <CloseButton placement="end" offset="small" screenReaderLabel="Close" onClick={onClose} />
+  <Text>Card content</Text>
+</View>
+
+// ❌ Never compose this manually
+<IconButton screenReaderLabel="Close" renderIcon={XInstUIIcon} withBackground={false} withBorder={false} />
+```
+
+**`color` prop** — use `color="primary-inverse"` when the button sits on a dark
+background (e.g., a colored header or overlay) to ensure adequate contrast.
+
 ### `TruncateText` — v2 never truncates (broken in InstUI 11.7.2)
 
 **Symptom:** `<TruncateText>` renders the full text at all sizes — nothing ever gets
