@@ -5,14 +5,14 @@ import { Text } from '@instructure/ui-text/latest'
 import { TextInput } from '@instructure/ui-text-input/latest'
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
 import {
-  SunInstUIIcon,
-  MoonInstUIIcon,
   ZoomInInstUIIcon,
   ZoomOutInstUIIcon,
   ArrowLeftInstUIIcon,
   HandInstUIIcon,
   MousePointer2InstUIIcon,
 } from '@instructure/ui-icons'
+import { SimpleSelect } from '@instructure/ui-simple-select/latest'
+import { THEMES, type ThemeKey } from '../themes'
 
 const MIN_SCALE = 0.3
 const MAX_SCALE = 1.5
@@ -62,18 +62,20 @@ export function InfiniteCanvas({
   children,
   initialScale = 1,
   title,
-  isDark,
-  onToggleTheme,
+  themeKey,
+  themeNames,
+  onThemeChange,
   backTo,
 }: {
   children: React.ReactNode
   initialScale?: number
   title?: string
-  isDark?: boolean
-  onToggleTheme?: () => void
+  themeKey?: ThemeKey
+  themeNames?: readonly ThemeKey[]
+  onThemeChange?: (key: ThemeKey) => void
   backTo?: string
 }) {
-  const palette = isDark ? DARK : LIGHT
+  const palette = themeKey === 'dark' ? DARK : LIGHT
   const initialY = 20
   const [transform, setTransform] = useState<Transform>({ x: 40, y: initialY, scale: initialScale })
   const transformRef = useRef<Transform>({ x: 40, y: initialY, scale: initialScale })
@@ -202,6 +204,18 @@ export function InfiniteCanvas({
     function onKeyDown(e: KeyboardEvent) {
       if (e.repeat) return
       const active = document.activeElement
+      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
+        e.preventDefault()
+        if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+          const el = containerRef.current
+          const t = transformRef.current
+          const cx = el ? el.getBoundingClientRect().width / 2 : 0
+          const cy = el ? el.getBoundingClientRect().height / 2 : 0
+          const k = 1 / t.scale
+          sync({ x: cx + (t.x - cx) * k, y: cy + (t.y - cy) * k, scale: 1 })
+        }
+        return
+      }
       if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return
       if (e.code === 'Space') { e.preventDefault(); enterTempPan('Space') }
       else if (e.key === 'Shift') enterTempPan('Shift')
@@ -231,7 +245,7 @@ export function InfiniteCanvas({
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('blur', onBlur)
     }
-  }, [])
+  }, [sync])
 
   useEffect(() => {
     const el = containerRef.current
@@ -493,15 +507,20 @@ export function InfiniteCanvas({
 
           <div style={sepStyle} />
 
-          {onToggleTheme && (
-            <IconButton
-              renderIcon={isDark ? <SunInstUIIcon /> : <MoonInstUIIcon />}
-              screenReaderLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              onClick={onToggleTheme}
-              withBackground={false}
-              withBorder={false}
+          {themeNames && onThemeChange && themeKey && (
+            <SimpleSelect
+              renderLabel={<ScreenReaderContent>Theme</ScreenReaderContent>}
               size="small"
-            />
+              value={themeKey}
+              onChange={(_e, { value }) => onThemeChange(value as ThemeKey)}
+              width="130px"
+            >
+              {themeNames.map(key => (
+                <SimpleSelect.Option key={key} id={key} value={key}>
+                  {THEMES[key].label}
+                </SimpleSelect.Option>
+              ))}
+            </SimpleSelect>
           )}
         </div>
       </nav>

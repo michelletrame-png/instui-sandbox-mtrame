@@ -43,9 +43,7 @@ export default function App() {
 
   const currentTheme = THEMES[themeKey].theme
   const themeNames = Object.keys(THEMES) as ThemeKey[]
-  // eslint-disable-next-line instui/no-theme-name-detection -- theme state management, not color selection
   const isDark = themeKey === 'dark'
-  // eslint-disable-next-line instui/no-theme-name-detection -- theme toggle logic
   const onToggleTheme = () => setThemeKey(prev => prev === 'dark' ? 'light' : 'dark')
 
   const loader = (
@@ -59,7 +57,7 @@ export default function App() {
     const element = viewMode === 'spec'
       ? (
         <Suspense fallback={loader}>
-          <InfiniteCanvas title={p.title} isDark={isDark} onToggleTheme={onToggleTheme} backTo={staticPrototypePath ? undefined : '/'} initialScale={0.6}>
+          <InfiniteCanvas title={p.title} themeKey={themeKey} themeNames={themeNames} onThemeChange={setThemeKey} backTo={staticPrototypePath ? undefined : '/'} initialScale={0.6}>
             <SpecEmbedFrame specId={p.id} themeKey={themeKey} isDark={isDark} />
           </InfiniteCanvas>
         </Suspense>
@@ -79,7 +77,7 @@ export default function App() {
             .map(p => prototypeRoute(p, '/'))
         ) : (
           <>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home themeKey={themeKey} themeNames={themeNames} onThemeChange={setThemeKey} />} />
             <Route
               path="/showcase"
               element={
