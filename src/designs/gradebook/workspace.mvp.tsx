@@ -5,6 +5,7 @@ import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
 import { Text } from '@instructure/ui-text/latest'
 import { Button, IconButton } from '@instructure/ui-buttons/latest'
+import { Popover } from '@instructure/ui-popover/latest'
 import { Avatar } from '@instructure/ui-avatar/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
@@ -19,10 +20,12 @@ import {
   ShieldUserInstUIIcon,
   SparklesInstUIIcon,
   CheckInstUIIcon,
+
   SendInstUIIcon,
   SettingsInstUIIcon,
   ChevronLeftInstUIIcon,
   ChevronRightInstUIIcon,
+  ChevronDownInstUIIcon,
   IconCanvasLogoSolid,
   LibraryInstUIIcon,
   Mic2InstUIIcon,
@@ -160,6 +163,192 @@ function QuizViewer({ containerBg }: { containerBg: string; border?: string }) {
   )
 }
 
+// ── Student sort helpers ───────────────────────────────────────────────────────
+
+export type StudentSort = 'last-name-asc' | 'last-name-desc' | 'submission-date' | 'status' | 'random' | 'random-by-status'
+
+function getLastName(name: string): string {
+  const parts = name.split(' ')
+  return parts[parts.length - 1]
+}
+
+function submissionSortKey(submittedAt: string | undefined): number {
+  if (!submittedAt) return Infinity
+  const m = submittedAt.match(/\w+ (\d+), (\d+):(\d+) (AM|PM)/)
+  if (!m) return Infinity
+  let hour = parseInt(m[2])
+  const min  = parseInt(m[3])
+  if (m[4] === 'PM' && hour !== 12) hour += 12
+  if (m[4] === 'AM' && hour === 12) hour = 0
+  return parseInt(m[1]) * 10000 + hour * 100 + min
+}
+
+function shuffleArray(arr: number[], seed: number): number[] {
+  const result = [...arr]
+  let s = seed
+  const rand = () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff
+    return (s >>> 0) / 4294967296
+  }
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
+// Sort key: ungraded → late → graded → missing → excused (most → least actionable)
+function studentSortKey(studentId: string, aIdx: number): number {
+  const status = getStatus(studentId, aIdx)
+  if (status === 'ungraded') return 0
+  if (status === 'late')     return 1
+  if (status === 'graded')   return 2
+  if (status === 'missing')  return 3
+  if (status === 'excused')  return 4
+  return 5
+}
+
+/* eslint-disable instui/no-hardcoded-hex */
+const PICKER_PILL: Record<string, { bg: string; color: string; label: string }> = {
+  ungraded: { bg: '#EAECEC', color: '#586874', label: 'Ungraded' },
+  late:     { bg: '#FDE8D4', color: '#CF4A00', label: 'Late'     },
+  graded:   { bg: '#D6ECD9', color: '#03893D', label: 'Graded'   },
+  missing:  { bg: '#FDE8E8', color: '#E62429', label: 'Missing'  },
+  excused:  { bg: '#EDE9F8', color: '#6B40CC', label: 'Excused'  },
+}
+/* eslint-enable instui/no-hardcoded-hex */
+
+function studentStatusPill(studentId: string, aIdx: number) {
+  const status = getStatus(studentId, aIdx)
+  const pill = PICKER_PILL[status]
+  if (!pill) return null
+  // Don't show "Ungraded" if the student hasn't submitted yet
+  if (status === 'ungraded' && !STUDENTS.find(s => s.id === studentId)?.cells[aIdx].submittedAt) return null
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 6px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: pill.bg, color: pill.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+      {pill.label}
+    </span>
+  )
+}
+
+// ── StudentPicker ──────────────────────────────────────────────────────────────
+
+const SORT_OPTIONS: { value: StudentSort; label: string }[] = [
+  { value: 'last-name-asc',    label: 'Name A→Z' },
+  { value: 'last-name-desc',   label: 'Name Z→A' },
+  { value: 'submission-date',  label: 'By Date' },
+  { value: 'status',           label: 'By Status' },
+  { value: 'random',           label: 'Random' },
+  { value: 'random-by-status', label: 'Random by Status' },
+]
+
+function StudentPicker({
+  studentIdx, onSelectStudent, studentSort, onSortChange, onReshuffle,
+  sortedStudentIndices, assignmentIdx, border, containerBg,
+}: {
+  studentIdx: number
+  onSelectStudent: (idx: number) => void
+  studentSort: StudentSort
+  onSortChange: (sort: StudentSort) => void
+  onReshuffle: () => void
+  sortedStudentIndices: number[]
+  assignmentIdx: number
+  border: string
+  containerBg: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  /* eslint-disable instui/no-hardcoded-hex */
+  /* eslint-disable instui/no-style-border */
+  return (
+    <Popover
+      renderTrigger={
+        <button
+          type="button"
+          style={{
+            fontSize: 14, fontWeight: 700, border: 'none', background: 'transparent',
+            fontFamily: 'inherit', color: 'inherit', cursor: 'pointer', outline: 'none',
+            display: 'flex', alignItems: 'center', gap: 4, padding: 0, flexShrink: 0,
+          }}
+        >
+          {STUDENTS[studentIdx].name}
+          <ChevronDownInstUIIcon size="x-small" color="secondary" />
+        </button>
+      }
+      on="click"
+      isShowingContent={open}
+      onShowContent={() => setOpen(true)}
+      onHideContent={() => setOpen(false)}
+      placement="bottom start"
+      shouldCloseOnDocumentClick
+      withArrow={false}
+      shadow="resting"
+    >
+      <View as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} width="280px">
+        {/* Sort section */}
+        <View as="div" display="block" padding="small" borderWidth="0 0 small 0">
+          <View as="div" display="block" margin="0 0 x-small 0">
+            <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Sort</Text>
+          </View>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {SORT_OPTIONS.map(opt => {
+              const isActive = studentSort === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onSortChange(opt.value)
+                    if (opt.value.startsWith('random')) onReshuffle()
+                  }}
+                  style={{
+                    padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+                    border: `1px solid ${isActive ? '#0770A3' : border}`,
+                    background: isActive ? '#EBF5FF' : 'transparent',
+                    color: isActive ? '#0770A3' : '#586874',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {opt.label}
+                  {opt.value.startsWith('random') && isActive ? ' ↺' : ''}
+                </button>
+              )
+            })}
+          </div>
+        </View>
+        {/* Student list */}
+        <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+          {sortedStudentIndices.map(idx => {
+            const isSelected = idx === studentIdx
+            return (
+              <div
+                key={STUDENTS[idx].id}
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => { onSelectStudent(idx); setOpen(false) }}
+                style={{
+                  padding: '7px 12px', cursor: 'pointer', fontSize: 13,
+                  borderLeft: `3px solid ${isSelected ? '#0770A3' : 'transparent'}`,
+                  background: isSelected ? '#EBF5FF' : 'transparent',
+                  fontWeight: isSelected ? 600 : 400,
+                  color: isSelected ? '#0770A3' : 'inherit',
+                  boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                }}
+              >
+                <span>{STUDENTS[idx].name}</span>
+                <span style={{ flexShrink: 0 }}>{studentStatusPill(STUDENTS[idx].id, assignmentIdx)}</span>
+              </div>
+            )
+          })}
+        </div>
+      </View>
+    </Popover>
+  )
+  /* eslint-enable instui/no-style-border */
+  /* eslint-enable instui/no-hardcoded-hex */
+}
+
 // ── GradingWorkspace ───────────────────────────────────────────────────────────
 
 export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: PrototypeProps) {
@@ -183,6 +372,8 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
   const [studentIdx, setStudentIdx]             = useState(initStudentIdx)
   const [assignmentIdx, setAssignmentIdx]       = useState(initAssignmentIdx)
+  const [studentSort, setStudentSort]           = useState<StudentSort>('last-name-asc')
+  const [shuffleSeed, setShuffleSeed]           = useState(() => Math.floor(Math.random() * 99991) + 1)
   const [sidebarAssignment, setSidebarAssignment] = useState<string>(() =>
     isQueueMode ? 'all-ungraded' : ASSIGNMENTS[initAssignmentIdx].id
   )
@@ -270,6 +461,45 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       missing:  STUDENTS.filter(s => getStatus(s.id, aIdx) === 'missing').length,
     }
   }, [sidebarAssignment, gradingVersion])
+
+  const sortedStudentIndices = useMemo(() => {
+    const indices = STUDENTS.map((_, i) => i)
+    switch (studentSort) {
+      case 'last-name-asc':
+        return [...indices].sort((a, b) =>
+          getLastName(STUDENTS[a].name).localeCompare(getLastName(STUDENTS[b].name))
+        )
+      case 'last-name-desc':
+        return [...indices].sort((a, b) =>
+          getLastName(STUDENTS[b].name).localeCompare(getLastName(STUDENTS[a].name))
+        )
+      case 'submission-date':
+        return [...indices].sort((a, b) =>
+          submissionSortKey(STUDENTS[a].cells[assignmentIdx].submittedAt) -
+          submissionSortKey(STUDENTS[b].cells[assignmentIdx].submittedAt)
+        )
+      case 'status':
+        return [...indices].sort((a, b) => {
+          const diff = studentSortKey(STUDENTS[a].id, assignmentIdx) - studentSortKey(STUDENTS[b].id, assignmentIdx)
+          return diff !== 0 ? diff : getLastName(STUDENTS[a].name).localeCompare(getLastName(STUDENTS[b].name))
+        })
+      case 'random':
+        return shuffleArray(indices, shuffleSeed)
+      case 'random-by-status': {
+        const groups: Record<number, number[]> = {}
+        indices.forEach(i => {
+          const key = studentSortKey(STUDENTS[i].id, assignmentIdx)
+          if (!groups[key]) groups[key] = []
+          groups[key].push(i)
+        })
+        return [0, 1, 2, 3, 4, 5].flatMap(key =>
+          groups[key]?.length ? shuffleArray(groups[key], shuffleSeed + key) : []
+        )
+      }
+      default:
+        return indices
+    }
+  }, [studentSort, shuffleSeed, assignmentIdx, gradingVersion])
 
   // Sync assignmentIdx when sidebar assignment dropdown changes to a specific assignment
   useEffect(() => {
@@ -620,22 +850,18 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                 {/* eslint-disable instui/no-style-border */}
                 <div style={{ padding: '8px 16px', background: containerBg, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
                 {/* eslint-enable instui/no-style-border */}
-                  {/* Student dropdown */}
-                  {/* eslint-disable instui/no-style-border */}
-                  <select
-                    value={studentIdx}
-                    onChange={e => setStudentIdx(Number(e.target.value))}
-                    style={{
-                      fontSize: 14, fontWeight: 700, border: 'none', background: 'transparent',
-                      fontFamily: 'inherit', color: 'inherit', cursor: 'pointer', outline: 'none',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {STUDENTS.map((s, idx) => (
-                      <option key={s.id} value={idx}>{s.name}</option>
-                    ))}
-                  </select>
-                  {/* eslint-enable instui/no-style-border */}
+                  {/* Student picker — sort + filter + name list in one */}
+                  <StudentPicker
+                    studentIdx={studentIdx}
+                    onSelectStudent={setStudentIdx}
+                    studentSort={studentSort}
+                    onSortChange={setStudentSort}
+                    onReshuffle={() => setShuffleSeed(s => s + 1)}
+                    sortedStudentIndices={sortedStudentIndices}
+                    assignmentIdx={assignmentIdx}
+                    border={border}
+                    containerBg={containerBg}
+                  />
 
                   <span style={{ color: border, flexShrink: 0 }}>·</span>
 

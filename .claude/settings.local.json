@@ -46,7 +46,9 @@
       "Bash(brew list *)",
       "Bash(brew install *)",
       "Bash(git remote:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
