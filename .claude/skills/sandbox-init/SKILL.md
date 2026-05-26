@@ -71,7 +71,30 @@ reinstalling Node from nodejs.org, which bundles npm.
 
 ---
 
-## Step 4 — Fix remote setup
+## Step 4 — Check GitHub org access
+
+The sandbox requires access to two GitHub organizations: `instructure` (for the sandbox repo) and `instructure-internal` (for the InstUI plugin that loads automatically in Claude Code).
+
+```bash
+gh repo view instructure/instui-sandbox-base --json name 2>&1
+gh repo view instructure-internal/aip-instui-plugin --json name 2>&1
+```
+
+**Both return JSON** → continue to Step 5.
+
+**Either returns an error** → tell the user:
+
+> You're missing GitHub org access needed for the InstUI sandbox. Post in **#it** on Slack:
+>
+> **Request:** GitHub Org Access
+> **Action needed:** Please add me to both the `instructure` and `instructure-internal` GitHub orgs
+> **Reason:** Access to InstUI Prototyping Tool
+
+Stop here. Return when IT confirms access.
+
+---
+
+## Step 5 — Fix remote setup
 
 Check what `origin` points to:
 
@@ -93,7 +116,7 @@ Tell the user: *"Renamed `origin` → `upstream` so you can't accidentally push 
 
 ---
 
-## Step 5 — Verify BASE_URL is configured
+## Step 6 — Verify BASE_URL is configured
 
 Run:
 
@@ -109,9 +132,9 @@ Then check:
 grep "^BASE_URL=" .env.local 2>/dev/null
 ```
 
-**If the repo name is `instui-sandbox-base`** → skip to Step 6. The `vite.config.ts` fallback already covers it.
+**If the repo name is `instui-sandbox-base`** → skip to Step 7. The `vite.config.ts` fallback already covers it.
 
-**If the repo name is anything else AND `.env.local` already contains `BASE_URL=/<repo-name>/`** → skip to Step 6.
+**If the repo name is anything else AND `.env.local` already contains `BASE_URL=/<repo-name>/`** → skip to Step 7.
 
 **Otherwise** → create or update `.env.local`:
 
@@ -123,13 +146,13 @@ If the file already exists with a different `BASE_URL` line, replace that line r
 
 ---
 
-## Step 6 — Check dependencies are installed
+## Step 7 — Check dependencies are installed
 
 ```bash
 ls node_modules 2>/dev/null | wc -l
 ```
 
-**Output is greater than 0** → skip to Step 7.
+**Output is greater than 0** → skip to Step 8.
 
 **Output is 0 or the directory doesn't exist** → dependencies need to be installed.
 Tell the user: *"Installing project dependencies — this takes a minute or two the
@@ -154,7 +177,7 @@ npm install
 
 ---
 
-## Step 7 — Start the dev server
+## Step 8 — Start the dev server
 
 Run in the background:
 
@@ -184,7 +207,7 @@ output. Common causes:
 
 ---
 
-## Step 8 — Hand off to the user
+## Step 9 — Hand off to the user
 
 Once the server is confirmed running, tell the user:
 

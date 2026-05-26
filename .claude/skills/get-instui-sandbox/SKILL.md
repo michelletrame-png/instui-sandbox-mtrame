@@ -90,17 +90,20 @@ browser**. Follow the browser steps. Continue once signed in.
 
 ## Step 4 — Check repo access
 
+The sandbox requires access to two GitHub organizations: `instructure` (for the sandbox repo) and `instructure-internal` (for the InstUI plugin).
+
 ```bash
 gh repo view instructure/instui-sandbox-base --json name
+gh repo view instructure-internal/aip-instui-plugin --json name
 ```
 
-**Returns JSON** → you have access. Continue to Step 5.
+**Both return JSON** → you have access. Continue to Step 5.
 
-**Returns an error** → the user doesn't have Instructure GitHub org access.
+**Either returns an error** → the user is missing GitHub org access.
 Tell them to post in the **#it** Slack channel:
 
-> **Request:** GitHub Instructure Org Access
-> **Action needed:** Please add me to the Instructure GitHub org
+> **Request:** GitHub Org Access
+> **Action needed:** Please add me to both the `instructure` and `instructure-internal` GitHub orgs
 > **Reason:** Access to InstUI Prototyping Tool
 
 Stop here. Return when IT confirms access.

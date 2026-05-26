@@ -18,6 +18,9 @@ dist-ssr
 # Per-fork deploy configuration (created by /deploy skill, not shared upstream)
 .claude/deploy.json
 
+# Local skill assets
+.claude/skills/*.zip
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -10,15 +10,7 @@ Prototyping sandbox for Canvas LMS UI concepts using **Instructure UI (InstUI) v
 
 ## Skills
 
-`/.claude/skills/` contains agent skills loaded on demand by Claude Code. They are the primary authority for InstUI decisions — theming, tokens, layout, icons, component APIs, and more. Invoke the relevant skill before writing any component or token usage for the first time in a session.
-
-## ESLint rules
-
-`eslint-rules/` enforces three common InstUI mistakes as warnings:
-
-- `instui/no-hardcoded-hex` — use `sharedTokens` instead of hex values in `style` props
-- `instui/view-background-needs-override` — `<View background="primary/secondary">` must include a matching `themeOverride`
-- `instui/no-theme-name-detection` — use `useComputedTheme()` tokens instead of branching on theme name strings
+`/.claude/skills/` contains sandbox workflow skills — design, spec, publish, audit, copy review, and more. InstUI reference knowledge (component props, token paths, icon lookup, behavioral rules, and anti-patterns) comes from the `aip-instui` plugin, which loads automatically.
 
 ---
 
@@ -56,7 +48,7 @@ Register it in `src/registry.ts`:
 
 ## Theming
 
-No hardcoded colors or raw hex values in JSX. All colors come from `useComputedTheme()` tokens. See `instui-reference-tokens` for canonical patterns including View backgrounds and `themeOverride` wiring.
+No hardcoded colors or raw hex values in JSX. All colors come from `useComputedTheme()` tokens. See the `aip-instui` plugin's token guidance for canonical patterns including View backgrounds and `themeOverride` wiring.
 
 ## UX Writing
 
