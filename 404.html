@@ -4,10 +4,14 @@
     <meta charset="utf-8" />
     <script>
       var l = window.location;
+      var parts = l.pathname.split('/');
+      // If segment[2] looks like a sandbox hash (8-char hex), include it in the base.
+      var hasHash = parts.length >= 3 && /^[0-9a-f]{8}$/.test(parts[2]);
+      var baseEnd = hasHash ? 3 : 2;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 2).join('/') +
-        '/?p=' + encodeURIComponent(l.pathname.split('/').slice(2).join('/')) +
+        parts.slice(0, baseEnd).join('/') +
+        '/?p=' + encodeURIComponent(parts.slice(baseEnd).join('/')) +
         (l.search ? '&q=' + encodeURIComponent(l.search.slice(1)) : '') +
         l.hash
       );
