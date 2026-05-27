@@ -53,3 +53,19 @@ No hardcoded colors or raw hex values in JSX. All colors come from `useComputedT
 ## UX Writing
 
 The PostToolUse hook detects human-visible strings in prototype TSX files and triggers `instui-ux-copy` in Review mode automatically. Do not invoke `instui-ux-copy` proactively — wait for the hook prompt.
+
+---
+
+## Publishing a static export
+
+Use `/sandbox-publish` to deploy a frozen static snapshot. The skill handles everything, but if you trigger the workflow manually:
+
+```sh
+gh workflow run deploy-static.yml \
+  --repo <org>/<repo-name> \
+  --field deploy_id=<id>-v1 \
+  --field prototype_path=/<id> \
+  --field sandbox_hash=<value from src/sandbox.config.ts>
+```
+
+`--repo` is required. Omitting it runs the workflow on whichever repo `gh` resolves as default in the current shell context — often the base template repo rather than the sandbox.

@@ -340,10 +340,14 @@ Then trigger the build:
 ```bash
 gh workflow run deploy-static.yml \
   --repo <repo.owner>/<repo.name> \
-  -f deploy_id=<id> \
-  -f prototype_path=<prototypePath> \
-  -f sandbox_hash=<export-hash>
+  --field deploy_id=<id> \
+  --field prototype_path=<prototypePath> \
+  --field sandbox_hash=<export-hash>
 ```
+
+> **`--repo` is required.** Omitting it runs the workflow on whichever repo
+> `gh` resolves as default in the current shell — often the base template
+> repo, not the sandbox. Always pass `--repo <repo.owner>/<repo.name>`.
 
 Tell the user:
 > Building now. Your export will be live in ~2 minutes at:
