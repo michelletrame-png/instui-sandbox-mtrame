@@ -50,6 +50,16 @@ export const prototypes: PrototypeMeta[] = [
     component: lazy(() => import('./designs/edit-dates-remap')),
   },
   {
+    id: 'create-assignment-spec',
+    title: 'Create Assignment — Spec',
+    path: '/create-assignment-spec',
+    createdAt: '2026-05-29',
+    category: 'Spec',
+    status: 'Active',
+    viewMode: 'spec',
+    component: lazy(() => import('./designs/create-assignment-spec')),
+  },
+  {
     id: 'gradebook-mvp',
     title: 'Gradebook MVP',
     path: '/gradebook-mvp',

@@ -1798,7 +1798,7 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
               </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <span style={{ fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#273540', fontFamily: fontHeading }}>Create Coursework: {title}</span>
+              <span style={{ fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#273540', fontFamily: fontHeading }}>Create coursework: {title}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <span style={{ fontSize: 12, padding: '2px 12px', borderRadius: 4, background: '#e0ebf5', color: '#273540' }}>Draft saved</span>
@@ -1877,7 +1877,7 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
               <EditableTitle value={title} onChange={setTitle} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, borderRadius: 16, background: '#f9f9f9', border: '1px solid #e8eaec' }}>
                 <style>{`[data-coursework-grid] svg { stroke-width: 1.25 !important; }`}</style>
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: '#273540', margin: 0 }}>Coursework Type</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: '#273540', margin: 0 }}>Coursework type</h2>
 
                 {/* Type grid — MVP: Assignment active, Quiz + Discussion coming in V2 */}
                 <div data-coursework-grid style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
@@ -1906,7 +1906,7 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
                       <ComingSoonBadge />
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#9aa5ae', lineHeight: 1.3 }}>Quiz</span>
-                    <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Auto-graded questions: multiple choice, true/false, fill-in</span>
+                    <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Auto-graded questions: multiple choice, true/false, and fill-in</span>
                   </div>
 
                   {/* Discussion — Coming in V2 */}
@@ -1937,7 +1937,7 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
                     <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Students curate and reflect on a collection of their work</span>
                   </div>
 
-                  {/* Worksheet/Problem Set — Later in the roadmap */}
+                  {/* Worksheet/Problem set — Later in the roadmap */}
                   <div style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
                     padding: '14px 16px', borderRadius: 12, textAlign: 'left',
@@ -1947,11 +1947,11 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
                       <span style={{ display: 'flex', color: '#c7cdd1' }}><FileTextInstUIIcon size="small" /></span>
                       <ComingSoonBadge label="Later in the roadmap" />
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#9aa5ae', lineHeight: 1.3 }}>Worksheet/Problem Set</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#9aa5ae', lineHeight: 1.3 }}>Worksheet/Problem set</span>
                     <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Structured problems or questions students complete and submit</span>
                   </div>
 
-                  {/* AI Conversation — Later in the roadmap */}
+                  {/* AI conversation — Later in the roadmap */}
                   <div style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
                     padding: '14px 16px', borderRadius: 12, textAlign: 'left',
@@ -1961,8 +1961,8 @@ export default function CreateAssignment({ onToggleTheme }: PrototypeProps) {
                       <span style={{ display: 'flex', color: '#c7cdd1' }}><SparklesInstUIIcon size="small" /></span>
                       <ComingSoonBadge label="Later in the roadmap" />
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#9aa5ae', lineHeight: 1.3 }}>AI Conversation</span>
-                    <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Students engage in a guided dialogue with an AI to demonstrate learning</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#9aa5ae', lineHeight: 1.3 }}>AI conversation</span>
+                    <span style={{ fontSize: 12, color: '#9aa5ae', lineHeight: 1.4 }}>Students have a guided conversation with AI to show their learning</span>
                   </div>
                 </div>
               </div>
