@@ -37,7 +37,7 @@ import {
   type CellData, type StudentData,
   seededRand, pct, GRADE_COLORS,
   STUDENTS, STUDENT_DEFS, ASSIGNMENTS, RUBRIC_TEMPLATE,
-  getScore, setScore, getStatus, setStatus, needsGradingLive,
+  getScore, setScore, getStatus, setStatus, needsGradingLive, getResubmitted,
 } from './data'
 import type { PrototypeProps } from '../../registry'
 
@@ -51,6 +51,7 @@ const PILL = {
   missing:  { bg: '#FDE8E8', color: '#E62429', label: 'Missing'  },
   graded:   { bg: '#D6ECD9', color: '#03893D', label: 'Graded'   },
   excused:  { bg: '#EDE9F8', color: '#6B40CC', label: 'Excused'  },
+  resubmitted: { bg: '#E0EBF5', color: '#0A5A87', label: 'Resubmitted' },
 } as const
 
 function ScoreBadge({
@@ -211,6 +212,11 @@ function ScoreBadge({
           {cell.status === 'late' && (
             <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: 4, padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: PILL.late.bg, color: PILL.late.color, whiteSpace: 'nowrap' }}>
               Late
+            </span>
+          )}
+          {getResubmitted(studentId, colIdx) && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: 4, padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: PILL.resubmitted.bg, color: PILL.resubmitted.color, whiteSpace: 'nowrap' }}>
+              Resubmitted
             </span>
           )}
         </span>
@@ -500,7 +506,11 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
 
   // ── At-risk detection ──
   const BELOW_C = new Set(['D+', 'D', 'D−', 'F'])
+  // Marcus Williams (s6), Laura Andersen (s13), and William Foster (s24) are
+  // excluded from at-risk highlighting.
+  const AT_RISK_EXCLUDED = new Set(['s6', 's13', 's24'])
   const AT_RISK = STUDENTS.filter(s => {
+    if (AT_RISK_EXCLUDED.has(s.id)) return false
     if (!BELOW_C.has(s.currentGrade)) return false
     return (
       s.cells.some(c => c.status === 'missing') ||

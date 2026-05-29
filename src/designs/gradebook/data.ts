@@ -236,7 +236,8 @@ export function generateCell(sIdx: number, aIdx: number, pts: number, perf: numb
     }
   }
   // A slice of graded work has a newer submission the teacher hasn't re-graded.
-  const resubmitted = seededRand(sIdx * 97 + aIdx * 31 + 900) < 0.15
+  // Limit resubmissions to Lab Report 2 (aIdx 10) and Lab Report 3 (aIdx 15).
+  const resubmitted = (aIdx === 10 || aIdx === 15) && seededRand(sIdx * 97 + aIdx * 31 + 900) < 0.15
   return {
     submission: 'has-submission',
     submittedAtIso: dueIso ? submittedTimestampIso(dueIso, sIdx, aIdx, false) : undefined,
