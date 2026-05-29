@@ -23,6 +23,33 @@ export type PrototypeMeta = {
 
 export const prototypes: PrototypeMeta[] = [
   {
+    id: 'edit-dates-horizontal',
+    title: 'Edit Dates — Horizontal Timeline',
+    path: '/edit-dates-horizontal',
+    createdAt: '2026-05-29',
+    category: 'Prototype',
+    status: 'Active',
+    component: lazy(() => import('./designs/edit-dates-horizontal')),
+  },
+  {
+    id: 'edit-dates-vertical',
+    title: 'Edit Dates — Vertical Timeline',
+    path: '/edit-dates-vertical',
+    createdAt: '2026-05-29',
+    category: 'Prototype',
+    status: 'Active',
+    component: lazy(() => import('./designs/edit-dates-vertical')),
+  },
+  {
+    id: 'edit-dates-remap',
+    title: 'Edit Dates — Term Remap',
+    path: '/edit-dates-remap',
+    createdAt: '2026-05-29',
+    category: 'Prototype',
+    status: 'Active',
+    component: lazy(() => import('./designs/edit-dates-remap')),
+  },
+  {
     id: 'gradebook-mvp',
     title: 'Gradebook MVP',
     path: '/gradebook-mvp',
@@ -30,6 +57,15 @@ export const prototypes: PrototypeMeta[] = [
     category: 'Prototype',
     status: 'Active',
     component: lazy(() => import('./designs/gradebook/index.mvp')),
+  },
+  {
+    id: 'gradebook-workspace-mvp',
+    title: 'Gradebook Workspace MVP',
+    path: '/gradebook-workspace-mvp',
+    createdAt: '2026-05-26',
+    category: 'Prototype',
+    status: 'Active',
+    component: lazy(() => import('./designs/gradebook/workspace.mvp')),
   },
   {
     id: 'create-assignment-mvp',

@@ -37,7 +37,7 @@ import {
   type CellData, type StudentData,
   seededRand, pct, GRADE_COLORS,
   STUDENTS, STUDENT_DEFS, ASSIGNMENTS, RUBRIC_TEMPLATE,
-  getScore, setScore, getStatus, setStatus,
+  getScore, setScore, getStatus, setStatus, needsGradingLive,
 } from './data'
 import type { PrototypeProps } from '../../registry'
 
@@ -511,7 +511,7 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
 
   const ungradedCountByAssignment = useMemo(() =>
     ASSIGNMENTS.map((_, aIdx) =>
-      STUDENTS.filter(s => getStatus(s.id, aIdx) === 'ungraded' && !!s.cells[aIdx].submittedAt).length
+      STUDENTS.filter(s => needsGradingLive(s.id, aIdx)).length
     ),
   [gradingVersion])
 
@@ -560,8 +560,8 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
       ? Math.round(graded.reduce((sum, c) => sum + c.score!, 0) / graded.length)
       : undefined
     return avg !== undefined
-      ? { score: avg, max: ASSIGNMENTS[aIdx].pts, status: 'graded' }
-      : { max: ASSIGNMENTS[aIdx].pts, status: 'ungraded' }
+      ? { submission: 'has-submission', score: avg, max: ASSIGNMENTS[aIdx].pts, status: 'graded' }
+      : { submission: 'no-submission', max: ASSIGNMENTS[aIdx].pts, status: 'ungraded' }
   }
 
   const trayStudent = infoTray ? STUDENTS.find(s => s.id === infoTray.studentId) ?? null : null

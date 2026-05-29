@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
@@ -34,32 +34,65 @@ import {
 } from '@instructure/ui-icons'
 import {
   type CellData, type Comment,
-  STUDENTS, ASSIGNMENTS, RUBRIC_TEMPLATE, RUBRIC_MAX, ESSAY_CONTENT,
-  seededRubricState, getScore, setScore, getStatus, setStatus, getRubricState, setRubricState,
+  STUDENTS, ASSIGNMENTS, RUBRIC_TEMPLATE, RUBRIC_MAX, ESSAY_CONTENT, labReportForStudent, submissionsFor, organelleQuizFor, type Submission,
+  seededRubricState, getScore, setScore, getStatus, setStatus, getResubmitted, setResubmitted, getRubricState, setRubricState, needsGradingLive,
 } from './data'
 import { CommentLibraryModal } from './CommentLibraryModal'
 import type { PrototypeProps } from '../../registry'
 
 // ── Submission viewer ──────────────────────────────────────────────────────────
 
-function EssayViewer({ assignmentId, containerBg }: { assignmentId: string; containerBg: string }) {
+function EssayViewer({ assignmentId, studentId, studentName, submission, containerBg }: { assignmentId: string; studentId: string; studentName: string; submission?: Submission; containerBg: string }) {
+  const viewingOlder = submission ? !submission.isLatest : false
+  const olderBanner = viewingOlder && (
+    <View as="div" display="block" margin="0 0 medium 0" background="primary" themeOverride={{ backgroundPrimary: '#E0EBF5' }} borderRadius="medium" padding="x-small small">
+      <Text size="x-small" themeOverride={{ primaryColor: '#0A5A87' }}>Viewing the original submission from {submission!.submittedAt}. The student turned in revised work later.</Text>
+    </View>
+  )
+  // Lab Report 4 (a21) has a distinct experiment per student rather than one
+  // shared body, so render a structured lab report keyed to the student. The
+  // original submission shows fewer sections — the student expanded it on resubmit.
+  if (assignmentId === 'a21') {
+    const report = labReportForStudent(studentId)
+    const sections = viewingOlder
+      ? report.sections.slice(0, Math.max(2, report.sections.length - 2))
+      : report.sections
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 32px' }}>
+        <View as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} borderRadius="large" padding="x-large" borderWidth="small" shadow="resting">
+          {olderBanner}
+          <View as="div" display="block" margin="0 0 x-small 0">
+            <Text size="large" weight="bold">{report.title}</Text>
+          </View>
+          <View as="div" display="block" margin="0 0 medium 0">
+            <Text size="x-small" color="secondary">{studentName} · {report.meta}</Text>
+          </View>
+          {sections.map(section => (
+            <View key={section.heading} as="div" display="block" margin="0 0 medium 0">
+              <View as="div" display="block" margin="0 0 xx-small 0">
+                <Text size="small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">{section.heading}</Text>
+              </View>
+              <Text size="medium">{section.body}</Text>
+            </View>
+          ))}
+        </View>
+      </div>
+    )
+  }
   const body = ESSAY_CONTENT[assignmentId]
   if (!body) return (
-    /* eslint-disable instui/no-style-border */
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
       <BookTextInstUIIcon size="large" color="mutedColor" />
       <Text color="secondary" size="small">No preview available for this submission type.</Text>
     </div>
-    /* eslint-enable instui/no-style-border */
   )
   return (
-    /* eslint-disable instui/no-style-border */
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 32px' }}>
       <View as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} borderRadius="large" padding="x-large" borderWidth="small" shadow="resting">
+        {olderBanner}
         <Text size="medium">{body}</Text>
       </View>
     </div>
-    /* eslint-enable instui/no-style-border */
   )
 }
 
@@ -70,16 +103,13 @@ function SlidesViewer({ studentName, containerBg }: { studentName: string; conta
     { n: 3, header: 'SOURCE 2', title: 'Alberts et al.',          body: 'Molecular Biology of the Cell, 6th ed. (2014). Garland Science.\n\nChapter 14 covers chemiosmosis and ATP synthase.' },
   ]
   return (
-    /* eslint-disable instui/no-style-border */
     <div style={{ padding: '24px 32px' }}>
       <div style={{ display: 'flex', gap: 20, flexWrap: 'nowrap', overflowX: 'auto' }}>
         {slides.map(slide => (
           <View key={slide.n} as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} borderWidth="small" borderRadius="large" overflowX="hidden" width="280px">
-            {/* eslint-disable instui/no-hardcoded-hex */}
             <div style={{ padding: '5px 14px', background: '#0770A3' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{slide.header}</span>
             </div>
-            {/* eslint-enable instui/no-hardcoded-hex */}
             <View as="div" display="block" padding="medium">
               <View as="div" display="block" margin="0 0 x-small 0"><Text weight="bold" size="small">{slide.title}</Text></View>
               <Text size="x-small" color="secondary">{slide.body}</Text>
@@ -88,7 +118,6 @@ function SlidesViewer({ studentName, containerBg }: { studentName: string; conta
         ))}
       </div>
     </div>
-    /* eslint-enable instui/no-style-border */
   )
 }
 
@@ -102,7 +131,6 @@ function IllustrationViewer({ studentName, border }: { studentName: string; bord
     { name: 'Lysosome',        color: '#EC4899', bg: '#FFF1F2', note: 'Acid hydrolases digest worn organelles via autophagy.' },
   ]
   return (
-    /* eslint-disable instui/no-hardcoded-hex */
     <div style={{ padding: '24px 32px', maxWidth: 720, margin: '0 auto' }}>
       <View as="div" display="block" margin="0 0 small 0">
         <Text weight="bold" size="small">Annotated Cell Diagram — {studentName}</Text>
@@ -119,23 +147,13 @@ function IllustrationViewer({ studentName, border }: { studentName: string; bord
         </div>
       </div>
     </div>
-    /* eslint-enable instui/no-hardcoded-hex */
   )
 }
 
-function QuizViewer({ containerBg }: { containerBg: string; border?: string }) {
-  const questions = [
-    { n: 1, text: 'Which ethical framework judges actions solely by their consequences?',  answer: 'Consequentialism',                  correct: true  },
-    { n: 2, text: 'Kant\'s categorical imperative requires that moral rules be:',           answer: 'Universalizable',                   correct: true  },
-    { n: 3, text: 'Who introduced the concept of the "veil of ignorance"?',               answer: 'Peter Singer',                      correct: false, expected: 'John Rawls' },
-    { n: 4, text: 'Virtue ethics focuses primarily on:',                                  answer: 'Character and habit',               correct: true  },
-    { n: 5, text: 'What does "autonomy" mean in bioethics?',                              answer: 'Patient self-determination',         correct: true  },
-    { n: 6, text: '"The ends justify the means" is most associated with:',                answer: 'Machiavelli / consequentialism',     correct: true  },
-    { n: 7, text: 'Deontological ethics is primarily concerned with:',                    answer: 'Feelings and intuition',            correct: false, expected: 'Duties and rules' },
-  ]
+function QuizViewer({ studentId, aIdx, submittedAt, containerBg }: { studentId: string; aIdx: number; submittedAt?: string; containerBg: string; border?: string }) {
+  const questions = organelleQuizFor(studentId, aIdx)
   const correctCount = questions.filter(q => q.correct).length
   return (
-    /* eslint-disable instui/no-hardcoded-hex */
     <div style={{ padding: '24px 32px', maxWidth: 680, margin: '0 auto' }}>
       <View as="div" display="block" margin="0 0 medium 0">
         <Flex alignItems="center" gap="small">
@@ -157,10 +175,9 @@ function QuizViewer({ containerBg }: { containerBg: string; border?: string }) {
         ))}
       </div>
       <View as="div" display="block" margin="medium 0 0 0" borderWidth="small" borderRadius="medium" padding="small medium" background="primary" themeOverride={{ backgroundPrimary: containerBg }}>
-        <Text size="x-small" color="secondary">Auto-graded · Submitted Apr 18, 11:42 AM</Text>
+        <Text size="x-small" color="secondary">Auto-graded{submittedAt ? ` · Submitted ${submittedAt}` : ''}</Text>
       </View>
     </div>
-    /* eslint-enable instui/no-hardcoded-hex */
   )
 }
 
@@ -209,27 +226,26 @@ function studentSortKey(studentId: string, aIdx: number): number {
   return 5
 }
 
-/* eslint-disable instui/no-hardcoded-hex */
-const PICKER_PILL: Record<string, { bg: string; color: string; label: string }> = {
-  ungraded: { bg: '#EAECEC', color: '#586874', label: 'Ungraded' },
-  late:     { bg: '#FDE8D4', color: '#CF4A00', label: 'Late'     },
-  graded:   { bg: '#D6ECD9', color: '#03893D', label: 'Graded'   },
-  missing:  { bg: '#FDE8E8', color: '#E62429', label: 'Missing'  },
-  excused:  { bg: '#EDE9F8', color: '#6B40CC', label: 'Excused'  },
+const ROW_TAG: Record<string, { bg: string; color: string; label: string }> = {
+  resubmitted: { bg: '#E0EBF5', color: '#0A5A87', label: 'Resubmitted' },
+  late:        { bg: '#FDE8D4', color: '#CF4A00', label: 'Late'        },
+  excused:     { bg: '#EDE9F8', color: '#6B40CC', label: 'Excused'     },
+  missing:     { bg: '#FDE8E8', color: '#E62429', label: 'Missing'     },
 }
-/* eslint-enable instui/no-hardcoded-hex */
 
-function studentStatusPill(studentId: string, aIdx: number) {
+// A blue dot left of the name means the row still needs a grade: either turned
+// in and never graded, or graded then resubmitted without a re-grade. Excused
+// and not-yet-submitted rows have nothing to grade, so they get no dot.
+function studentRowMeta(studentId: string, aIdx: number) {
   const status = getStatus(studentId, aIdx)
-  const pill = PICKER_PILL[status]
-  if (!pill) return null
-  // Don't show "Ungraded" if the student hasn't submitted yet
-  if (status === 'ungraded' && !STUDENTS.find(s => s.id === studentId)?.cells[aIdx].submittedAt) return null
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 6px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: pill.bg, color: pill.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
-      {pill.label}
-    </span>
-  )
+  const resubmitted = getResubmitted(studentId, aIdx)
+  const needsGrading = needsGradingLive(studentId, aIdx)
+  const tags: { bg: string; color: string; label: string }[] = []
+  if (resubmitted) tags.push(ROW_TAG.resubmitted)
+  if (status === 'late') tags.push(ROW_TAG.late)
+  if (status === 'excused') tags.push(ROW_TAG.excused)
+  if (status === 'missing') tags.push(ROW_TAG.missing)
+  return { needsGrading, tags }
 }
 
 // ── StudentPicker ──────────────────────────────────────────────────────────────
@@ -259,8 +275,6 @@ function StudentPicker({
 }) {
   const [open, setOpen] = useState(false)
 
-  /* eslint-disable instui/no-hardcoded-hex */
-  /* eslint-disable instui/no-style-border */
   return (
     <Popover
       renderTrigger={
@@ -321,12 +335,15 @@ function StudentPicker({
         <div style={{ maxHeight: 220, overflowY: 'auto' }}>
           {sortedStudentIndices.map(idx => {
             const isSelected = idx === studentIdx
+            const { needsGrading, tags } = studentRowMeta(STUDENTS[idx].id, assignmentIdx)
             return (
               <div
                 key={STUDENTS[idx].id}
                 role="option"
                 aria-selected={isSelected}
+                tabIndex={0}
                 onClick={() => { onSelectStudent(idx); setOpen(false) }}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectStudent(idx); setOpen(false) } }}
                 style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 13,
                   borderLeft: `3px solid ${isSelected ? '#0770A3' : 'transparent'}`,
@@ -334,11 +351,31 @@ function StudentPicker({
                   fontWeight: isSelected ? 600 : 400,
                   color: isSelected ? '#0770A3' : 'inherit',
                   boxSizing: 'border-box',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                  display: 'flex', alignItems: 'center', gap: 8,
                 }}
               >
-                <span>{STUDENTS[idx].name}</span>
-                <span style={{ flexShrink: 0 }}>{studentStatusPill(STUDENTS[idx].id, assignmentIdx)}</span>
+                {/* fixed-width slot keeps names aligned whether or not a dot shows */}
+                <span style={{ flexShrink: 0, width: 8, display: 'inline-flex', justifyContent: 'center' }}>
+                  {needsGrading && (
+                    <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: '#0770A3' }} />
+                  )}
+                </span>
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {needsGrading && <ScreenReaderContent>Needs grading. </ScreenReaderContent>}
+                  {STUDENTS[idx].name}
+                </span>
+                {tags.length > 0 && (
+                  <span style={{ flexShrink: 0, display: 'inline-flex', gap: 4 }}>
+                    {tags.map(tag => (
+                      <span
+                        key={tag.label}
+                        style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 6px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: tag.bg, color: tag.color, whiteSpace: 'nowrap' }}
+                      >
+                        {tag.label}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </div>
             )
           })}
@@ -346,18 +383,189 @@ function StudentPicker({
       </View>
     </Popover>
   )
-  /* eslint-enable instui/no-style-border */
-  /* eslint-enable instui/no-hardcoded-hex */
+}
+
+// ── AssignmentPicker ─────────────────────────────────────────────────────────
+// Popover-based dropdown (matches StudentPicker) so each option can stack the
+// "N need grading" tag on its own line below the assignment name.
+
+function AssignmentPicker({
+  assignmentIdx, onSelect, containerBg,
+}: {
+  assignmentIdx: number
+  onSelect: (idx: number) => void
+  containerBg: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover
+      renderTrigger={
+        <button
+          type="button"
+          style={{
+            fontSize: 13, fontWeight: 600, border: 'none', background: 'transparent',
+            fontFamily: 'inherit', color: 'inherit', cursor: 'pointer', outline: 'none',
+            display: 'flex', alignItems: 'center', gap: 4, padding: 0, minWidth: 0, maxWidth: 240,
+          }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {ASSIGNMENTS[assignmentIdx].name}
+          </span>
+          <ChevronDownInstUIIcon size="x-small" color="secondary" />
+        </button>
+      }
+      on="click"
+      isShowingContent={open}
+      onShowContent={() => setOpen(true)}
+      onHideContent={() => setOpen(false)}
+      placement="bottom start"
+      shouldCloseOnDocumentClick
+      withArrow={false}
+      shadow="resting"
+    >
+      <View as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} width="300px">
+        <div style={{ maxHeight: 320, overflowY: 'auto' }} role="listbox">
+          {ASSIGNMENTS.map((a, idx) => {
+            const isSelected = idx === assignmentIdx
+            const needsGrading = STUDENTS.filter(s => needsGradingLive(s.id, idx)).length
+            return (
+              <div
+                key={a.id}
+                role="option"
+                aria-selected={isSelected}
+                tabIndex={0}
+                onClick={() => { onSelect(idx); setOpen(false) }}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(idx); setOpen(false) } }}
+                style={{
+                  padding: '8px 12px', cursor: 'pointer', fontSize: 13,
+                  borderLeft: `3px solid ${isSelected ? '#0770A3' : 'transparent'}`,
+                  background: isSelected ? '#EBF5FF' : 'transparent',
+                  fontWeight: isSelected ? 600 : 400,
+                  color: isSelected ? '#0770A3' : 'inherit',
+                  boxSizing: 'border-box',
+                  display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start',
+                }}
+              >
+                <span>{a.name}</span>
+                {needsGrading > 0 && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: '#FDE8D4', color: '#CF4A00', whiteSpace: 'nowrap' }}>
+                    {needsGrading} need grading
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </View>
+    </Popover>
+  )
+}
+
+// ── SubmissionPicker ───────────────────────────────────────────────────────────
+// When a student resubmitted, the submission timestamp becomes a Popover dropdown
+// (same style as the student/assignment pickers) so the grader can switch between
+// the latest and earlier turn-ins. With a single submission it stays plain text.
+
+function SubmissionPicker({
+  submissions, selectedId, onSelect, containerBg,
+}: {
+  submissions: Submission[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  containerBg: string
+}) {
+  const [open, setOpen] = useState(false)
+  const active = submissions.find(s => s.id === selectedId) ?? submissions[0]
+  if (!active) return null
+
+  if (submissions.length <= 1) {
+    return (
+      <Flex alignItems="center" gap="xx-small">
+        <ClockInstUIIcon size="x-small" color="mutedColor" />
+        <Text size="x-small" color="secondary">Submitted {active.submittedAt}</Text>
+      </Flex>
+    )
+  }
+
+  return (
+    <Popover
+      renderTrigger={
+        <button
+          type="button"
+          style={{
+            border: 'none', background: 'transparent', fontFamily: 'inherit', cursor: 'pointer',
+            outline: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: 0,
+          }}
+        >
+          <ClockInstUIIcon size="x-small" color="mutedColor" />
+          <Text size="x-small" color="secondary">Submitted {active.submittedAt}</Text>
+          <ChevronDownInstUIIcon size="x-small" color="secondary" />
+        </button>
+      }
+      on="click"
+      isShowingContent={open}
+      onShowContent={() => setOpen(true)}
+      onHideContent={() => setOpen(false)}
+      placement="bottom end"
+      shouldCloseOnDocumentClick
+      withArrow={false}
+      shadow="resting"
+    >
+      <View as="div" display="block" background="primary" themeOverride={{ backgroundPrimary: containerBg }} width="240px">
+        <View as="div" display="block" padding="x-small small" borderWidth="0 0 small 0">
+          <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Submissions</Text>
+        </View>
+        <div role="listbox">
+          {submissions.map(sub => {
+            const isSelected = sub.id === active.id
+            return (
+              <div
+                key={sub.id}
+                role="option"
+                aria-selected={isSelected}
+                tabIndex={0}
+                onClick={() => { onSelect(sub.id); setOpen(false) }}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(sub.id); setOpen(false) } }}
+                style={{
+                  padding: '8px 12px', cursor: 'pointer', fontSize: 13,
+                  borderLeft: `3px solid ${isSelected ? '#0770A3' : 'transparent'}`,
+                  background: isSelected ? '#EBF5FF' : 'transparent',
+                  color: isSelected ? '#0770A3' : 'inherit',
+                  boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                }}
+              >
+                <span style={{ fontWeight: isSelected ? 600 : 400 }}>{sub.submittedAt}</span>
+                <span
+                  style={{
+                    flexShrink: 0, display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
+                    fontSize: 10, fontWeight: 700, borderRadius: 10, whiteSpace: 'nowrap',
+                    background: sub.isLatest ? '#E0EBF5' : '#EAECEC',
+                    color: sub.isLatest ? '#0A5A87' : '#586874',
+                  }}
+                >
+                  {sub.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </View>
+    </Popover>
+  )
 }
 
 // ── GradingWorkspace ───────────────────────────────────────────────────────────
+
+// Student sidebar is hidden for the MVP. Flip to true to restore it.
+const SHOW_STUDENT_SIDEBAR = false as boolean
 
 export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: PrototypeProps) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { sharedTokens, semantics } = useComputedTheme()
 
-  /* eslint-disable instui/no-hardcoded-hex */
   const border      = sharedTokens.stroke.baseColor          ?? '#c7cdd1'
   const containerBg = sharedTokens.background.containerColor ?? '#ffffff'
   const pageBg      = sharedTokens.background.pageColor      ?? '#f5f7f8'
@@ -365,7 +573,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
   const accentBlue  = sharedTokens.stroke.accentBlue         ?? '#0770A3'
   const textBase    = semantics.color.text.base              ?? '#273540'
   const textMuted   = semantics.color.text.muted             ?? '#586874'
-  /* eslint-enable instui/no-hardcoded-hex */
 
   // Read URL params
   const initStudentId     = searchParams.get('s') ?? STUDENTS[0].id
@@ -387,11 +594,13 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
   const userModifiedRubricRef = useRef(false)
   const [localScore, setLocalScore]             = useState<string>(() => getScore(initStudentId, initAssignmentIdx)?.toString() ?? '')
   const [gradeSaved, setGradeSaved]             = useState(false)
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null)
   const [pendingText, setPendingText]           = useState('')
   const [sendError, setSendError]               = useState(false)
   const [comments, setComments]                 = useState<Comment[]>([])
   const [saved, setSaved]                       = useState(false)
-  const [gradingVersion, setGradingVersion]     = useState(0)
+  // Bumped after external grade-store mutations to force a re-render
+  const [, setGradingVersion]                   = useState(0)
   const [libOpen, setLibOpen]                   = useState(false)
   const [mediaMsg, setMediaMsg]                 = useState<string | null>(null)
   const mediaMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -414,8 +623,10 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
   type SidebarItem = { studentIdx: number; assignmentIdx: number; key: string }
 
-  // Build sidebar student list based on selected assignment filter
-  const sidebarItems = useMemo((): SidebarItem[] => {
+  // Build sidebar student list based on selected assignment filter.
+  // Plain consts (not useMemo): React Compiler auto-memoizes, and these read
+  // from the external grade store keyed by gradingVersion re-renders.
+  const sidebarItems: SidebarItem[] = (() => {
     if (sidebarAssignment === 'all-ungraded') {
       const items: SidebarItem[] = []
       ASSIGNMENTS.forEach((a, aIdx) => {
@@ -431,17 +642,17 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     const aIdx = ASSIGNMENTS.findIndex(a => a.id === sidebarAssignment)
     if (aIdx < 0) return []
     return STUDENTS.map((_, sIdx) => ({ studentIdx: sIdx, assignmentIdx: aIdx, key: `${sIdx}-${aIdx}` }))
-  }, [sidebarAssignment, gradingVersion])
+  })()
 
-  const filteredSidebarItems = useMemo(() => {
-    if (sidebarAssignment === 'all-ungraded') return sidebarItems
-    return sidebarItems.filter(item =>
-      getStatus(STUDENTS[item.studentIdx].id, item.assignmentIdx) === sidebarTab
-    )
-  }, [sidebarItems, sidebarTab, sidebarAssignment, gradingVersion])
+  const filteredSidebarItems =
+    sidebarAssignment === 'all-ungraded'
+      ? sidebarItems
+      : sidebarItems.filter(item =>
+          getStatus(STUDENTS[item.studentIdx].id, item.assignmentIdx) === sidebarTab
+        )
 
   // Next ungraded submission after the current position (assignment-major order)
-  const nextUngraded = useMemo(() => {
+  const nextUngraded = (() => {
     for (let aIdx = 0; aIdx < ASSIGNMENTS.length; aIdx++) {
       if (!ASSIGNMENTS[aIdx].pastDue) continue
       for (let sIdx = 0; sIdx < STUDENTS.length; sIdx++) {
@@ -453,9 +664,9 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       }
     }
     return null
-  }, [studentIdx, assignmentIdx, gradingVersion])
+  })()
 
-  const tabCounts = useMemo(() => {
+  const tabCounts = (() => {
     if (sidebarAssignment === 'all-ungraded') return null
     const aIdx = ASSIGNMENTS.findIndex(a => a.id === sidebarAssignment)
     if (aIdx < 0) return null
@@ -464,9 +675,9 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       graded:   STUDENTS.filter(s => getStatus(s.id, aIdx) === 'graded').length,
       missing:  STUDENTS.filter(s => getStatus(s.id, aIdx) === 'missing').length,
     }
-  }, [sidebarAssignment, gradingVersion])
+  })()
 
-  const sortedStudentIndices = useMemo(() => {
+  const sortedStudentIndices = (() => {
     const indices = STUDENTS.map((_, i) => i)
     switch (studentSort) {
       case 'last-name-asc':
@@ -503,18 +714,32 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       default:
         return indices
     }
-  }, [studentSort, shuffleSeed, assignmentIdx, gradingVersion])
+  })()
 
   // Sync assignmentIdx when sidebar assignment dropdown changes to a specific assignment
   useEffect(() => {
     if (sidebarAssignment === 'all-ungraded') return
     const aIdx = ASSIGNMENTS.findIndex(a => a.id === sidebarAssignment)
+    // Intentional: mirror the sidebar dropdown selection into the active assignment
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (aIdx >= 0) setAssignmentIdx(aIdx)
   }, [sidebarAssignment])
 
   const student    = STUDENTS[studentIdx]
   const assignment = ASSIGNMENTS[assignmentIdx]
   const cell: CellData = student.cells[assignmentIdx]
+
+  // Submission history for this student/assignment. Newest first, so a null
+  // selection defaults to the latest submission.
+  const submissions = submissionsFor(student.id, assignmentIdx)
+  const activeSubmission = submissions.find(s => s.id === selectedSubmissionId) ?? submissions[0]
+
+  // Prev/next student navigation follows the current sort order
+  const studentOrderPos = sortedStudentIndices.indexOf(studentIdx)
+  const prevStudentIdx  = studentOrderPos > 0 ? sortedStudentIndices[studentOrderPos - 1] : null
+  const nextStudentIdx  = studentOrderPos >= 0 && studentOrderPos < sortedStudentIndices.length - 1
+    ? sortedStudentIndices[studentOrderPos + 1]
+    : null
 
   // Reset grading state when student or assignment changes;
   // mark the previous submission as graded if a score was saved for it
@@ -526,6 +751,8 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       if (getScore(prevStudent.id, prevAIdx) !== undefined &&
           getStatus(prevStudent.id, prevAIdx) === 'ungraded') {
         setStatus(prevStudent.id, prevAIdx, 'graded')
+        // Intentional: surface the external grade-store mutation in the next render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setGradingVersion(v => v + 1)
       }
     }
@@ -543,11 +770,12 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     }
     setLocalScore(getScore(student.id, assignmentIdx)?.toString() ?? '')
     setGradeSaved(false)
+    setSelectedSubmissionId(null)
     setPendingText('')
     setSendError(false)
     setComments([])
     setSaved(false)
-  }, [studentIdx, assignmentIdx, student.id])
+  }, [studentIdx, assignmentIdx, student.id, assignment.hasRubric])
 
   // Autosave for non-rubric grade input (debounced)
   useEffect(() => {
@@ -565,6 +793,11 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     const n = Number(localScore)
     const timer = setTimeout(() => {
       setScore(student.id, assignmentIdx, n)
+      // Saving a grade resolves any pending re-grade from a resubmission.
+      if (getResubmitted(student.id, assignmentIdx)) {
+        setResubmitted(student.id, assignmentIdx, false)
+        setGradingVersion(v => v + 1)
+      }
       if (getStatus(student.id, assignmentIdx) === 'ungraded') {
         setStatus(student.id, assignmentIdx, 'graded')
         setGradingVersion(v => v + 1)
@@ -572,7 +805,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
       setGradeSaved(true)
     }, 800)
     return () => clearTimeout(timer)
-  }, [localScore, assignment.hasRubric])
+  }, [localScore, assignment.hasRubric, assignmentIdx, student.id])
 
   // Debounced "Grade saved" indicator for rubric — score is written immediately in selectRubricLevel
   useEffect(() => {
@@ -589,6 +822,11 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     }, 0)
     setRubricState(student.id, assignmentIdx, next)
     setScore(student.id, assignmentIdx, newTotal)
+    // Saving a grade resolves any pending re-grade from a resubmission.
+    if (getResubmitted(student.id, assignmentIdx)) {
+      setResubmitted(student.id, assignmentIdx, false)
+      setGradingVersion(v => v + 1)
+    }
     if (getStatus(student.id, assignmentIdx) === 'ungraded') {
       setStatus(student.id, assignmentIdx, 'graded')
       setGradingVersion(v => v + 1)
@@ -609,6 +847,14 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     const idx = rubric[c.id]
     return sum + (idx !== undefined ? c.levels[idx].pts : 0)
   }, 0)
+
+  // A grade is present either from rubric scoring or a number in the grade input
+  const hasGrade = assignment.hasRubric
+    ? Object.keys(rubric).length > 0
+    : localScore.trim() !== '' && !isNaN(Number(localScore))
+  // The primary feedback button only sends + advances when there's both a
+  // comment to send and a grade already entered; otherwise it just advances
+  const sendAndNext = pendingText.trim() !== '' && hasGrade
 
 
   return (
@@ -645,7 +891,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                   <Breadcrumb.Link>{assignment.name}</Breadcrumb.Link>
                 </Breadcrumb>
                 <Flex alignItems="center" gap="x-small">
-                  {/* eslint-disable instui/no-hardcoded-hex */}
                   <div style={{ display: 'flex', overflow: 'hidden', borderRadius: 9999, border: '1px solid #c7cdd1', width: 'fit-content' }}>
                     {(['Gradebook', 'Speedgrader'] as const).map(opt => (
                       <button
@@ -663,7 +908,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       </button>
                     ))}
                   </div>
-                  {/* eslint-enable instui/no-hardcoded-hex */}
                   <IconButton
                     screenReaderLabel="Grading settings"
                     color="secondary"
@@ -685,20 +929,15 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
             <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
               {/* ── Student sidebar — removed for MVP ──────────────────────────────────
-                   To restore: delete the `{false && (` line below and its matching
-                   `)}` that appears just after the sidebar's closing </div>.
+                   To restore: set SHOW_STUDENT_SIDEBAR to true at the top of this file.
                    ─────────────────────────────────────────────────────────────── */}
-              {false && (
-              /* eslint-disable instui/no-style-border */
+              {SHOW_STUDENT_SIDEBAR && (
               <div style={{ width: sidebarOpen ? 240 : 48, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: `1px solid ${border}`, background: containerBg, overflow: 'hidden', transition: 'width 0.2s ease' }}>
-              {/* eslint-enable instui/no-style-border */}
 
                 {sidebarOpen ? (
                   <>
                     {/* Assignment dropdown + collapse button */}
-                    {/* eslint-disable instui/no-style-border */}
                     <div style={{ padding: '10px 12px', borderBottom: `1px solid ${border}`, flexShrink: 0, background: mutedBg }}>
-                    {/* eslint-enable instui/no-style-border */}
                       <Flex alignItems="center" justifyItems="space-between" margin="0 0 xx-small 0">
                         <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Assignment</Text>
                         <IconButton
@@ -711,7 +950,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                           onClick={() => setSidebarOpen(false)}
                         />
                       </Flex>
-                      {/* eslint-disable instui/no-style-border */}
                       <select
                         value={sidebarAssignment}
                         onChange={e => { setSidebarAssignment(e.target.value); setSidebarTab('ungraded') }}
@@ -727,14 +965,11 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                           <option key={a.id} value={a.id}>{a.name}</option>
                         ))}
                       </select>
-                      {/* eslint-enable instui/no-style-border */}
                     </div>
 
                     {/* Tabs (hidden in all-ungraded mode) */}
                     {sidebarAssignment !== 'all-ungraded' && (
-                      /* eslint-disable instui/no-style-border */
                       <div style={{ display: 'flex', borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
-                      {/* eslint-enable instui/no-style-border */}
                         {(['ungraded', 'graded', 'missing'] as const).map(tab => (
                           <button
                             key={tab}
@@ -765,11 +1000,13 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                         const a = ASSIGNMENTS[item.assignmentIdx]
                         const c = s.cells[item.assignmentIdx]
                         const isActive = item.studentIdx === studentIdx && item.assignmentIdx === assignmentIdx
-                        /* eslint-disable instui/no-hardcoded-hex */
                         return (
                           <div
                             key={item.key}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => { setStudentIdx(item.studentIdx); setAssignmentIdx(item.assignmentIdx) }}
+                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStudentIdx(item.studentIdx); setAssignmentIdx(item.assignmentIdx) } }}
                             style={{
                               padding: '9px 12px', cursor: 'pointer',
                               borderBottom: '1px solid #f0f2f2',
@@ -804,7 +1041,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                             </div>
                           </div>
                         )
-                        /* eslint-enable instui/no-hardcoded-hex */
                       })}
                     </div>
                   </>
@@ -820,7 +1056,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       renderIcon={<ChevronRightInstUIIcon />}
                       onClick={() => setSidebarOpen(true)}
                     />
-                    {/* eslint-disable instui/no-hardcoded-hex */}
                     <div style={{ width: '100%', overflowY: 'auto', flex: 1 }}>
                       {filteredSidebarItems.map(item => {
                         const s = STUDENTS[item.studentIdx]
@@ -828,8 +1063,11 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                         return (
                           <div
                             key={item.key}
+                            role="button"
+                            tabIndex={0}
                             title={s.name}
                             onClick={() => { setStudentIdx(item.studentIdx); setAssignmentIdx(item.assignmentIdx) }}
+                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStudentIdx(item.studentIdx); setAssignmentIdx(item.assignmentIdx) } }}
                             style={{
                               display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '5px 0',
                               cursor: 'pointer', borderLeft: isActive ? '3px solid #0770A3' : '3px solid transparent',
@@ -841,7 +1079,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                         )
                       })}
                     </div>
-                    {/* eslint-enable instui/no-hardcoded-hex */}
                   </div>
                 )}
               </div>
@@ -851,72 +1088,86 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
               <div style={{ flex: 1, overflowY: 'auto', background: mutedBg }}>
 
                 {/* Submission header strip */}
-                {/* eslint-disable instui/no-style-border */}
                 <div style={{ padding: '8px 16px', background: containerBg, borderBottom: `1px solid ${border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                {/* eslint-enable instui/no-style-border */}
-                  {/* Student picker — sort + filter + name list in one */}
-                  <StudentPicker
-                    studentIdx={studentIdx}
-                    onSelectStudent={setStudentIdx}
-                    studentSort={studentSort}
-                    onSortChange={setStudentSort}
-                    onReshuffle={() => setShuffleSeed(s => s + 1)}
-                    sortedStudentIndices={sortedStudentIndices}
+                  {/* Assignment dropdown — left */}
+                  <AssignmentPicker
                     assignmentIdx={assignmentIdx}
-                    border={border}
+                    onSelect={setAssignmentIdx}
                     containerBg={containerBg}
                   />
 
-                  <span style={{ color: border, flexShrink: 0 }}>·</span>
+                  {/* Right group: submission info, then student picker */}
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                    {/* Submission info — just left of the student picker */}
+                    <div style={{ flexShrink: 0 }}>
+                      {cell.submittedAt ? (
+                        <SubmissionPicker
+                          submissions={submissions}
+                          selectedId={selectedSubmissionId}
+                          onSelect={setSelectedSubmissionId}
+                          containerBg={containerBg}
+                        />
+                      ) : (
+                        <Text size="x-small" color="secondary">Not yet submitted · Due {assignment.dueLabel}</Text>
+                      )}
+                    </div>
 
-                  {/* Assignment dropdown */}
-                  {/* eslint-disable instui/no-style-border */}
-                  <select
-                    value={assignmentIdx}
-                    onChange={e => setAssignmentIdx(Number(e.target.value))}
-                    style={{
-                      fontSize: 13, fontWeight: 600, border: 'none', background: 'transparent',
-                      fontFamily: 'inherit', color: 'inherit', cursor: 'pointer', outline: 'none',
-                      minWidth: 0,
-                    }}
-                  >
-                    {ASSIGNMENTS.map((a, idx) => (
-                      <option key={a.id} value={idx}>{a.name}</option>
-                    ))}
-                  </select>
-                  {/* eslint-enable instui/no-style-border */}
+                    <span style={{ color: border, flexShrink: 0 }}>·</span>
 
-                  {/* Submission info — right aligned */}
-                  <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                    {cell.submittedAt ? (
-                      <Flex alignItems="center" gap="xx-small">
-                        <ClockInstUIIcon size="x-small" color="mutedColor" />
-                        <Text size="x-small" color="secondary">Submitted {cell.submittedAt}</Text>
-                      </Flex>
-                    ) : (
-                      <Text size="x-small" color="secondary">Not yet submitted · Due {assignment.dueLabel}</Text>
-                    )}
+                    {/* Student navigation — back arrow, picker, next arrow */}
+                    <Flex alignItems="center" gap="xx-small">
+                      <IconButton
+                        screenReaderLabel="Previous student"
+                        withBackground={false}
+                        withBorder={false}
+                        size="small"
+                        interaction={prevStudentIdx === null ? 'disabled' : 'enabled'}
+                        onClick={() => { if (prevStudentIdx !== null) setStudentIdx(prevStudentIdx) }}
+                      >
+                        <ChevronLeftInstUIIcon />
+                      </IconButton>
+
+                      {/* Student picker — sort + filter + name list in one */}
+                      <StudentPicker
+                        studentIdx={studentIdx}
+                        onSelectStudent={setStudentIdx}
+                        studentSort={studentSort}
+                        onSortChange={setStudentSort}
+                        onReshuffle={() => setShuffleSeed(s => s + 1)}
+                        sortedStudentIndices={sortedStudentIndices}
+                        assignmentIdx={assignmentIdx}
+                        border={border}
+                        containerBg={containerBg}
+                      />
+
+                      <IconButton
+                        screenReaderLabel="Next student"
+                        withBackground={false}
+                        withBorder={false}
+                        size="small"
+                        interaction={nextStudentIdx === null ? 'disabled' : 'enabled'}
+                        onClick={() => { if (nextStudentIdx !== null) setStudentIdx(nextStudentIdx) }}
+                      >
+                        <ChevronRightInstUIIcon />
+                      </IconButton>
+                    </Flex>
                   </div>
                 </div>
 
                 {/* Content */}
-                {assignment.modality === 'essay'        && <EssayViewer assignmentId={assignment.id} containerBg={containerBg} />}
+                {assignment.modality === 'essay'        && <EssayViewer assignmentId={assignment.id} studentId={student.id} studentName={student.name} submission={activeSubmission} containerBg={containerBg} />}
                 {assignment.modality === 'slides'       && <SlidesViewer studentName={student.name} containerBg={containerBg} />}
                 {assignment.modality === 'illustration' && <IllustrationViewer studentName={student.name} border={border} />}
-                {assignment.modality === 'quiz'         && <QuizViewer containerBg={containerBg} border={border} />}
+                {assignment.modality === 'quiz'         && <QuizViewer studentId={student.id} aIdx={assignmentIdx} submittedAt={cell.submittedAt} containerBg={containerBg} border={border} />}
               </div>
 
               {/* ── Grading panel ── */}
-              {/* eslint-disable instui/no-style-border */}
               <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${border}`, background: containerBg, overflowY: 'auto' }}>
-              {/* eslint-enable instui/no-style-border */}
 
 
                 {/* Rubric */}
-                {/* eslint-disable instui/no-style-border */}
                 {assignment.hasRubric && (
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-                {/* eslint-enable instui/no-style-border */}
                   <Flex alignItems="center" justifyItems="space-between" margin="0 0 small 0">
                     <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Rubric</Text>
                     <Button
@@ -934,7 +1185,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     </Button>
                   </Flex>
 
-                  {/* eslint-disable instui/no-hardcoded-hex */}
                   {/* Instructor Score bar */}
                   <div style={{ position: 'relative', background: mutedBg, borderRadius: 6, height: 48, overflow: 'hidden', border: `1px solid ${border}`, marginBottom: 16 }}>
                     <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, fontSize: 13, color: '#273540' }}>Instructor Score</span>
@@ -984,7 +1234,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       </View>
                     )
                   })}
-                  {/* eslint-enable instui/no-hardcoded-hex */}
 
                   {/* Total + Save */}
                   <View as="div" display="block" borderWidth="small 0 0 0" padding="medium 0 0 0">
@@ -1060,16 +1309,16 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       <Button
                         color="primary"
                         size="small"
-                        renderIcon={pendingText.trim() ? <SendInstUIIcon /> : undefined}
+                        renderIcon={sendAndNext ? <SendInstUIIcon /> : undefined}
                         onClick={() => {
-                          if (pendingText.trim()) sendComment()
+                          if (sendAndNext) sendComment()
                           if (nextUngraded) {
                             setStudentIdx(nextUngraded.studentIdx)
                             setAssignmentIdx(nextUngraded.assignmentIdx)
                           }
                         }}
                       >
-                        {pendingText.trim() ? 'Send + Next' : 'Next'}
+                        {sendAndNext ? 'Send + Next' : 'Next'}
                       </Button>
                     </Flex>
                   </View>
@@ -1083,11 +1332,8 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
                 {/* Score / Grade section — non-rubric only, sticky to bottom */}
                 {!assignment.hasRubric && (
-                  /* eslint-disable instui/no-style-border */
                   <div style={{ position: 'sticky', bottom: 0, width: '100%', boxSizing: 'border-box', padding: '16px 20px', borderTop: `1px solid ${border}`, background: containerBg, flexShrink: 0, zIndex: 1 }}>
-                  {/* eslint-enable instui/no-style-border */}
                     <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Grade</Text>
-                    {/* eslint-disable instui/no-hardcoded-hex */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
                       <input
                         type="number"
@@ -1105,7 +1351,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       />
                       <Text size="medium" color="secondary">/ {cell.max} pts</Text>
                     </div>
-                    {/* eslint-enable instui/no-hardcoded-hex */}
                     <Flex alignItems="center" justifyItems="space-between" margin="small 0 0 0">
                       {gradeSaved ? (
                         <Flex alignItems="center" gap="xx-small">

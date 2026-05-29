@@ -1,12 +1,56 @@
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Legacy single-string display label. Kept for callers that still want one
+ * value per cell. New code should prefer the predicates (isLate, isMissing,
+ * etc.) below — they handle combinations the enum can't express.
+ */
 export type ScoreStatus = 'graded' | 'missing' | 'late' | 'ungraded' | 'excused'
 
+/**
+ * Whether a submission record exists for this (student, assignment) cell.
+ * Canonical replacement for the implicit "did they submit?" check that used
+ * to be encoded by `submittedAt` being defined.
+ */
+export type SubmissionState = 'has-submission' | 'no-submission'
+
+/**
+ * Stored state of a single cell. The model is dual-fielded during the
+ * migration: legacy fields (status, submittedAt as a display string) are
+ * still populated for backward compatibility, while the canonical fields
+ * (submission, submittedAtIso, excused) are the new source of truth.
+ *
+ * New code should:
+ *   • read submission state via the predicate helpers (isLate, isMissing, ...)
+ *   • read submittedAt only for display; use submittedAtIso for comparisons
+ *   • use `excused` directly instead of checking `status === 'excused'`
+ *
+ * Once all callers are migrated, the legacy fields (status, submittedAt) can
+ * be removed and submittedAtIso renamed back to submittedAt.
+ */
 export type CellData = {
+  // ── Canonical fields (new source of truth) ─────────────────────────────────
+  submission: SubmissionState
+  /** ISO 8601 timestamp. Present iff submission === 'has-submission'. */
+  submittedAtIso?: string
+  /** True if this assignment doesn't count toward the student's grade. */
+  excused?: boolean
+
+  // ── Legacy fields (still populated, deprecated for direct reads) ───────────
+  /** @deprecated Use predicates (isLate, isMissing, etc.) or getDisplayStatus. */
+  status: ScoreStatus
+  /** @deprecated Display-string ("Apr 14, 11:42 AM"). Use formatSubmittedAt(submittedAtIso) for new code. */
+  submittedAt?: string
+
+  // ── Shared fields (unchanged) ──────────────────────────────────────────────
   score?: number
   max: number
-  status: ScoreStatus
-  submittedAt?: string
+  /**
+   * True when a student turned in new work after an initial grade — needs a
+   * re-grade. Independent of `score`: a resubmitted cell can be graded
+   * (previous grade still on file) or ungraded (cleared pending re-grade).
+   */
+  resubmitted?: boolean
 }
 
 export type StudentData = {
@@ -135,16 +179,41 @@ export function seededRubricState(studentId: string): Record<string, number> {
 
 // ── Cell generation ─────────────────────────────────────────────────────────────
 
-export function generateCell(sIdx: number, aIdx: number, pts: number, perf: number, hasRubric = false): CellData {
+/**
+ * Deterministic ISO timestamp for a submission. Late submissions land 1–3 days
+ * after the assignment's due date; on-time submissions land 1–7 days before.
+ * Used by the new canonical `submittedAtIso` field. The display-string version
+ * (`submittedDate`) remains separate to preserve existing UI strings.
+ */
+function submittedTimestampIso(dueIso: string, sIdx: number, aIdx: number, late: boolean): string {
+  const dueDate = new Date(dueIso)
+  const offsetDays = late
+    ? 1 + Math.floor(seededRand(aIdx * 17 + sIdx * 3) * 3)
+    : -(1 + Math.floor(seededRand(aIdx * 17 + sIdx * 3) * 7))
+  const hour = 8 + Math.floor(seededRand(aIdx * 11 + sIdx * 7) * 15)
+  const min  = Math.floor(seededRand(aIdx * 13 + sIdx * 5) * 60)
+  const d = new Date(dueDate.getTime() + offsetDays * 86_400_000)
+  d.setHours(hour, min, 0, 0)
+  return d.toISOString()
+}
+
+export function generateCell(sIdx: number, aIdx: number, pts: number, perf: number, hasRubric = false, dueIso?: string): CellData {
   const r1 = seededRand(sIdx * 97 + aIdx * 31)
   const r2 = seededRand(sIdx * 97 + aIdx * 31 + 500)
-  if (aIdx >= 22) return { max: pts, status: 'ungraded' }
+  // Future assignments (not yet due) — no submission record exists.
+  if (aIdx >= 22) {
+    return { submission: 'no-submission', max: pts, status: 'ungraded' }
+  }
   const excusedP = 0.03
   const missingP = perf < 0.60 ? 0.22 : perf < 0.75 ? 0.09 : 0.03
   const lateP    = perf < 0.70 ? 0.14 : perf < 0.85 ? 0.07 : 0.02
   const pendingP = aIdx >= 18 ? 0.40 : 0
-  if (r1 < excusedP) return { max: pts, status: 'excused' }
-  if (r1 < excusedP + missingP) return { max: pts, status: 'missing' }
+  if (r1 < excusedP) {
+    return { submission: 'no-submission', excused: true, max: pts, status: 'excused' }
+  }
+  if (r1 < excusedP + missingP) {
+    return { submission: 'no-submission', max: pts, status: 'missing' }
+  }
 
   // For rubric assignments, derive score from the seeded rubric total so all
   // views show the same number. For non-rubric assignments, use the perf formula.
@@ -153,12 +222,27 @@ export function generateCell(sIdx: number, aIdx: number, pts: number, perf: numb
     : Math.round(pts * Math.min(1, Math.max(0.5, perf + (r2 - 0.5) * 0.22)))
 
   if (r1 < excusedP + missingP + lateP) {
-    return { score, max: pts, status: 'late', submittedAt: submittedDate(aIdx, sIdx) }
+    return {
+      submission: 'has-submission',
+      submittedAtIso: dueIso ? submittedTimestampIso(dueIso, sIdx, aIdx, true) : undefined,
+      score, max: pts, status: 'late', submittedAt: submittedDate(aIdx, sIdx),
+    }
   }
   if (r1 < excusedP + missingP + lateP + pendingP) {
-    return { max: pts, status: 'ungraded', submittedAt: submittedDate(aIdx, sIdx) }
+    return {
+      submission: 'has-submission',
+      submittedAtIso: dueIso ? submittedTimestampIso(dueIso, sIdx, aIdx, false) : undefined,
+      max: pts, status: 'ungraded', submittedAt: submittedDate(aIdx, sIdx),
+    }
   }
-  return { score, max: pts, status: 'graded', submittedAt: submittedDate(aIdx, sIdx) }
+  // A slice of graded work has a newer submission the teacher hasn't re-graded.
+  const resubmitted = seededRand(sIdx * 97 + aIdx * 31 + 900) < 0.15
+  return {
+    submission: 'has-submission',
+    submittedAtIso: dueIso ? submittedTimestampIso(dueIso, sIdx, aIdx, false) : undefined,
+    score, max: pts, status: 'graded', submittedAt: submittedDate(aIdx, sIdx),
+    resubmitted: resubmitted || undefined,
+  }
 }
 
 // ── Grade / display helpers ─────────────────────────────────────────────────────
@@ -176,7 +260,86 @@ export function formatDue(iso: string): string {
 
 export function pct(score: number, max: number) { return Math.round((score / max) * 100) }
 
-/* eslint-disable instui/no-hardcoded-hex */
+// ── Derived predicates (new canonical model) ──────────────────────────────────
+//
+// Each predicate is a pure function over CellData + (optionally) the
+// assignment's due date. Prefer these over reading `cell.status` directly.
+
+/** Is the assignment past its due date relative to `today`? */
+export function isDue(dueIso: string, today: Date = TODAY): boolean {
+  return new Date(dueIso) <= today
+}
+
+/** Was this submission turned in after the assignment's due date? */
+export function isLate(cell: CellData, dueIso: string): boolean {
+  if (cell.submission !== 'has-submission' || !cell.submittedAtIso) return false
+  return new Date(cell.submittedAtIso) > new Date(dueIso)
+}
+
+/** Past due, no submission, and not excused. */
+export function isMissing(cell: CellData, dueIso: string, today: Date = TODAY): boolean {
+  return cell.submission === 'no-submission' && !cell.excused && isDue(dueIso, today)
+}
+
+/** A score has been entered (and the assignment isn't excused). */
+export function isGraded(cell: CellData): boolean {
+  return cell.score !== undefined && !cell.excused
+}
+
+/** Has a submission, no grade yet, not excused. */
+export function isUngraded(cell: CellData): boolean {
+  return cell.submission === 'has-submission' && cell.score === undefined && !cell.excused
+}
+
+/** No submission yet, but the assignment also isn't past due. */
+export function isNotYetSubmitted(cell: CellData, dueIso: string, today: Date = TODAY): boolean {
+  return cell.submission === 'no-submission' && !cell.excused && !isDue(dueIso, today)
+}
+
+/** Student turned in new work after an initial grade. */
+export function isResubmitted(cell: CellData): boolean {
+  return cell.resubmitted === true
+}
+
+/**
+ * Needs a grade: either never graded, or graded then resubmitted without a
+ * re-grade. This is the single definition behind every "N need grading" count
+ * and the blue dot in the student picker — keep them in sync via this helper.
+ */
+export function needsGrading(cell: CellData): boolean {
+  return isUngraded(cell) || (isGraded(cell) && isResubmitted(cell))
+}
+
+/** Graded + resubmitted — previous grade on file, new submission waiting. */
+export function isNeedsRegrade(cell: CellData): boolean {
+  return isGraded(cell) && isResubmitted(cell)
+}
+
+/**
+ * Single-label display status from a cell + due date. Precedence:
+ * excused > late > graded > missing > ungraded. `resubmitted` is intentionally
+ * NOT folded in — render it as a separate tag alongside the primary status.
+ */
+export function getDisplayStatus(cell: CellData, dueIso: string, today: Date = TODAY): ScoreStatus {
+  if (cell.excused) return 'excused'
+  if (isLate(cell, dueIso)) return 'late'
+  if (isGraded(cell)) return 'graded'
+  if (isMissing(cell, dueIso, today)) return 'missing'
+  return 'ungraded'
+}
+
+/** Format an ISO submission timestamp for display: "Apr 14, 11:42 AM". */
+export function formatSubmittedAt(iso: string): string {
+  const d = new Date(iso)
+  const month = d.toLocaleDateString('en-US', { month: 'short' })
+  const day   = d.getDate()
+  const hours = d.getHours()
+  const mins  = d.getMinutes()
+  const ampm  = hours >= 12 ? 'PM' : 'AM'
+  const h12   = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
+  return `${month} ${day}, ${h12}:${String(mins).padStart(2, '0')} ${ampm}`
+}
+
 export function scoreBadgeStyle(cell: CellData): BadgeStyle {
   if (cell.status === 'missing')                       return { bg: '#FEE2E2', color: '#DC2626', borderColor: '#FCA5A5', label: 'Missing' }
   if (cell.status === 'ungraded' && !cell.submittedAt) return { bg: '#F8FAFC', color: '#94A3B8', borderColor: '#E2E8F0', label: '—' }
@@ -194,7 +357,6 @@ export const GRADE_COLORS: Record<string, string> = {
   'D+': '#DC2626', 'D': '#DC2626', 'D−': '#DC2626',
   'F': '#DC2626',
 }
-/* eslint-enable instui/no-hardcoded-hex */
 
 // ── Assignment definitions ─────────────────────────────────────────────────────
 
@@ -262,7 +424,7 @@ export const STUDENTS: StudentData[] = STUDENT_DEFS.map((def, sIdx) => ({
   name: def.name,
   section: def.section,
   currentGrade: gradeFromPerf(def.perf),
-  cells: ASSIGNMENT_DEFS.map((a, aIdx) => generateCell(sIdx, aIdx, a.pts, def.perf, a.hasRubric)),
+  cells: ASSIGNMENT_DEFS.map((a, aIdx) => generateCell(sIdx, aIdx, a.pts, def.perf, a.hasRubric, a.due)),
 }))
 
 const UNPOSTED_IDS = new Set(['a18'])
@@ -271,7 +433,7 @@ export const ASSIGNMENTS = ASSIGNMENT_DEFS.map((def, aIdx) => {
   const cells   = STUDENTS.map(s => s.cells[aIdx])
   const pastDue = new Date(def.due) <= TODAY
   const needsGradingCount = pastDue
-    ? cells.filter(c => c.status === 'ungraded' && c.submittedAt).length
+    ? cells.filter(needsGrading).length
     : 0
   const unposted = UNPOSTED_IDS.has(def.id)
   const unpostedCount = unposted ? cells.filter(c => c.score !== undefined).length : 0
@@ -322,6 +484,156 @@ export const ESSAY_CONTENT: Record<string, string> = {
   a25: `This project report synthesizes findings from a semester-long investigation into the differential adoption of AI writing assistance tools across student populations at our institution. Survey data (n=412) indicated statistically significant differences in tool adoption rates by first-generation student status, major, and self-reported technological confidence, even when controlling for hardware access. Qualitative interviews with 18 students surfaced two dominant framings: AI as efficiency tool versus AI as threat to learning. These framings correlated with, but were not fully predicted by, adoption rates. Implications for pedagogical design and institutional policy are discussed, with particular attention to equitable access and the risk of compounding existing academic advantage gaps.`,
 }
 
+// ── Lab Report submissions (assignment a21) ─────────────────────────────────────
+// A21 ("Lab Report 4") has no single canonical submission — each student turns
+// in their own experiment. These give user-testing participants varied, gradeable
+// work: the topics differ and the quality deliberately ranges from beginning to
+// exceptional so two graders can reach different scores.
+
+export type LabReportSection = { heading: string; body: string }
+export type LabReport = {
+  title: string
+  meta: string
+  sections: LabReportSection[]
+}
+
+export const LAB_REPORTS: LabReport[] = [
+  {
+    title: 'The Effect of Temperature on Catalase Enzyme Activity',
+    meta: 'Biology 201 · Lab Section B · 6 pages',
+    sections: [
+      { heading: 'Objective', body: 'To determine how temperature affects the rate at which catalase, an enzyme found in liver tissue, breaks hydrogen peroxide down into water and oxygen.' },
+      { heading: 'Hypothesis', body: 'If catalase activity depends on molecular collisions, then reaction rate will increase with temperature up to an optimum near 37°C, after which the enzyme will denature and activity will fall sharply.' },
+      { heading: 'Materials and Methods', body: 'Fresh bovine liver was homogenized and diluted to a 5% suspension. For each trial, 2 mL of liver extract was combined with 5 mL of 3% hydrogen peroxide in a sealed flask connected to a gas pressure sensor. Trials were run at 5, 20, 37, 50, and 70°C, with three replicates per temperature. Oxygen production was recorded for 60 seconds and the initial rate calculated from the first 10 seconds of each curve. A heat-denatured control (boiled extract) was included.' },
+      { heading: 'Results', body: 'Initial reaction rate rose from 0.4 kPa/s at 5°C to a peak of 2.9 kPa/s at 37°C, then dropped to 0.6 kPa/s at 50°C and was negligible at 70°C. The boiled control produced no measurable oxygen. Standard deviation across replicates stayed below 8% of the mean except at 50°C, where it reached 14%.' },
+      { heading: 'Discussion', body: 'The data support the hypothesis. The rise to 37°C reflects increased kinetic energy and collision frequency, while the steep decline above 50°C is consistent with thermal denaturation of the active site. The larger variation at 50°C likely reflects partial, uneven denaturation during the trial. A limitation is that the gas sensor was sensitive to flask temperature itself, which may have inflated early readings at higher temperatures; future trials should equilibrate the peroxide separately before mixing.' },
+      { heading: 'Conclusion', body: 'Catalase activity is temperature-dependent and peaks near mammalian body temperature, confirming that enzymes operate within a narrow optimal range.' },
+    ],
+  },
+  {
+    title: 'Investigating Osmosis in Potato Tissue Across Sucrose Concentrations',
+    meta: 'Biology 201 · Lab Section A · 4 pages',
+    sections: [
+      { heading: 'Introduction', body: 'Osmosis is the movement of water across a selectively permeable membrane from a region of higher water potential to lower. This experiment used potato cylinders to estimate the solute concentration of potato cells by finding the sucrose concentration at which no net mass change occurs.' },
+      { heading: 'Method', body: 'Twenty-five potato cylinders were cut to 4 cm using a cork borer and blotted dry. Five cylinders were placed in each of five sucrose solutions (0.0, 0.2, 0.4, 0.6, and 0.8 mol/L) for 90 minutes, then reweighed. Percent change in mass was calculated for each.' },
+      { heading: 'Results', body: 'Cylinders gained mass in distilled water (+18%) and 0.2 mol/L (+7%), showed almost no change near 0.35 mol/L, and lost mass in 0.6 (−11%) and 0.8 mol/L (−21%). The point of zero net change, found by interpolation, was approximately 0.34 mol/L.' },
+      { heading: 'Discussion', body: 'The results show water moving into cells in dilute solutions and out in concentrated ones, as expected. The estimated isotonic point of 0.34 mol/L is a reasonable value for potato tissue. Errors include incomplete blotting before weighing and slight differences in surface area between cylinders. Repeating with more concentrations near the crossover point would improve the estimate.' },
+    ],
+  },
+  {
+    title: 'How Light Intensity Affects the Rate of Photosynthesis in Elodea',
+    meta: 'Biology 201 · Lab Section C · 3 pages',
+    sections: [
+      { heading: 'Aim', body: 'We wanted to see if more light makes plants photosynthesize faster.' },
+      { heading: 'Method', body: 'We put a piece of Elodea in a test tube of water with baking soda and shined a lamp on it. We counted the bubbles coming off the plant for one minute. Then we moved the lamp further away and counted again. We did this at 10 cm, 20 cm, and 30 cm.' },
+      { heading: 'Results', body: 'At 10 cm we got 42 bubbles, at 20 cm we got 25 bubbles, and at 30 cm we got 11 bubbles. So there were more bubbles when the light was closer.' },
+      { heading: 'Conclusion', body: 'The closer the light, the more the plant photosynthesized because there were more bubbles. This proves our hypothesis was right. Some bubbles were hard to count because they came fast.' },
+    ],
+  },
+  {
+    title: 'Carbon Dioxide Production During Yeast Fermentation of Different Sugars',
+    meta: 'Biology 201 · Lab Section B · 5 pages',
+    sections: [
+      { heading: 'Objective', body: 'To compare the rate of anaerobic fermentation by Saccharomyces cerevisiae when supplied with glucose, sucrose, lactose, or no sugar, measured as carbon dioxide released.' },
+      { heading: 'Hypothesis', body: 'Glucose will yield the fastest fermentation because it can enter glycolysis directly, sucrose will follow after hydrolysis, and lactose will produce little to no gas because brewer\'s yeast lacks beta-galactosidase.' },
+      { heading: 'Materials and Methods', body: 'Each treatment used 7 g of active dry yeast suspended in 100 mL of 35°C water with 5 g of the test sugar. Suspensions were sealed in fermentation tubes and CO2 was collected by water displacement at two-minute intervals for 30 minutes. A sugar-free control isolated endogenous respiration. All tubes were held in a 35°C water bath.' },
+      { heading: 'Results', body: 'Glucose produced 41 mL of CO2, sucrose 33 mL, lactose 3 mL, and the control 1 mL over 30 minutes. Glucose showed the steepest initial slope; sucrose lagged for the first four minutes before accelerating.' },
+      { heading: 'Discussion', body: 'Results matched the hypothesis. The four-minute lag for sucrose is consistent with the time needed for invertase to cleave it into glucose and fructose. The near-zero lactose result confirms that this yeast strain cannot metabolize lactose. A source of error is gas escaping during tube assembly; sealing tubes underwater would reduce this. The endogenous control confirms the measured gas came from added sugar rather than stored reserves.' },
+      { heading: 'Conclusion', body: 'Sugar type strongly determines fermentation rate, and the pattern reflects which sugars the yeast can transport and enzymatically process.' },
+    ],
+  },
+  {
+    title: 'pH and Enzymes',
+    meta: 'Biology 201 · Lab Section A · 2 pages',
+    sections: [
+      { heading: 'What we did', body: 'We tested how pH changes the enzyme. We used pepsin and egg white and put them in different pH and watched what happened.' },
+      { heading: 'Results', body: 'In the acid one the egg white got cloudy and broke down but in the basic one nothing really happened. The middle one was kind of in between.' },
+      { heading: 'Conclusion', body: 'Enzymes work better at the right pH. Pepsin likes acid because it is in the stomach. We could have done more pH levels but ran out of time.' },
+    ],
+  },
+  {
+    title: 'Diffusion of Glucose and Starch Across a Dialysis Membrane',
+    meta: 'Biology 201 · Lab Section C · 4 pages',
+    sections: [
+      { heading: 'Introduction', body: 'Selectively permeable membranes allow small molecules to pass while blocking large ones. This experiment used dialysis tubing to model a cell membrane and tested which molecules could diffuse across it.' },
+      { heading: 'Method', body: 'A length of dialysis tubing was filled with a solution of glucose and starch and sealed at both ends. It was submerged in a beaker of distilled water containing iodine (IKI) indicator. After 30 minutes, the water and the tubing contents were tested with Benedict\'s reagent (for glucose) and observed for the blue-black iodine-starch color.' },
+      { heading: 'Results', body: 'The water outside the bag tested positive for glucose with Benedict\'s reagent but remained amber, indicating no starch escaped. The solution inside the bag turned blue-black, showing iodine had entered. Starch stayed inside throughout.' },
+      { heading: 'Discussion', body: 'The results confirm that glucose and iodine, both small molecules, crossed the membrane while the much larger starch molecules could not. This matches the expected behavior of a selectively permeable membrane based on molecular size. A limitation is that diffusion was not measured over time, only at a single endpoint; sampling at intervals would show diffusion rates.' },
+    ],
+  },
+  {
+    title: 'Zone of Inhibition: Testing Antibiotic Effectiveness on E. coli',
+    meta: 'Biology 201 · Lab Section B · 5 pages',
+    sections: [
+      { heading: 'Objective', body: 'To compare the effectiveness of three antibiotics against a non-pathogenic strain of Escherichia coli by measuring zones of inhibition on agar plates.' },
+      { heading: 'Hypothesis', body: 'Broad-spectrum antibiotics (ampicillin and tetracycline) will produce larger zones of inhibition than the narrow-spectrum penicillin against this Gram-negative strain.' },
+      { heading: 'Materials and Methods', body: 'Three nutrient agar plates were each inoculated with a lawn of E. coli using a sterile swab. Paper discs soaked in ampicillin, tetracycline, and penicillin were placed on each plate along with a water-soaked control disc. Plates were incubated at 37°C for 24 hours, after which the clear zone diameter around each disc was measured with calipers. Each antibiotic was tested in triplicate.' },
+      { heading: 'Results', body: 'Mean zone diameters were tetracycline 24 mm, ampicillin 19 mm, and penicillin 6 mm. The water control showed no zone. Replicate measurements agreed within 2 mm.' },
+      { heading: 'Discussion', body: 'The data partly support the hypothesis. Tetracycline and ampicillin produced large zones, but penicillin\'s very small zone reflects the difficulty penicillin has crossing the outer membrane of Gram-negative bacteria. Disc placement may have slightly affected results where two zones overlapped. Using a wider plate spacing would prevent this in future work.' },
+      { heading: 'Conclusion', body: 'Antibiotic effectiveness against E. coli varied widely, and the results align with each drug\'s known mechanism and spectrum.' },
+    ],
+  },
+  {
+    title: 'Measuring Transpiration Rates in Bean Plants Under Different Conditions',
+    meta: 'Biology 201 · Lab Section A · 3 pages',
+    sections: [
+      { heading: 'Aim', body: 'To find out how wind and humidity change how fast a plant loses water through transpiration.' },
+      { heading: 'Method', body: 'We attached a bean shoot to a potometer and measured how far the water moved in the tube over ten minutes. We tested normal room conditions, with a fan blowing, and with a plastic bag over the leaves.' },
+      { heading: 'Results', body: 'The water moved 18 mm in normal conditions, 31 mm with the fan, and 9 mm with the bag. So the fan made it transpire more and the bag made it less.' },
+      { heading: 'Conclusion', body: 'Wind speeds up transpiration and humidity slows it down. This is because wind blows away the water vapor near the leaf and the bag traps it. We only did each one once so it would be better to repeat it.' },
+    ],
+  },
+]
+
+export function labReportForStudent(studentId: string): LabReport {
+  const idx = parseInt(studentId.slice(1)) - 1
+  return LAB_REPORTS[idx % LAB_REPORTS.length]
+}
+
+// ── Organelle Quiz (a20) ────────────────────────────────────────────────────────
+// Seven auto-graded questions. Each student gets a different mix of wrong answers
+// so user-testing participants see realistic variety. The number correct tracks
+// the student's actual score (10 pts per question) so the result never contradicts
+// the grade; which questions are missed, and the wrong option chosen, are seeded
+// per student.
+
+export type QuizQuestion = { n: number; text: string; answer: string; correct: boolean; expected?: string }
+
+const ORGANELLE_QUESTIONS: { text: string; correct: string; distractors: string[] }[] = [
+  { text: 'Which organelle is the primary site of ATP production?',                 correct: 'Mitochondria',     distractors: ['Ribosome', 'Golgi apparatus', 'Nucleus'] },
+  { text: 'Where in the cell does protein synthesis (translation) occur?',           correct: 'Ribosome',         distractors: ['Lysosome', 'Smooth ER', 'Nucleolus'] },
+  { text: 'Which organelle modifies, sorts, and packages proteins for secretion?',   correct: 'Golgi apparatus',  distractors: ['Rough ER', 'Vacuole', 'Peroxisome'] },
+  { text: 'What studs the surface of the rough endoplasmic reticulum?',              correct: 'Ribosomes',        distractors: ['Cilia', 'Microvilli', 'Chloroplasts'] },
+  { text: 'Which organelle uses acid hydrolases to digest worn-out components?',     correct: 'Lysosome',         distractors: ['Peroxisome', 'Mitochondria', 'Vacuole'] },
+  { text: 'Where is the cell\u2019s chromatin stored?',                              correct: 'Nucleus',          distractors: ['Cytoplasm', 'Nucleolus', 'Ribosome'] },
+  { text: 'Which structure regulates what enters and leaves the cell?',             correct: 'Plasma membrane',  distractors: ['Cell wall', 'Cytoskeleton', 'Golgi apparatus'] },
+]
+
+export function organelleQuizFor(studentId: string, aIdx: number): QuizQuestion[] {
+  const sIdx = parseInt(studentId.slice(1)) - 1
+  const total = ORGANELLE_QUESTIONS.length
+  const score = getScore(studentId, aIdx)
+  const ptsPer = 70 / total
+  const numCorrect = score != null
+    ? Math.max(0, Math.min(total, Math.round(score / ptsPer)))
+    : 4 + Math.floor(seededRand(sIdx * 61 + 11) * 3)
+
+  // Rank questions by a per-student seed; the lowest-ranked ones become the misses.
+  const wrongIdx = new Set(
+    ORGANELLE_QUESTIONS
+      .map((_, i) => ({ i, r: seededRand(sIdx * 137 + i * 29 + 401) }))
+      .sort((a, b) => a.r - b.r)
+      .slice(0, total - numCorrect)
+      .map(x => x.i)
+  )
+
+  return ORGANELLE_QUESTIONS.map((q, i) => {
+    if (!wrongIdx.has(i)) return { n: i + 1, text: q.text, answer: q.correct, correct: true }
+    const pick = Math.floor(seededRand(sIdx * 53 + i * 17 + 9) * q.distractors.length)
+    return { n: i + 1, text: q.text, answer: q.distractors[pick], correct: false, expected: q.correct }
+  })
+}
+
 // ── Session-scoped grade store ─────────────────────────────────────────────────
 // Module-level map persists grades across component mounts and route navigation
 // within a single browser session, standing in for a real backend in this prototype.
@@ -343,19 +655,101 @@ export function setScore(studentId: string, aIdx: number, score: number | undefi
   _gradeStore.set(_key(studentId, aIdx), score)
 }
 
-const _statusStore = new Map<string, ScoreStatus>()
-
+/**
+ * Returns the current display status for a cell, derived from the canonical
+ * fields plus the live score in `_gradeStore`. No status-override store —
+ * "graded" / "ungraded" transitions now follow automatically from whether
+ * `setScore` has stored a defined value.
+ */
 export function getStatus(studentId: string, aIdx: number): ScoreStatus {
-  const k = _key(studentId, aIdx)
-  if (!_statusStore.has(k)) {
-    const student = STUDENTS.find(s => s.id === studentId)
-    _statusStore.set(k, student?.cells[aIdx]?.status ?? 'ungraded')
-  }
-  return _statusStore.get(k)!
+  const student = STUDENTS.find(s => s.id === studentId)
+  const cell = student?.cells[aIdx]
+  if (!cell) return 'ungraded'
+  const currentScore = getScore(studentId, aIdx)
+  const liveCell: CellData = { ...cell, score: currentScore }
+  return getDisplayStatus(liveCell, ASSIGNMENT_DEFS[aIdx].due)
 }
 
-export function setStatus(studentId: string, aIdx: number, status: ScoreStatus): void {
-  _statusStore.set(_key(studentId, aIdx), status)
+/**
+ * @deprecated No-op. In the dual-model migration, status is derived from
+ * `score` + canonical fields. The transitions encoded by old call sites
+ * (`setStatus(..., 'graded')` after a score is entered, etc.) now happen
+ * automatically via `getStatus()` deriving from the live score. Kept as a
+ * stable export so existing callers compile without changes.
+ */
+export function setStatus(_studentId: string, _aIdx: number, _status: ScoreStatus): void {
+  // intentionally empty
+}
+
+const _resubStore = new Map<string, boolean>()
+
+export function getResubmitted(studentId: string, aIdx: number): boolean {
+  const k = _key(studentId, aIdx)
+  if (!_resubStore.has(k)) {
+    const student = STUDENTS.find(s => s.id === studentId)
+    _resubStore.set(k, !!student?.cells[aIdx]?.resubmitted)
+  }
+  return _resubStore.get(k)!
+}
+
+export function setResubmitted(studentId: string, aIdx: number, resubmitted: boolean): void {
+  _resubStore.set(_key(studentId, aIdx), resubmitted)
+}
+
+/**
+ * Store-aware `needsGrading`: reflects in-session grade and re-grade changes so
+ * "N need grading" counts shrink as the teacher works. Mirrors the pure
+ * `needsGrading` predicate but reads the mutable session stores.
+ */
+export function needsGradingLive(studentId: string, aIdx: number): boolean {
+  const cell = STUDENTS.find(s => s.id === studentId)?.cells[aIdx]
+  if (!cell) return false
+  const submitted = cell.submission === 'has-submission'
+  const status = getStatus(studentId, aIdx)
+  if (status === 'excused') return false
+  const ungraded = getScore(studentId, aIdx) === undefined
+  return (ungraded && submitted) || (!ungraded && getResubmitted(studentId, aIdx))
+}
+
+// ── Submission history ──────────────────────────────────────────────────────────
+// A resubmitted cell has two versions on file: the original turn-in and a later
+// resubmission. History is derived from the seeded `resubmitted` flag (not the
+// mutable store) so both versions stay visible even after the teacher re-grades.
+
+export type Submission = {
+  id: string
+  submittedAt: string
+  label: string
+  isLatest: boolean
+}
+
+// Generate a resubmission timestamp a few days after the original turn-in.
+function laterSubmission(original: string, sIdx: number, aIdx: number): string {
+  const m = original.match(/(\w+) (\d+), (\d+):(\d+) (AM|PM)/)
+  if (!m) return original
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  let monthIdx = Math.max(0, months.indexOf(m[1]))
+  let day = parseInt(m[2]) + 2 + Math.floor(seededRand(sIdx * 41 + aIdx * 7 + 300) * 4)
+  if (day > 30) { day -= 30; monthIdx = (monthIdx + 1) % 12 }
+  const hour = 8 + Math.floor(seededRand(sIdx * 23 + aIdx * 9 + 700) * 13)
+  const min  = Math.floor(seededRand(sIdx * 19 + aIdx * 3 + 100) * 60)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const h12  = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+  return `${months[monthIdx]} ${day}, ${h12}:${String(min).padStart(2, '0')} ${ampm}`
+}
+
+export function submissionsFor(studentId: string, aIdx: number): Submission[] {
+  const sIdx = parseInt(studentId.slice(1)) - 1
+  const cell = STUDENTS[sIdx]?.cells[aIdx]
+  if (!cell?.submittedAt) return []
+  const original = cell.submittedAt
+  if (!cell.resubmitted) {
+    return [{ id: 'v1', submittedAt: original, label: 'Submission', isLatest: true }]
+  }
+  return [
+    { id: 'v2', submittedAt: laterSubmission(original, sIdx, aIdx), label: 'Latest', isLatest: true },
+    { id: 'v1', submittedAt: original, label: 'Original', isLatest: false },
+  ]
 }
 
 // ── Comment Library ────────────────────────────────────────────────────────────
