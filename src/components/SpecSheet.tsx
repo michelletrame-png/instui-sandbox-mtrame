@@ -8,6 +8,7 @@ import { Button, CloseButton } from '@instructure/ui-buttons/latest'
 import { FileTextInstUIIcon, CodeInstUIIcon, LinkInstUIIcon } from '@instructure/ui-icons'
 import { Modal } from '@instructure/ui-modal/latest'
 import { InfiniteCanvas } from './InfiniteCanvas'
+import { THEMES, type ThemeKey } from '../themes'
 import { extractCopyFromDOM } from './extractCopy'
 import type { CopyEntry } from './extractCopy'
 import type { PrototypeProps } from '../registry'
@@ -168,7 +169,6 @@ export function SpecSheet({
         <Flex direction="column" gap="large">
 
           {/* Page header */}
-          {/* eslint-disable-next-line instui/no-style-layout -- no View prop for maxWidth */}
           <Flex direction="column" gap="x-small" style={{ maxWidth: '640px' }}>
             <Heading level="h1" variant="titlePageDesktop" margin="0">{title}</Heading>
             {description && <Text size="descriptionPage">{description}</Text>}
@@ -182,7 +182,6 @@ export function SpecSheet({
               <Flex direction="column" gap="xx-large">
 
                 {/* Section header */}
-                {/* eslint-disable-next-line instui/no-style-layout -- no View prop for maxWidth */}
                 <Flex direction="column" gap="x-small" style={{ maxWidth: '640px' }}>
                   <Heading level="h2" margin="0">{section.title}</Heading>
                   {section.description && (
@@ -195,7 +194,7 @@ export function SpecSheet({
                   {section.boards.map((board, bi) => {
                     const boardKey = `${si}-${bi}`
                     return (
-                      <Flex.Item key={bi} shouldShrink={false}>
+                      <Flex.Item key={bi} shouldShrink={false} overflowX="visible" overflowY="visible">
                         <div data-board-id={boardKey}>
                         <Flex direction="column" gap="medium" width={`${board.width}px`}>
 
@@ -344,7 +343,6 @@ export function SpecSheet({
             borderRadius="0"
             padding="medium"
           >
-            {/* eslint-disable-next-line instui/no-style-layout -- <pre> browser reset, no View equivalent */}
             <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {codeModal?.code}
             </pre>
@@ -408,9 +406,11 @@ export function SpecSheet({
   )
 }
 
-export default function SpecSheetTemplate({ isDark, onToggleTheme }: PrototypeProps) {
+export default function SpecSheetTemplate(_: PrototypeProps) {
+  const [themeKey, setThemeKey] = useState<ThemeKey>('light')
+  const themeNames = Object.keys(THEMES) as ThemeKey[]
   return (
-    <InfiniteCanvas title="Spec Sheet" isDark={isDark} onToggleTheme={onToggleTheme} backTo="/">
+    <InfiniteCanvas title="Spec Sheet" themeKey={themeKey} themeNames={themeNames} onThemeChange={setThemeKey} backTo="/">
       <SpecSheet
         title="Component name"
         description="Brief description of the component or feature being spec'd out. Replace this with your own."

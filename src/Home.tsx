@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import { useComputedTheme } from '@instructure/emotion'
 import { View } from '@instructure/ui-view/latest'
 import { Flex } from '@instructure/ui-flex/latest'
@@ -16,6 +16,7 @@ import { TextInput } from '@instructure/ui-text-input/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { CopyInstUIIcon, ExternalLinkInstUIIcon, SearchInstUIIcon } from '@instructure/ui-icons'
 import { prototypes } from './registry'
+import { THEMES, type ThemeKey } from './themes'
 import { sandboxOwner, sandboxHash } from './sandbox.config'
 
 const _repoName = import.meta.env.BASE_URL.split('/').filter(Boolean)[0]
@@ -205,7 +206,7 @@ function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: Re
               padding="xx-small x-small"
             >
               <Flex alignItems="center" gap="x-small">
-                <Flex.Item shouldGrow shouldShrink>
+                <Flex.Item shouldGrow shouldShrink overflowX="visible" overflowY="visible">
                   <Text size="small" color="secondary">{t}</Text>
                 </Flex.Item>
                 <IconButton
@@ -225,12 +226,38 @@ function SkillCard({ skill, sharedTokens }: { skill: SkillInfo; sharedTokens: Re
   )
 }
 
-export function Home() {
-  const [tabIndex, setTabIndex] = useState(0)
-  const [searchDesigns, setSearchDesigns] = useState('')
-  const [searchPublished, setSearchPublished] = useState('')
-  const [filterCategory, setFilterCategory] = useState<PrototypeCategory | ''>('')
-  const [filterStatus, setFilterStatus] = useState<PrototypeStatus | ''>('Active')
+export function Home({ themeKey, themeNames, onThemeChange }: {
+  themeKey: ThemeKey
+  themeNames: readonly ThemeKey[]
+  onThemeChange: (key: ThemeKey) => void
+}) {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const TAB_NAMES = ['designs', 'published', 'templates', 'references', 'help'] as const
+  type TabName = typeof TAB_NAMES[number]
+  const tabParam = (searchParams.get('tab') ?? 'designs') as TabName
+  const tabIndex = Math.max(0, TAB_NAMES.indexOf(tabParam))
+  const searchDesigns = searchParams.get('q') ?? ''
+  const searchPublished = searchParams.get('qp') ?? ''
+  const filterCategory = (searchParams.get('category') ?? '') as PrototypeCategory | ''
+  const filterStatus = (() => {
+    const s = searchParams.get('status')
+    if (s === null) return 'Active' as PrototypeStatus | ''
+    if (s === 'all') return '' as PrototypeStatus | ''
+    return s as PrototypeStatus | ''
+  })()
+
+  function updateParam(key: string, value: string) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      const defaults: Record<string, string> = { tab: 'designs', status: 'Active' }
+      const urlValue = key === 'status' && value === '' ? 'all' : value
+      if (urlValue === (defaults[key] ?? '')) next.delete(key)
+      else next.set(key, urlValue)
+      return next
+    }, { replace: true })
+  }
+
   const { sharedTokens } = useComputedTheme()
 
   type StaticExport = { id: string; title: string; url: string; deployedAt: string }
@@ -297,29 +324,43 @@ export function Home() {
               <IconButton size="small" withBackground={false} withBorder={false} screenReaderLabel="Copy live site link" renderIcon={<CopyInstUIIcon />} onClick={() => navigator.clipboard.writeText(sandboxLiveUrl)} />
             )}
           </Flex>
+          <View as="div" display="block" margin="x-small 0 0 0">
+            <SimpleSelect
+              renderLabel={<ScreenReaderContent>Theme</ScreenReaderContent>}
+              size="small"
+              value={themeKey}
+              onChange={(_e, { value }) => onThemeChange(value as ThemeKey)}
+            >
+              {themeNames.map(key => (
+                <SimpleSelect.Option key={key} id={key} value={key}>
+                  {THEMES[key].label}
+                </SimpleSelect.Option>
+              ))}
+            </SimpleSelect>
+          </View>
         </Flex>
 
         <View as="div" display="block" maxWidth="700px" width="100%">
-          <Tabs onRequestTabChange={(_e, { index }) => setTabIndex(index)}>
+          <Tabs onRequestTabChange={(_e, { index }) => updateParam('tab', TAB_NAMES[index])}>
             <Tabs.Panel renderTitle="Designs" isSelected={tabIndex === 0} padding="none" themeOverride={{ defaultOverflowY: 'visible' }}>
               {tabPanelView(
                 <Flex direction="column" gap="medium">
                   <Flex gap="small" alignItems="end" wrap="wrap">
-                    <Flex.Item shouldGrow shouldShrink>
+                    <Flex.Item shouldGrow shouldShrink overflowX="visible" overflowY="visible">
                       <TextInput
                         renderLabel={<ScreenReaderContent>Search designs</ScreenReaderContent>}
                         placeholder="Search designs"
                         renderBeforeInput={<SearchInstUIIcon inline={false} />}
-                        renderAfterInput={searchDesigns ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchDesigns('')} /> : undefined}
+                        renderAfterInput={searchDesigns ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => updateParam('q', '')} /> : undefined}
                         size="small"
                         value={searchDesigns}
-                        onChange={(_e, value) => setSearchDesigns(value)}
+                        onChange={(_e, value) => updateParam('q', value)}
                       />
                     </Flex.Item>
                     <SimpleSelect
                       renderLabel={<ScreenReaderContent>Filter by category</ScreenReaderContent>}
                       value={filterCategory}
-                      onChange={(_e, { value }) => setFilterCategory((value ?? '') as PrototypeCategory | '')}
+                      onChange={(_e, { value }) => updateParam('category', (value ?? '') as string)}
                       size="small"
                       width="160px"
                     >
@@ -330,7 +371,7 @@ export function Home() {
                     <SimpleSelect
                       renderLabel={<ScreenReaderContent>Filter by status</ScreenReaderContent>}
                       value={filterStatus}
-                      onChange={(_e, { value }) => setFilterStatus((value ?? '') as PrototypeStatus | '')}
+                      onChange={(_e, { value }) => updateParam('status', (value ?? '') as string)}
                       size="small"
                       width="160px"
                     >
@@ -357,7 +398,7 @@ export function Home() {
                         padding="xx-small x-small"
                       >
                         <Flex alignItems="center" gap="x-small">
-                          <Flex.Item shouldGrow shouldShrink>
+                          <Flex.Item shouldGrow shouldShrink overflowX="visible" overflowY="visible">
                             <Text size="small" color="secondary">/sandbox-publish the [design name] to a static link</Text>
                           </Flex.Item>
                           <IconButton
@@ -376,10 +417,10 @@ export function Home() {
                         renderLabel={<ScreenReaderContent>Search published</ScreenReaderContent>}
                         placeholder="Search published"
                         renderBeforeInput={<SearchInstUIIcon inline={false} />}
-                        renderAfterInput={searchPublished ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => setSearchPublished('')} /> : undefined}
+                        renderAfterInput={searchPublished ? <CloseButton size="small" screenReaderLabel="Clear search" onClick={() => updateParam('qp', '')} /> : undefined}
                         size="small"
                         value={searchPublished}
-                        onChange={(_e, value) => setSearchPublished(value)}
+                        onChange={(_e, value) => updateParam('qp', value)}
                       />
                       <Table caption="Published links" hover>
                       <Table.Head>
