@@ -1,0 +1,1 @@
+import{G as e,T as t,t as n}from"./v2-C9oVrVvN.js";import{t as r}from"./useComputedTheme-BEikr0mC.js";var i=e(t(),1);function a(e){let{sharedTokens:t}=r();return(0,i.jsx)(n,{as:`div`,minHeight:`100vh`,display:`block`,background:`secondary`,themeOverride:{backgroundSecondary:t.background.pageColor}})}export{a as default};
