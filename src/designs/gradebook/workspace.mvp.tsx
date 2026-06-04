@@ -1499,7 +1499,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     open={libOpen}
                     onClose={() => setLibOpen(false)}
                     onInsert={text => setPendingText(prev => prev ? `${prev}\n\n${text}` : text)}
-                    width={panelWidth}
+                    width={panelWidth + 100}
                   />
                 </div>
 
