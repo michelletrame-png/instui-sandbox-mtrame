@@ -39,6 +39,7 @@ import {
   seededRubricState, getScore, setScore, getStatus, setStatus, getResubmitted, setResubmitted, getRubricState, setRubricState, needsGradingLive,
 } from './data'
 import { CommentLibraryModal } from './CommentLibraryModal'
+import { GradebookSettingsTray } from './GradebookSettingsTray'
 import type { PrototypeProps } from '../../registry'
 
 // ── Submission viewer ──────────────────────────────────────────────────────────
@@ -603,6 +604,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
   // Bumped after external grade-store mutations to force a re-render
   const [, setGradingVersion]                   = useState(0)
   const [libOpen, setLibOpen]                   = useState(false)
+  const [settingsTrayOpen, setSettingsTrayOpen] = useState(false)
   const [mediaMsg, setMediaMsg]                 = useState<string | null>(null)
   const mediaMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevStudentIdxRef   = useRef(initStudentIdx)
@@ -615,8 +617,8 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
   useEffect(() => { localStorage.setItem('mvp-rubric-view', rubricView) }, [rubricView])
   // Per-row expand state for traditional view (criterion.id → bool)
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
-  // Manual per-criterion score overrides — when present, takes precedence over the selected level's points
-  const [rubricOverrides, setRubricOverrides] = useState<Record<string, number>>({})
+  // Manual override for the rubric total — when defined, takes precedence over the sum of selected levels
+  const [rubricTotalOverride, setRubricTotalOverride] = useState<number | undefined>(undefined)
 
   // Grading-panel width — drag-resizable, persisted
   const [panelWidth, setPanelWidth] = useState<number>(() => {
@@ -797,7 +799,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     prevAssignmentIdxRef.current = assignmentIdx
 
     userModifiedRubricRef.current = false
-    setRubricOverrides({})
+    setRubricTotalOverride(undefined)
     if (assignment.hasRubric) {
       const stored = getRubricState(student.id, assignmentIdx)
       setRubric(stored !== undefined ? stored
@@ -854,12 +856,9 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
   function selectRubricLevel(criterionId: string, idx: number) {
     const next = { ...rubric, [criterionId]: idx }
-    // Clicking a level clears any manual override for that criterion
-    const nextOverrides = { ...rubricOverrides }
-    delete nextOverrides[criterionId]
-    setRubricOverrides(nextOverrides)
+    // Clicking a level clears the manual total override
+    setRubricTotalOverride(undefined)
     const newTotal = RUBRIC_TEMPLATE.reduce((sum, c) => {
-      if (nextOverrides[c.id] !== undefined) return sum + nextOverrides[c.id]
       const i = next[c.id]
       return sum + (i !== undefined ? c.levels[i].pts : 0)
     }, 0)
@@ -886,29 +885,21 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     setSendError(false)
   }
 
-  function criterionPoints(c: typeof RUBRIC_TEMPLATE[number]): number | undefined {
-    if (rubricOverrides[c.id] !== undefined) return rubricOverrides[c.id]
+  const rubricSumFromLevels = RUBRIC_TEMPLATE.reduce((sum, c) => {
     const idx = rubric[c.id]
-    return idx !== undefined ? c.levels[idx].pts : undefined
-  }
-  const rubricTotal = RUBRIC_TEMPLATE.reduce((sum, c) => sum + (criterionPoints(c) ?? 0), 0)
+    return sum + (idx !== undefined ? c.levels[idx].pts : 0)
+  }, 0)
+  const rubricTotal = rubricTotalOverride ?? rubricSumFromLevels
 
-  function setCriterionOverride(criterionId: string, raw: string) {
-    const next = { ...rubricOverrides }
+  function setTotalOverride(raw: string) {
     if (raw.trim() === '' || isNaN(Number(raw))) {
-      delete next[criterionId]
-    } else {
-      const max = RUBRIC_TEMPLATE.find(c => c.id === criterionId)?.points ?? 0
-      next[criterionId] = Math.max(0, Math.min(max, Number(raw)))
+      setRubricTotalOverride(undefined)
+      setScore(student.id, assignmentIdx, rubricSumFromLevels)
+      return
     }
-    setRubricOverrides(next)
-    // Recompute and persist total
-    const newTotal = RUBRIC_TEMPLATE.reduce((sum, c) => {
-      if (next[c.id] !== undefined) return sum + next[c.id]
-      const idx = rubric[c.id]
-      return sum + (idx !== undefined ? c.levels[idx].pts : 0)
-    }, 0)
-    setScore(student.id, assignmentIdx, newTotal)
+    const clamped = Math.max(0, Math.min(RUBRIC_MAX, Number(raw)))
+    setRubricTotalOverride(clamped)
+    setScore(student.id, assignmentIdx, clamped)
     if (getStatus(student.id, assignmentIdx) === 'ungraded') {
       setStatus(student.id, assignmentIdx, 'graded')
       setGradingVersion(v => v + 1)
@@ -983,6 +974,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     withBackground={false}
                     withBorder={false}
                     renderIcon={<SettingsInstUIIcon />}
+                    onClick={() => setSettingsTrayOpen(true)}
                   />
                 </Flex>
               </Flex>
@@ -1281,11 +1273,24 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     </Button>
                   </Flex>
 
-                  {/* Instructor Score bar */}
+                  {/* Instructor Score bar — total is editable to override the rubric sum */}
                   <div style={{ position: 'relative', background: mutedBg, borderRadius: 6, height: 48, overflow: 'hidden', border: `1px solid ${border}`, marginBottom: 16 }}>
                     <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, fontSize: 13, color: '#273540' }}>Instructor Score</span>
-                    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: '#0b874b', minWidth: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 14px' }}>
-                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>{rubricTotal} / {RUBRIC_MAX} pts</span>
+                    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: '#0b874b', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 12px', gap: 4 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        max={RUBRIC_MAX}
+                        value={rubricTotal}
+                        onChange={e => setTotalOverride(e.target.value)}
+                        aria-label="Override rubric total"
+                        style={{
+                          width: 56, height: 28, fontSize: 14, fontWeight: 700, textAlign: 'center',
+                          border: 'none', borderRadius: 4, outline: 'none', fontFamily: 'inherit',
+                          background: 'rgba(255,255,255,0.18)', color: '#fff',
+                        }}
+                      />
+                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>/ {RUBRIC_MAX} pts</span>
                     </div>
                   </div>
 
@@ -1334,12 +1339,6 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                   {rubricView === 'traditional' && (
                     <div style={{ overflowX: 'auto', border: `1px solid ${border}`, borderRadius: 6 }}>
                       <div style={{ minWidth: 720 }}>
-                        <div style={{ padding: '8px 12px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
-                          <Text size="small" weight="bold">{assignment.name}</Text>
-                        </div>
-                        <div style={{ padding: '6px 12px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
-                          <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Criteria</Text>
-                        </div>
                         {RUBRIC_TEMPLATE.map(criterion => {
                           const selectedIdx = rubric[criterion.id]
                           const expanded = !!expandedCriteria[criterion.id]
@@ -1390,29 +1389,15 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                                   )
                                 })}
                               </div>
-                              <div style={{ width: 110, flexShrink: 0, padding: '10px 8px', borderLeft: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={criterion.points}
-                                  value={criterionPoints(criterion) ?? ''}
-                                  onChange={e => setCriterionOverride(criterion.id, e.target.value)}
-                                  aria-label={`${criterion.label} points`}
-                                  style={{
-                                    width: 48, height: 30, fontSize: 14, fontWeight: 700, textAlign: 'center',
-                                    border: `1px solid ${border}`, borderRadius: 4, outline: 'none',
-                                    fontFamily: 'inherit', background: 'transparent', color: 'inherit',
-                                  }}
-                                  placeholder="--"
-                                />
+                              <div style={{ width: 96, flexShrink: 0, padding: '10px 8px', borderLeft: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: textBase }}>
+                                  {selectedIdx !== undefined ? criterion.levels[selectedIdx].pts : '--'}
+                                </span>
                                 <span style={{ fontSize: 11, color: textMuted }}>/ {criterion.points}</span>
                               </div>
                             </div>
                           )
                         })}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 12px', background: mutedBg }}>
-                          <Text size="small" weight="bold">Total Points: {rubricTotal} / {RUBRIC_MAX}</Text>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -1514,6 +1499,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     open={libOpen}
                     onClose={() => setLibOpen(false)}
                     onInsert={text => setPendingText(prev => prev ? `${prev}\n\n${text}` : text)}
+                    width={panelWidth}
                   />
                 </div>
 
@@ -1573,6 +1559,8 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
           </Flex>
         </Flex.Item>
       </Flex>
+
+      <GradebookSettingsTray open={settingsTrayOpen} onClose={() => setSettingsTrayOpen(false)} />
     </View>
   )
 }
