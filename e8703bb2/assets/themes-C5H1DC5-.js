@@ -1,0 +1,1 @@
+import{d as e,f as t,p as n,u as r}from"./v2-C9oVrVvN.js";var i={light:{label:`Light`,theme:r},canvas:{label:`Canvas`,theme:t},dark:{label:`Dark`,theme:e},canvasHighContrast:{label:`High Contrast`,theme:n}};export{i as t};
