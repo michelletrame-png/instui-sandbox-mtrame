@@ -11,7 +11,7 @@ import { Button, IconButton } from '@instructure/ui-buttons/latest'
 import { TextArea } from '@instructure/ui-text-area/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
-import { XInstUIIcon, PlusInstUIIcon, EditInstUIIcon, TrashInstUIIcon, SettingsInstUIIcon, CheckInstUIIcon } from '@instructure/ui-icons'
+import { XInstUIIcon, PlusInstUIIcon, EditInstUIIcon, TrashInstUIIcon, SettingsInstUIIcon, CheckInstUIIcon, ChevronDownInstUIIcon, ChevronRightInstUIIcon } from '@instructure/ui-icons'
 import { COMMENT_LIB, COMMENT_FOLDERS, type CommentEntry } from './data'
 
 const CUSTOM_KEY     = 'mvp-comment-lib-custom'
@@ -62,10 +62,10 @@ export function CommentLibraryModal({
   const accentBlue  = sharedTokens.stroke.accentBlue         ?? '#0770A3'
 
   const [scope,    setScope]   = useState<'all' | 'assignment' | 'course'>('all')
-  const [folder,   setFolder]  = useState<string>('all')
   const [selected, setSel]     = useState<string[]>([])
   const [custom,   setCustom]  = useState<CustomStore>(() => loadCustom())
   const [folders,  setFolders] = useState<FolderStore>(() => loadFolders())
+  const [openFolders, setOpenFolders] = useState<Set<string>>(new Set())
 
   const [adding,    setAdding]    = useState(false)
   const [newText,   setNewText]   = useState('')
@@ -78,13 +78,14 @@ export function CommentLibraryModal({
 
   useEffect(() => {
     if (open) {
-      setScope('all'); setFolder('all'); setSel([])
+      setScope('all'); setSel([])
       setAdding(false); setNewText(''); setNewFolder('encouragement')
       setManaging(false); setRenamingId(null); setRenameValue(''); setNewFolderName('')
+      setOpenFolders(new Set())
     }
   }, [open])
 
-  // Effective folder list (built-ins minus deleted + custom + unsorted-if-populated)
+  // Effective folder list
   type EffectiveFolder = { id: string; label: string; isBuiltIn: boolean; canEdit: boolean }
   const deletedSet = new Set(folders.deleted)
   function displayLabel(id: string, fallback: string): string {
@@ -106,27 +107,28 @@ export function CommentLibraryModal({
     : []
   const effectiveFolders: EffectiveFolder[] = [...builtInList, ...customList, ...unsortedItem]
 
-  useEffect(() => {
-    if (folder !== 'all' && !effectiveFolders.some(f => f.id === folder)) setFolder('all')
-  }, [effectiveFolders, folder])
-
   function inScope(folderId: string): boolean {
     if (scope === 'all') return true
     if (scope === 'assignment') return ASSIGNMENT_SET.has(folderId)
     return !ASSIGNMENT_SET.has(folderId)
   }
+  const visibleFolders = effectiveFolders.filter(f => inScope(f.id))
 
-  const allInScope = effectiveFolders.filter(f => inScope(f.id)).flatMap(f => commentsIn(f.id))
-  const visible = folder === 'all'
-    ? allInScope
-    : (inScope(folder) ? commentsIn(folder) : [])
-
-  function toggle(id: string) {
+  function toggleSelect(id: string) {
     setSel(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+  function toggleFolder(id: string) {
+    setOpenFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
   }
 
   function handleInsert() {
-    const texts = visible.filter(c => selected.includes(c.id)).map(c => c.text)
+    const allComments = visibleFolders.flatMap(f => commentsIn(f.id))
+    const texts = allComments.filter(c => selected.includes(c.id)).map(c => c.text)
+    if (texts.length === 0) return
     onInsert(texts.join('\n\n'))
     onClose()
   }
@@ -138,7 +140,8 @@ export function CommentLibraryModal({
     const next: CustomStore = { ...custom, [newFolder]: [...(custom[newFolder] ?? []), entry] }
     setCustom(next); saveCustom(next)
     setAdding(false); setNewText('')
-    setFolder(newFolder)
+    // Auto-open the folder we just saved into so the user sees it
+    setOpenFolders(prev => new Set([...prev, newFolder]))
   }
 
   // Folder CRUD
@@ -180,7 +183,6 @@ export function CommentLibraryModal({
     }
     setFolders(next); saveFolders(next)
 
-    if (folder === id) setFolder('all')
     if (newFolder === id) setNewFolder('encouragement')
   }
   function addNewFolder() {
@@ -193,6 +195,11 @@ export function CommentLibraryModal({
   }
 
   const saveTargets = effectiveFolders.filter(f => f.id !== UNSORTED_ID)
+  const SCOPES: Array<{ id: 'all' | 'assignment' | 'course'; label: string }> = [
+    { id: 'all',        label: 'All' },
+    { id: 'assignment', label: 'This assignment' },
+    { id: 'course',     label: 'This course' },
+  ]
 
   return (
     <Tray
@@ -200,16 +207,16 @@ export function CommentLibraryModal({
       label="Comment Library"
       placement="end"
       size="small"
-      themeOverride={width ? { smallWidth: `${width}px` } : undefined}
+      themeOverride={{ padding: '0', ...(width ? { smallWidth: `${width}px` } : {}) } as object}
       shouldCloseOnDocumentClick
       onDismiss={onClose}
     >
       <View as="div" display="block" height="100vh">
         <Flex direction="column" height="100%">
           {/* Header */}
-          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
+          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
             <Flex alignItems="center" justifyItems="space-between" gap="small" margin="0 0 small 0">
-              <Heading level="h2" margin="0">Comment Library</Heading>
+              <Heading level="h3" margin="0" as="h2">Comment Library</Heading>
               <IconButton
                 screenReaderLabel="Close comment library"
                 color="secondary"
@@ -221,60 +228,100 @@ export function CommentLibraryModal({
               />
             </Flex>
 
-            <Flex direction="column" gap="x-small">
-              <SimpleSelect
-                renderLabel={<ScreenReaderContent>Comment scope</ScreenReaderContent>}
-                value={scope}
-                onChange={(_e, { value }) => { setScope(value as 'all' | 'assignment' | 'course'); setFolder('all'); setSel([]) }}
-              >
-                <SimpleSelect.Option id="sc-all"        value="all">All comments</SimpleSelect.Option>
-                <SimpleSelect.Option id="sc-assignment" value="assignment">Comments for this assignment</SimpleSelect.Option>
-                <SimpleSelect.Option id="sc-course"     value="course">Comments for this course</SimpleSelect.Option>
-              </SimpleSelect>
-
-              <Flex gap="x-small" alignItems="end">
-                <Flex.Item shouldGrow shouldShrink>
-                  <SimpleSelect
-                    renderLabel={<ScreenReaderContent>Folder</ScreenReaderContent>}
-                    value={folder}
-                    onChange={(_e, { value }) => { setFolder(value as string); setSel([]) }}
-                  >
-                    <SimpleSelect.Option id="f-all" value="all">All folders</SimpleSelect.Option>
-                    {effectiveFolders.map(f => (
-                      <SimpleSelect.Option key={f.id} id={`f-${f.id}`} value={f.id}>
-                        {f.id === UNSORTED_ID ? `${f.label} (${unsortedCount})` : f.label}
-                      </SimpleSelect.Option>
-                    ))}
-                  </SimpleSelect>
-                </Flex.Item>
-                <IconButton
-                  screenReaderLabel={managing ? 'Done managing folders' : 'Manage folders'}
-                  size="small"
-                  color={managing ? 'primary' : 'secondary'}
-                  withBorder
-                  renderIcon={managing ? <CheckInstUIIcon /> : <SettingsInstUIIcon />}
-                  onClick={() => { setManaging(v => !v); setRenamingId(null) }}
-                />
-              </Flex>
+            <Flex alignItems="center" justifyItems="space-between" gap="x-small">
+              <Flex.Item shouldShrink>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {SCOPES.map(s => {
+                    const active = scope === s.id
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => { setScope(s.id); setSel([]) }}
+                        style={{
+                          padding: '5px 10px', fontSize: 12, fontWeight: 600, borderRadius: 14,
+                          border: `1px solid ${active ? accentBlue : border}`,
+                          background: active ? accentBlue : 'transparent',
+                          color: active ? '#fff' : 'inherit',
+                          cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </Flex.Item>
+              <IconButton
+                screenReaderLabel={managing ? 'Done managing folders' : 'Manage folders'}
+                size="small"
+                color={managing ? 'primary' : 'secondary'}
+                withBorder
+                renderIcon={managing ? <CheckInstUIIcon /> : <SettingsInstUIIcon />}
+                onClick={() => { setManaging(v => !v); setRenamingId(null) }}
+              />
             </Flex>
           </div>
 
           {/* Body */}
           <Flex.Item shouldGrow shouldShrink>
-            <div style={{ padding: '12px 16px', height: '100%', overflowY: 'auto', background: containerBg }}>
+            <div style={{ padding: '20px 20px', height: '100%', overflowY: 'auto', background: containerBg }}>
 
-              {managing ? (
-                <Flex direction="column" gap="x-small">
-                  <Flex alignItems="center" justifyItems="space-between" margin="0 0 x-small 0">
-                    <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Manage folders</Text>
-                    <Text size="x-small" color="secondary">{effectiveFolders.length} folder{effectiveFolders.length !== 1 ? 's' : ''}</Text>
-                  </Flex>
+              {/* Add comment trigger / form */}
+              {!managing && (
+                adding ? (
+                  <div style={{ padding: 12, border: `1px solid ${border}`, borderRadius: 6, marginBottom: 16, background: mutedBg }}>
+                    <View as="div" display="block" margin="0 0 small 0">
+                      <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">New comment</Text>
+                    </View>
+                    <TextArea
+                      label={<ScreenReaderContent>Comment text</ScreenReaderContent>}
+                      placeholder="Write a reusable comment…"
+                      value={newText}
+                      onChange={e => setNewText(e.target.value)}
+                      height="80px"
+                      resize="none"
+                    />
+                    <View as="div" display="block" margin="x-small 0 0 0">
+                      <SimpleSelect
+                        renderLabel="Save to folder"
+                        value={newFolder}
+                        onChange={(_e, { value }) => setNewFolder(value as string)}
+                      >
+                        {saveTargets.map(f => (
+                          <SimpleSelect.Option key={f.id} id={`nf-${f.id}`} value={f.id}>{f.label}</SimpleSelect.Option>
+                        ))}
+                      </SimpleSelect>
+                    </View>
+                    <View as="div" display="block" margin="small 0 0 0">
+                      <Flex gap="x-small" justifyItems="end">
+                        <Button size="small" onClick={() => { setAdding(false); setNewText('') }}>Cancel</Button>
+                        <Button size="small" color="primary" onClick={handleSaveNew} interaction={newText.trim() ? 'enabled' : 'disabled'}>
+                          Save to library
+                        </Button>
+                      </Flex>
+                    </View>
+                  </div>
+                ) : (
+                  <View as="div" display="block" margin="0 0 small 0">
+                    <Button size="small" renderIcon={<PlusInstUIIcon />} onClick={() => setAdding(true)}>
+                      Add comment
+                    </Button>
+                  </View>
+                )
+              )}
 
-                  {effectiveFolders.map(f => {
-                    const isRenaming = renamingId === f.id
-                    const count = commentsIn(f.id).length
-                    return (
-                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', border: `1px solid ${border}`, borderRadius: 6, background: mutedBg }}>
+              {/* Folder accordions */}
+              <Flex direction="column" gap="x-small">
+                {visibleFolders.map(f => {
+                  const isOpen = openFolders.has(f.id)
+                  const isRenaming = renamingId === f.id
+                  const folderComments = commentsIn(f.id)
+                  const folderSelectedCount = folderComments.filter(c => selected.includes(c.id)).length
+                  return (
+                    <div key={f.id} style={{ border: `1px solid ${border}`, borderRadius: 6, overflow: 'hidden' }}>
+                      {/* Accordion header */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: mutedBg, borderBottom: isOpen ? `1px solid ${border}` : 'none' }}>
                         {isRenaming ? (
                           <input
                             autoFocus
@@ -286,148 +333,119 @@ export function CommentLibraryModal({
                             style={{ flex: 1, fontSize: 13, padding: '6px 8px', border: `1px solid ${accentBlue}`, borderRadius: 4, fontFamily: 'inherit', background: '#fff', color: 'inherit', outline: 'none', boxSizing: 'border-box', minWidth: 0 }}
                           />
                         ) : (
-                          <>
+                          <button
+                            type="button"
+                            onClick={() => toggleFolder(f.id)}
+                            aria-expanded={isOpen}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 8, flex: 1,
+                              padding: 0, background: 'transparent', border: 'none',
+                              cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                              color: 'inherit', minWidth: 0,
+                            }}
+                          >
+                            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: '#576773' }}>
+                              {isOpen ? <ChevronDownInstUIIcon size="x-small" /> : <ChevronRightInstUIIcon size="x-small" />}
+                            </span>
                             <Flex.Item shouldGrow shouldShrink>
                               <Text size="small" weight="bold">{f.label}</Text>
-                              {f.id === UNSORTED_ID && (
-                                <>{' '}<Text size="x-small" color="secondary">(system)</Text></>
-                              )}
                             </Flex.Item>
-                            <Text size="x-small" color="secondary">{count}</Text>
-                            {f.canEdit && (
-                              <>
-                                <IconButton
-                                  screenReaderLabel={`Rename ${f.label}`}
-                                  size="small"
-                                  color="secondary"
-                                  withBackground={false}
-                                  withBorder={false}
-                                  renderIcon={<EditInstUIIcon />}
-                                  onClick={() => startRename(f.id, f.label)}
-                                />
-                                <IconButton
-                                  screenReaderLabel={`Delete ${f.label}`}
-                                  size="small"
-                                  color="danger"
-                                  withBackground={false}
-                                  withBorder={false}
-                                  renderIcon={<TrashInstUIIcon />}
-                                  onClick={() => deleteFolder(f.id)}
-                                />
-                              </>
-                            )}
+                            <Text size="x-small" color="secondary">
+                              {folderSelectedCount > 0 ? `${folderSelectedCount}/${folderComments.length}` : folderComments.length}
+                            </Text>
+                          </button>
+                        )}
+                        {managing && f.canEdit && !isRenaming && (
+                          <>
+                            <IconButton
+                              screenReaderLabel={`Rename ${f.label}`}
+                              size="small"
+                              color="secondary"
+                              withBackground={false}
+                              withBorder={false}
+                              renderIcon={<EditInstUIIcon />}
+                              onClick={() => startRename(f.id, f.label)}
+                            />
+                            <IconButton
+                              screenReaderLabel={`Delete ${f.label}`}
+                              size="small"
+                              color="danger"
+                              withBackground={false}
+                              withBorder={false}
+                              renderIcon={<TrashInstUIIcon />}
+                              onClick={() => deleteFolder(f.id)}
+                            />
                           </>
                         )}
                       </div>
-                    )
-                  })}
 
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <input
-                      type="text"
-                      placeholder="New folder name…"
-                      value={newFolderName}
-                      onChange={e => setNewFolderName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') addNewFolder() }}
-                      style={{ flex: 1, fontSize: 13, padding: '8px 10px', border: `1px solid ${border}`, borderRadius: 4, fontFamily: 'inherit', background: '#fff', color: 'inherit', outline: 'none', boxSizing: 'border-box', minWidth: 0 }}
-                    />
-                    <Button
-                      size="small"
-                      color="primary"
-                      renderIcon={<PlusInstUIIcon />}
-                      onClick={addNewFolder}
-                      interaction={newFolderName.trim() ? 'enabled' : 'disabled'}
-                    >
-                      Add folder
-                    </Button>
-                  </div>
-                </Flex>
-              ) : (
-                <>
-                  <Flex alignItems="center" justifyItems="space-between" margin="0 0 small 0">
-                    <Text size="small" color="secondary">
-                      {visible.length} comment{visible.length !== 1 ? 's' : ''} · Click to select
-                    </Text>
-                    {!adding && (
-                      <Button size="small" renderIcon={<PlusInstUIIcon />} onClick={() => setAdding(true)}>
-                        Add comment
-                      </Button>
-                    )}
-                  </Flex>
-
-                  {adding && (
-                    <div style={{ padding: 12, border: `1px solid ${border}`, borderRadius: 6, marginBottom: 12, background: mutedBg }}>
-                      <View as="div" display="block" margin="0 0 small 0">
-                        <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">New comment</Text>
-                      </View>
-                      <TextArea
-                        label={<ScreenReaderContent>Comment text</ScreenReaderContent>}
-                        placeholder="Write a reusable comment…"
-                        value={newText}
-                        onChange={e => setNewText(e.target.value)}
-                        height="80px"
-                        resize="none"
-                      />
-                      <View as="div" display="block" margin="x-small 0 0 0">
-                        <SimpleSelect
-                          renderLabel="Save to folder"
-                          value={newFolder}
-                          onChange={(_e, { value }) => setNewFolder(value as string)}
-                        >
-                          {saveTargets.map(f => (
-                            <SimpleSelect.Option key={f.id} id={`nf-${f.id}`} value={f.id}>{f.label}</SimpleSelect.Option>
-                          ))}
-                        </SimpleSelect>
-                      </View>
-                      <View as="div" display="block" margin="small 0 0 0">
-                        <Flex gap="x-small" justifyItems="end">
-                          <Button size="small" onClick={() => { setAdding(false); setNewText('') }}>Cancel</Button>
-                          <Button size="small" color="primary" onClick={handleSaveNew} interaction={newText.trim() ? 'enabled' : 'disabled'}>
-                            Save to library
-                          </Button>
-                        </Flex>
-                      </View>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {visible.length === 0
-                      ? (
-                        <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                          <Text color="secondary" size="small">No comments match.</Text>
+                      {/* Accordion content */}
+                      {isOpen && (
+                        <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 6, background: containerBg }}>
+                          {folderComments.length === 0
+                            ? <Text size="x-small" color="secondary">No comments in this folder.</Text>
+                            : folderComments.map(c => {
+                                const isSel = selected.includes(c.id)
+                                return (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => toggleSelect(c.id)}
+                                    style={{
+                                      display: 'block', width: '100%', textAlign: 'left',
+                                      padding: '8px 10px',
+                                      border: isSel ? `2px solid ${accentBlue}` : `1px solid ${border}`,
+                                      borderRadius: 4, cursor: 'pointer',
+                                      background: isSel ? '#E8F1FB' : containerBg,
+                                      fontFamily: 'inherit', fontSize: 13, lineHeight: '1.5',
+                                      color: 'inherit', transition: 'border-color 0.12s, background 0.12s',
+                                    }}
+                                  >
+                                    {isSel && (
+                                      <div style={{ fontSize: 10, fontWeight: 700, color: accentBlue, marginBottom: 4 }}>
+                                        ✓ SELECTED
+                                      </div>
+                                    )}
+                                    {c.text}
+                                  </button>
+                                )
+                              })
+                          }
                         </div>
-                      )
-                      : visible.map(c => {
-                        const isSel = selected.includes(c.id)
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => toggle(c.id)}
-                            style={{
-                              display: 'block', width: '100%', textAlign: 'left',
-                              padding: '10px 12px',
-                              border: isSel ? `2px solid ${accentBlue}` : `1px solid ${border}`,
-                              borderRadius: 4, cursor: 'pointer',
-                              background: isSel ? '#E8F1FB' : containerBg,
-                              fontFamily: 'inherit', fontSize: 13, lineHeight: '1.5',
-                              color: 'inherit', transition: 'border-color 0.12s, background 0.12s',
-                            }}
-                          >
-                            {isSel && (
-                              <div style={{ fontSize: 10, fontWeight: 700, color: accentBlue, marginBottom: 4 }}>
-                                ✓ SELECTED
-                              </div>
-                            )}
-                            {c.text}
-                          </button>
-                        )
-                      })
-                    }
-                  </div>
-                </>
-              )}
+                      )}
+                    </div>
+                  )
+                })}
 
+                {visibleFolders.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <Text color="secondary" size="small">No folders in this scope.</Text>
+                  </div>
+                )}
+              </Flex>
+
+              {/* Add folder field — manage mode only, at the bottom */}
+              {managing && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+                  <input
+                    type="text"
+                    placeholder="New folder name…"
+                    value={newFolderName}
+                    onChange={e => setNewFolderName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') addNewFolder() }}
+                    style={{ flex: 1, fontSize: 13, padding: '8px 10px', border: `1px solid ${border}`, borderRadius: 4, fontFamily: 'inherit', background: '#fff', color: 'inherit', outline: 'none', boxSizing: 'border-box', minWidth: 0 }}
+                  />
+                  <Button
+                    size="small"
+                    color="primary"
+                    renderIcon={<PlusInstUIIcon />}
+                    onClick={addNewFolder}
+                    interaction={newFolderName.trim() ? 'enabled' : 'disabled'}
+                  >
+                    Add folder
+                  </Button>
+                </div>
+              )}
             </div>
           </Flex.Item>
 
