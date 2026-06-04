@@ -31,7 +31,6 @@ import {
   SettingsInstUIIcon,
   ChevronRightInstUIIcon,
   CheckInstUIIcon,
-  LockInstUIIcon,
   IconCanvasLogoSolid,
 } from '@instructure/ui-icons'
 import {
