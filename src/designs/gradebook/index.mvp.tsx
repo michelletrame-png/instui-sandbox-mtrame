@@ -10,6 +10,7 @@ import { Avatar } from '@instructure/ui-avatar/latest'
 import { Pill } from '@instructure/ui-pill/latest'
 import { TextInput } from '@instructure/ui-text-input/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
+import { Menu } from '@instructure/ui-menu/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
 import { Tray } from '@instructure/ui-tray/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
@@ -470,9 +471,8 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
   const [newSchemeName, setNewSchemeName]     = useState('')
   const [newSchemeRows, setNewSchemeRows]     = useState<GradeRow[]>(DEFAULT_ROWS)
   const [rowNextId, setRowNextId]             = useState(6)
-  // Visibility Settings
+  // Visibility / student-view
   const [hideGradeTotals, setHideGradeTotals]       = useState(false)
-  const [anonymizeAnnotations, setAnonymizeAnnotations] = useState(false)
 
   // Late Policies
   const [autoDeductLate, setAutoDeductLate]         = useState(true)
@@ -487,8 +487,6 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
   const [postFor, setPostFor]                   = useState<'everyone' | 'graded'>('graded')
   const [postSection, setPostSection]           = useState('all')
   const [postConfirmed, setPostConfirmed]       = useState(false)
-  // Visibility Settings (continued)
-  const [anonymousGrading, setAnonymousGrading]       = useState(false)
   // Gradebook Settings (visual/display)
   const [columnSortOrder, setColumnSortOrder]         = useState('due-date')
   const [showUnpublished, setShowUnpublished]         = useState(false)
@@ -499,6 +497,14 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
   const [filterSection, setFilterSection]   = useState('all')
   const [filterGroup, setFilterGroup]       = useState('all')
   const [filterPanelOpen, setFilterPanelOpen] = useState(false)
+
+  const [exportMsg, setExportMsg] = useState<string | null>(null)
+  const exportMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  function triggerExport(format: 'csv' | 'xlsx') {
+    if (exportMsgTimer.current) clearTimeout(exportMsgTimer.current)
+    setExportMsg(`Downloaded gradebook.${format}`)
+    exportMsgTimer.current = setTimeout(() => setExportMsg(null), 3000)
+  }
 
   function openTray(studentId: string, assignmentIdx: number) {
     setInfoTray({ studentId, assignmentIdx })
@@ -551,10 +557,13 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
       })
     })
     .sort((a, b) => {
-      if (sortBy === 'grade') {
+      if (sortBy === 'grade' || sortBy === 'grade-asc') {
         const pa = STUDENT_DEFS.find(s => s.id === a.id)?.perf ?? 0
         const pb = STUDENT_DEFS.find(s => s.id === b.id)?.perf ?? 0
-        return pb - pa
+        return sortBy === 'grade' ? pb - pa : pa - pb
+      }
+      if (sortBy === 'name-desc') {
+        return b.name.localeCompare(a.name)
       }
       if (sortBy === 'risk') {
         const ra = atRiskIds.has(a.id) ? 0 : 1
@@ -670,8 +679,10 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                   <Flex alignItems="end" gap="small" wrap="no-wrap">
                     <TextInput renderLabel={<ScreenReaderContent>Search students</ScreenReaderContent>} placeholder="Search students…" value={search} onChange={(_e, value) => setSearch(value)} renderBeforeInput={<SearchInstUIIcon />} shouldNotWrap width="220px" />
                     <SimpleSelect renderLabel={<ScreenReaderContent>Sort students</ScreenReaderContent>} value={sortBy} onChange={(_e, { value }) => setSortBy(value as string)} width="200px">
-                      <SimpleSelect.Option id="name"  value="name">Sort: Name A–Z</SimpleSelect.Option>
-                      <SimpleSelect.Option id="grade" value="grade">Sort: Current grade</SimpleSelect.Option>
+                      <SimpleSelect.Option id="name"      value="name">Sort: Name A–Z</SimpleSelect.Option>
+                      <SimpleSelect.Option id="name-desc" value="name-desc">Sort: Name Z–A</SimpleSelect.Option>
+                      <SimpleSelect.Option id="grade"     value="grade">Sort: Grade high–low</SimpleSelect.Option>
+                      <SimpleSelect.Option id="grade-asc" value="grade-asc">Sort: Grade low–high</SimpleSelect.Option>
                     </SimpleSelect>
                     {/* eslint-disable instui/no-hardcoded-hex */}
                     <div style={{ position: 'relative' }}>
@@ -741,7 +752,21 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                     {/* eslint-enable instui/no-hardcoded-hex */}
                   </Flex>
                   <Flex alignItems="center" gap="small">
-                    <Button color="secondary" size="medium">Export</Button>
+                    {exportMsg && (
+                      <Flex alignItems="center" gap="xx-small">
+                        <CheckInstUIIcon size="x-small" color="accentGreenColor" />
+                        <Text size="small" color="success">{exportMsg}</Text>
+                      </Flex>
+                    )}
+                    <Menu
+                      label="Export gradebook"
+                      placement="bottom end"
+                      trigger={<Button color="secondary" size="medium">Export</Button>}
+                      onSelect={(_e, value) => triggerExport(value as 'csv' | 'xlsx')}
+                    >
+                      <Menu.Item value="csv">CSV (.csv)</Menu.Item>
+                      <Menu.Item value="xlsx">Excel (.xlsx)</Menu.Item>
+                    </Menu>
                   </Flex>
                 </Flex>
 
@@ -759,10 +784,17 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                               <span style={{ fontSize: 11, color: '#8d959f' }}>{a.dueLabel} · {a.pts} pts</span>
                               {a.pastDue && (
                                 <div style={{ marginTop: 2, display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start' }}>
-                                  {ungradedCountByAssignment[aIdx] > 0
-                                    ? <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: '#FDE8D4', color: '#CF4A00', whiteSpace: 'nowrap' }}>{ungradedCountByAssignment[aIdx]} need grading</span>
-                                    : <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: '#D6ECD9', color: '#03893D', whiteSpace: 'nowrap' }}>All graded</span>
-                                  }
+                                  {(() => {
+                                    const needsGrading = ungradedCountByAssignment[aIdx] > 0
+                                    const firstUngraded = needsGrading ? STUDENTS.find(s => needsGradingLive(s.id, aIdx))?.id : undefined
+                                    const target = firstUngraded
+                                      ? `/gradebook-workspace-mvp?s=${firstUngraded}&a=${aIdx}`
+                                      : `/gradebook-workspace-mvp?a=${aIdx}`
+                                    const baseStyle = { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', fontFamily: 'inherit' } as const
+                                    return needsGrading
+                                      ? <button type="button" onClick={() => navigate(target)} style={{ ...baseStyle, background: '#FDE8D4', color: '#CF4A00' }}>{ungradedCountByAssignment[aIdx]} need grading</button>
+                                      : <button type="button" onClick={() => navigate(target)} style={{ ...baseStyle, background: '#D6ECD9', color: '#03893D' }}>All graded</button>
+                                  })()}
                                   {a.unposted && (
                                     <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 10, background: '#D0E8FF', color: '#0770A3', whiteSpace: 'nowrap' }}>{a.unpostedCount} unposted</span>
                                   )}
@@ -889,12 +921,9 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                 {[
                   'Assignment Group Weights',
                   'Grading Schemes',
-                  'Visibility Settings',
-                  'Late Policies',
-                  'Missing Policies',
+                  'Submission Policies',
                   'Posting Policies',
                   'Gradebook Settings',
-                  'About',
                 ].map((item, i, arr) => (
                   <button
                     key={item}
@@ -1148,36 +1177,10 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
               </div>
             )}
 
-            {/* ── Visibility Settings ── */}
-            {settingsPanel === 'Visibility Settings' && (
-              <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {([
-                  { key: 'hideGradeTotals',      label: 'Hide grade totals from students',         desc: 'Students will only see assignment scores, not their overall course grade.',      val: hideGradeTotals,       set: setHideGradeTotals },
-                  { key: 'anonymizeAnnotations', label: 'Anonymize instructor annotations',         desc: 'Grader names are hidden in submission annotations.',                            val: anonymizeAnnotations,  set: setAnonymizeAnnotations },
-                  { key: 'anonymousGrading',     label: 'Anonymous grading',                        desc: 'Student names are hidden from graders to reduce bias during grading.',           val: anonymousGrading,      set: setAnonymousGrading },
-                ] as const).map(({ key, label, desc, val, set }) => (
-                  <div key={key} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#273540' }}>{label}</div>
-                      <div style={{ fontSize: 12, color: '#576773', marginTop: 2 }}>{desc}</div>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={val}
-                      onClick={() => set(v => !v)}
-                      style={{ width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', flexShrink: 0, background: val ? '#0770a3' : '#c7cdd1', position: 'relative', transition: 'background 0.15s', marginTop: 2 }}
-                    >
-                      <span style={{ position: 'absolute', top: 3, left: val ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.15s', display: 'block' }} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* ── Late Policies ── */}
-            {settingsPanel === 'Late Policies' && (
-              <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {settingsPanel === 'Submission Policies' && (
+              <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#576773', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Late Submissions</div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: '#273540' }}>Automatically deduct points</div>
@@ -1237,12 +1240,10 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                     </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* ── Missing Policies ── */}
-            {settingsPanel === 'Missing Policies' && (
-              <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ borderTop: `1px solid ${border}` }} />
+
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#576773', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Missing Submissions</div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: '#273540' }}>Auto-assign missing submission grade</div>
@@ -1484,96 +1485,31 @@ export default function GradebookPrototype({ isDark, onToggleTheme }: PrototypeP
                   )}
                 </div>
 
-              </div>
-            )}
+                <div style={{ borderTop: `1px solid ${border}` }} />
 
-            {/* ── About ── */}
-            {settingsPanel === 'About' && (
-              <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#273540', marginBottom: 4 }}>Enabled Features</div>
-                  <div style={{ fontSize: 12, color: '#576773', lineHeight: 1.5 }}>Features active in this course, who enabled them, and whether they can be changed.</div>
-                </div>
-
+                {/* Student view */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Enhanced Rubrics — admin locked */}
-                  <div style={{ border: `1px solid ${border}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#273540' }}>Enhanced Rubrics</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#fde8d4', color: '#7c3a00' }}>
-                        <LockInstUIIcon size="x-small" />
-                        Admin
-                      </span>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#576773', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Student View</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#273540' }}>Hide grade totals from students</div>
+                      <div style={{ fontSize: 12, color: '#576773', marginTop: 2 }}>Students will only see assignment scores, not their overall course grade.</div>
                     </div>
-                    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#d6ecd9', color: '#03893d' }}>
-                          <CheckInstUIIcon size="x-small" />
-                          On
-                        </span>
-                        <span style={{ fontSize: 12, color: '#576773' }}>Enabled and locked by your institution</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: '#8d959f', lineHeight: 1.5 }}>This setting cannot be changed at the course level. Contact your Canvas administrator to modify it.</div>
-                    </div>
-                  </div>
-
-                  {/* Performance Upgrades for Speedgrader — user set */}
-                  <div style={{ border: `1px solid ${border}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#273540' }}>Performance Upgrades for Speedgrader</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#d0e8ff', color: '#0770a3' }}>
-                        Course
-                      </span>
-                    </div>
-                    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#d6ecd9', color: '#03893d' }}>
-                          <CheckInstUIIcon size="x-small" />
-                          On
-                        </span>
-                        <span style={{ fontSize: 12, color: '#576773' }}>Enabled at the course level by you</span>
-                      </div>
-                      <a
-                        href="#"
-                        style={{ fontSize: 12, color: '#0770a3', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                        onClick={e => e.preventDefault()}
-                      >
-                        Change in Course Settings
-                        <ChevronRightInstUIIcon size="x-small" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Submission Stickers — off, user can change */}
-                  <div style={{ border: `1px solid ${border}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#273540' }}>Submission Stickers</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#d0e8ff', color: '#0770a3' }}>
-                        Course
-                      </span>
-                    </div>
-                    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#eaecec', color: '#576773' }}>
-                          Off
-                        </span>
-                        <span style={{ fontSize: 12, color: '#576773' }}>Not enabled for this course</span>
-                      </div>
-                      <a
-                        href="#"
-                        style={{ fontSize: 12, color: '#0770a3', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                        onClick={e => e.preventDefault()}
-                      >
-                        Change in Course Settings
-                        <ChevronRightInstUIIcon size="x-small" />
-                      </a>
-                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={hideGradeTotals}
+                      onClick={() => setHideGradeTotals(v => !v)}
+                      style={{ width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer', flexShrink: 0, background: hideGradeTotals ? '#0770a3' : '#c7cdd1', position: 'relative', transition: 'background 0.15s', marginTop: 2 }}
+                    >
+                      <span style={{ position: 'absolute', top: 3, left: hideGradeTotals ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left 0.15s', display: 'block' }} />
+                    </button>
                   </div>
                 </div>
 
               </div>
             )}
+
 
           </div>
         </View>

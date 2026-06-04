@@ -7,6 +7,7 @@ import { Text } from '@instructure/ui-text/latest'
 import { Button, IconButton } from '@instructure/ui-buttons/latest'
 import { TextArea } from '@instructure/ui-text-area/latest'
 import { Popover } from '@instructure/ui-popover/latest'
+import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { Avatar } from '@instructure/ui-avatar/latest'
 import { Breadcrumb } from '@instructure/ui-breadcrumb/latest'
 import { SideNavBar } from '@instructure/ui-side-nav-bar/latest'
@@ -606,6 +607,42 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
   const mediaMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevStudentIdxRef   = useRef(initStudentIdx)
 
+  // Rubric view preference — persists across assignments/sessions
+  const [rubricView, setRubricView] = useState<'compact' | 'traditional'>(() => {
+    const v = localStorage.getItem('mvp-rubric-view')
+    return v === 'traditional' ? 'traditional' : 'compact'
+  })
+  useEffect(() => { localStorage.setItem('mvp-rubric-view', rubricView) }, [rubricView])
+  // Per-row expand state for traditional view (criterion.id → bool)
+  const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
+  // Manual per-criterion score overrides — when present, takes precedence over the selected level's points
+  const [rubricOverrides, setRubricOverrides] = useState<Record<string, number>>({})
+
+  // Grading-panel width — drag-resizable, persisted
+  const [panelWidth, setPanelWidth] = useState<number>(() => {
+    const n = Number(localStorage.getItem('mvp-panel-width'))
+    return Number.isFinite(n) && n >= 280 && n <= 900 ? n : 360
+  })
+  useEffect(() => { localStorage.setItem('mvp-panel-width', String(panelWidth)) }, [panelWidth])
+  const resizingRef = useRef<{ startX: number; startWidth: number } | null>(null)
+  function onResizeStart(e: React.MouseEvent) {
+    e.preventDefault()
+    resizingRef.current = { startX: e.clientX, startWidth: panelWidth }
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return
+      const dx = resizingRef.current.startX - ev.clientX
+      const next = Math.max(280, Math.min(900, resizingRef.current.startWidth + dx))
+      setPanelWidth(next)
+    }
+    const onUp = () => {
+      resizingRef.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
   // Persist current position so gradebook can return to the same student/assignment
   useEffect(() => {
     sessionStorage.setItem('mvp-workspace-pos', JSON.stringify({
@@ -760,6 +797,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     prevAssignmentIdxRef.current = assignmentIdx
 
     userModifiedRubricRef.current = false
+    setRubricOverrides({})
     if (assignment.hasRubric) {
       const stored = getRubricState(student.id, assignmentIdx)
       setRubric(stored !== undefined ? stored
@@ -816,7 +854,12 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
   function selectRubricLevel(criterionId: string, idx: number) {
     const next = { ...rubric, [criterionId]: idx }
+    // Clicking a level clears any manual override for that criterion
+    const nextOverrides = { ...rubricOverrides }
+    delete nextOverrides[criterionId]
+    setRubricOverrides(nextOverrides)
     const newTotal = RUBRIC_TEMPLATE.reduce((sum, c) => {
+      if (nextOverrides[c.id] !== undefined) return sum + nextOverrides[c.id]
       const i = next[c.id]
       return sum + (i !== undefined ? c.levels[i].pts : 0)
     }, 0)
@@ -843,10 +886,35 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
     setSendError(false)
   }
 
-  const rubricTotal = RUBRIC_TEMPLATE.reduce((sum, c) => {
+  function criterionPoints(c: typeof RUBRIC_TEMPLATE[number]): number | undefined {
+    if (rubricOverrides[c.id] !== undefined) return rubricOverrides[c.id]
     const idx = rubric[c.id]
-    return sum + (idx !== undefined ? c.levels[idx].pts : 0)
-  }, 0)
+    return idx !== undefined ? c.levels[idx].pts : undefined
+  }
+  const rubricTotal = RUBRIC_TEMPLATE.reduce((sum, c) => sum + (criterionPoints(c) ?? 0), 0)
+
+  function setCriterionOverride(criterionId: string, raw: string) {
+    const next = { ...rubricOverrides }
+    if (raw.trim() === '' || isNaN(Number(raw))) {
+      delete next[criterionId]
+    } else {
+      const max = RUBRIC_TEMPLATE.find(c => c.id === criterionId)?.points ?? 0
+      next[criterionId] = Math.max(0, Math.min(max, Number(raw)))
+    }
+    setRubricOverrides(next)
+    // Recompute and persist total
+    const newTotal = RUBRIC_TEMPLATE.reduce((sum, c) => {
+      if (next[c.id] !== undefined) return sum + next[c.id]
+      const idx = rubric[c.id]
+      return sum + (idx !== undefined ? c.levels[idx].pts : 0)
+    }, 0)
+    setScore(student.id, assignmentIdx, newTotal)
+    if (getStatus(student.id, assignmentIdx) === 'ungraded') {
+      setStatus(student.id, assignmentIdx, 'graded')
+      setGradingVersion(v => v + 1)
+    }
+    userModifiedRubricRef.current = true
+  }
 
   // A grade is present either from rubric scoring or a number in the grade input
   const hasGrade = assignment.hasRubric
@@ -1140,6 +1208,10 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                         containerBg={containerBg}
                       />
 
+                      <Text size="x-small" color="secondary">
+                        {studentOrderPos + 1} of {sortedStudentIndices.length}
+                      </Text>
+
                       <IconButton
                         screenReaderLabel="Next student"
                         withBackground={false}
@@ -1162,14 +1234,38 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
               </div>
 
               {/* ── Grading panel ── */}
-              <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${border}`, background: containerBg, overflowY: 'auto' }}>
+              {/* Drag handle (left edge) for resizing the grading panel */}
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize grading panel"
+                onMouseDown={onResizeStart}
+                style={{
+                  width: 6, cursor: 'col-resize', flexShrink: 0,
+                  background: 'transparent', borderLeft: `1px solid ${border}`,
+                  zIndex: 1,
+                }}
+              />
+              <div style={{ width: panelWidth, flexShrink: 0, display: 'flex', flexDirection: 'column', background: containerBg, overflowY: 'auto' }}>
 
 
                 {/* Rubric */}
                 {assignment.hasRubric && (
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
                   <Flex alignItems="center" justifyItems="space-between" margin="0 0 small 0">
-                    <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Rubric</Text>
+                    <Flex alignItems="center" gap="small">
+                      <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Rubric</Text>
+                      <SimpleSelect
+                        renderLabel={<ScreenReaderContent>Rubric view</ScreenReaderContent>}
+                        size="small"
+                        value={rubricView}
+                        onChange={(_e, { value }) => setRubricView(value as 'compact' | 'traditional')}
+                        width="140px"
+                      >
+                        <SimpleSelect.Option id="rv-compact" value="compact">Compact</SimpleSelect.Option>
+                        <SimpleSelect.Option id="rv-traditional" value="traditional">Traditional</SimpleSelect.Option>
+                      </SimpleSelect>
+                    </Flex>
                     <Button
                       size="small"
                       color="secondary"
@@ -1193,7 +1289,7 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                     </div>
                   </div>
 
-                  {RUBRIC_TEMPLATE.map(criterion => {
+                  {rubricView === 'compact' && RUBRIC_TEMPLATE.map(criterion => {
                     const selectedIdx = rubric[criterion.id]
                     return (
                       <View as="div" display="block" margin="0 0 medium 0" key={criterion.id}>
@@ -1234,6 +1330,92 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       </View>
                     )
                   })}
+
+                  {rubricView === 'traditional' && (
+                    <div style={{ overflowX: 'auto', border: `1px solid ${border}`, borderRadius: 6 }}>
+                      <div style={{ minWidth: 720 }}>
+                        <div style={{ padding: '8px 12px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
+                          <Text size="small" weight="bold">{assignment.name}</Text>
+                        </div>
+                        <div style={{ padding: '6px 12px', background: mutedBg, borderBottom: `1px solid ${border}` }}>
+                          <Text size="x-small" weight="bold" transform="uppercase" letterSpacing="expanded" color="secondary">Criteria</Text>
+                        </div>
+                        {RUBRIC_TEMPLATE.map(criterion => {
+                          const selectedIdx = rubric[criterion.id]
+                          const expanded = !!expandedCriteria[criterion.id]
+                          return (
+                            <div key={criterion.id} style={{ display: 'flex', borderBottom: `1px solid ${border}`, alignItems: 'stretch' }}>
+                              <div style={{ width: 170, flexShrink: 0, padding: '10px 12px', borderRight: `1px solid ${border}` }}>
+                                <Text size="small" weight="bold">{criterion.label}</Text>
+                                {expanded && (
+                                  <View as="div" display="block" margin="x-small 0 0 0">
+                                    <Text size="x-small" color="secondary">{criterion.description}</Text>
+                                  </View>
+                                )}
+                                <View as="div" display="block" margin="x-small 0 0 0">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedCriteria(prev => ({ ...prev, [criterion.id]: !prev[criterion.id] }))}
+                                    style={{ padding: 0, border: 'none', background: 'transparent', color: accentBlue, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+                                  >
+                                    {expanded ? 'Collapse Criterion' : 'Expand Criterion'}
+                                  </button>
+                                </View>
+                              </div>
+                              <div style={{ display: 'flex', flex: 1 }}>
+                                {criterion.levels.map((level, idx) => {
+                                  const isSelected = selectedIdx === idx
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => selectRubricLevel(criterion.id, idx)}
+                                      style={{
+                                        flex: 1, minWidth: 72, padding: '8px 6px',
+                                        borderRight: idx < criterion.levels.length - 1 ? `1px solid ${border}` : 'none',
+                                        background: isSelected ? mutedBg : containerBg,
+                                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
+                                        border: 'none',
+                                        outline: isSelected ? `3px solid ${accentBlue}` : 'none',
+                                        outlineOffset: -3,
+                                        position: 'relative',
+                                      }}
+                                    >
+                                      <div style={{ fontSize: 11, fontWeight: 700, color: textBase, lineHeight: 1.2 }}>{level.label}</div>
+                                      <div style={{ fontSize: 10, fontWeight: 600, color: textMuted, marginTop: 2 }}>{level.pts} pts</div>
+                                      {expanded && (
+                                        <div style={{ fontSize: 10, color: textMuted, marginTop: 6, textAlign: 'left' }}>{level.description}</div>
+                                      )}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                              <div style={{ width: 110, flexShrink: 0, padding: '10px 8px', borderLeft: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={criterion.points}
+                                  value={criterionPoints(criterion) ?? ''}
+                                  onChange={e => setCriterionOverride(criterion.id, e.target.value)}
+                                  aria-label={`${criterion.label} points`}
+                                  style={{
+                                    width: 48, height: 30, fontSize: 14, fontWeight: 700, textAlign: 'center',
+                                    border: `1px solid ${border}`, borderRadius: 4, outline: 'none',
+                                    fontFamily: 'inherit', background: 'transparent', color: 'inherit',
+                                  }}
+                                  placeholder="--"
+                                />
+                                <span style={{ fontSize: 11, color: textMuted }}>/ {criterion.points}</span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 12px', background: mutedBg }}>
+                          <Text size="small" weight="bold">Total Points: {rubricTotal} / {RUBRIC_MAX}</Text>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Total + Save */}
                   <View as="div" display="block" borderWidth="small 0 0 0" padding="medium 0 0 0">
@@ -1303,23 +1485,28 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
 
                   <View as="div" display="block" margin="x-small 0 0 0">
                     <Flex justifyItems="end" gap="x-small">
-                      <Button color="secondary" size="small" renderIcon={<SendInstUIIcon />} onClick={sendComment}>
-                        Send
-                      </Button>
-                      <Button
-                        color="primary"
-                        size="small"
-                        renderIcon={sendAndNext ? <SendInstUIIcon /> : undefined}
-                        onClick={() => {
-                          if (sendAndNext) sendComment()
-                          if (nextUngraded) {
-                            setStudentIdx(nextUngraded.studentIdx)
-                            setAssignmentIdx(nextUngraded.assignmentIdx)
-                          }
-                        }}
-                      >
-                        {sendAndNext ? 'Send + Next' : 'Next'}
-                      </Button>
+                      {!assignment.hasRubric && (
+                        <Button color="primary" size="small" renderIcon={<SendInstUIIcon />} onClick={sendComment}>
+                          Send
+                        </Button>
+                      )}
+                      {assignment.hasRubric && (
+                        <Button
+                          color="primary"
+                          size="small"
+                          renderIcon={sendAndNext ? <SendInstUIIcon /> : undefined}
+                          interaction={nextUngraded ? 'enabled' : 'disabled'}
+                          onClick={() => {
+                            if (sendAndNext) sendComment()
+                            if (nextUngraded) {
+                              setStudentIdx(nextUngraded.studentIdx)
+                              setAssignmentIdx(nextUngraded.assignmentIdx)
+                            }
+                          }}
+                        >
+                          {sendAndNext ? 'Send and Next' : 'Next'}
+                        </Button>
+                      )}
                     </Flex>
                   </View>
 
@@ -1361,15 +1548,17 @@ export default function GradingWorkspaceMVP({ isDark, onToggleTheme }: Prototype
                       <Button
                         size="small"
                         color="primary"
+                        renderIcon={sendAndNext ? <SendInstUIIcon /> : undefined}
                         interaction={nextUngraded ? 'enabled' : 'disabled'}
                         onClick={() => {
+                          if (sendAndNext) sendComment()
                           if (nextUngraded) {
                             setStudentIdx(nextUngraded.studentIdx)
                             setAssignmentIdx(nextUngraded.assignmentIdx)
                           }
                         }}
                       >
-                        Next
+                        {sendAndNext ? 'Send and Next' : 'Next'}
                       </Button>
                     </Flex>
                   </div>

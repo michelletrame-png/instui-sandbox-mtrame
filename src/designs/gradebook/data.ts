@@ -781,21 +781,14 @@ export const COMMENT_LIB: Record<string, CommentEntry[]> = {
     { id: 'a2', text: 'The assignment required comparison of at least two peer-reviewed sources. Please revise to include a second source.' },
     { id: 'a3', text: 'Remember to include the required section on evolutionary implications in your final draft.' },
   ],
-  ai_suggested: [
-    { id: 'ai1', text: 'Your thesis directly addresses the prompt with a clear, arguable claim. This sets a strong foundation for the rest of your essay.' },
-    { id: 'ai2', text: 'The endosymbiotic theory section would benefit from at least one additional primary source to strengthen your claim.' },
-    { id: 'ai3', text: 'Your evidence integration is a highlight of this paper — you consistently explain how each source supports your argument rather than simply citing it.' },
-    { id: 'ai4', text: 'Consider revising your conclusion to extend your argument to broader biological implications, rather than restating your opening.' },
-  ],
 }
 
 export const COMMENT_FOLDERS = [
-  { id: 'all',          label: 'All Comments',        ai: false },
-  { id: 'encouragement',label: 'Encouragement',        ai: false },
-  { id: 'improvement',  label: 'Improvement',          ai: false },
-  { id: 'writing',      label: 'Writing Style',        ai: false },
-  { id: 'assignment',   label: 'Assignment-Specific',  ai: false },
-  { id: 'ai_suggested', label: '✦ AI Suggested',       ai: true  },
+  { id: 'all',          label: 'All Comments'       },
+  { id: 'encouragement',label: 'Encouragement'      },
+  { id: 'improvement',  label: 'Improvement'        },
+  { id: 'writing',      label: 'Writing Style'      },
+  { id: 'assignment',   label: 'Assignment-Specific'},
 ] as const
 
 // ── Rubric store ───────────────────────────────────────────────────────────────
