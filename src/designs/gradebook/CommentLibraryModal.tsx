@@ -97,17 +97,26 @@ export function CommentLibraryModal({
   const customList: EffectiveFolder[] = folders.custom
     .map(f => ({ id: f.id, label: displayLabel(f.id, f.label), isBuiltIn: false, canEdit: true }))
 
+  const hasFolders = builtInList.length + customList.length > 0
+
   function commentsIn(id: string): CommentEntry[] {
-    if (id === UNSORTED_ID) return custom[UNSORTED_ID] ?? []
+    if (id === UNSORTED_ID) {
+      // Custom orphans + seed comments from any deleted built-in folder.
+      const orphans = custom[UNSORTED_ID] ?? []
+      const fromDeletedBuiltIns = folders.deleted.flatMap(d => COMMENT_LIB[d] ?? [])
+      return [...orphans, ...fromDeletedBuiltIns]
+    }
     return [...(COMMENT_LIB[id] ?? []), ...(custom[id] ?? [])]
   }
-  const unsortedCount = (custom[UNSORTED_ID] ?? []).length
-  const unsortedItem: EffectiveFolder[] = unsortedCount > 0
+  const unsortedCount = commentsIn(UNSORTED_ID).length
+  const unsortedItem: EffectiveFolder[] = (!hasFolders || unsortedCount > 0)
     ? [{ id: UNSORTED_ID, label: UNSORTED_LABEL, isBuiltIn: false, canEdit: false }]
     : []
   const effectiveFolders: EffectiveFolder[] = [...builtInList, ...customList, ...unsortedItem]
 
   function inScope(folderId: string): boolean {
+    // When no real folders exist, Unsorted is the only home and should show in every scope.
+    if (folderId === UNSORTED_ID && !hasFolders) return true
     if (scope === 'all') return true
     if (scope === 'assignment') return ASSIGNMENT_SET.has(folderId)
     return !ASSIGNMENT_SET.has(folderId)
@@ -136,12 +145,13 @@ export function CommentLibraryModal({
   function handleSaveNew() {
     const text = newText.trim()
     if (!text) return
+    const targetId = saveTargets.some(f => f.id === newFolder) ? newFolder : UNSORTED_ID
     const entry: CommentEntry = { id: `u${Date.now()}`, text }
-    const next: CustomStore = { ...custom, [newFolder]: [...(custom[newFolder] ?? []), entry] }
+    const next: CustomStore = { ...custom, [targetId]: [...(custom[targetId] ?? []), entry] }
     setCustom(next); saveCustom(next)
     setAdding(false); setNewText('')
     // Auto-open the folder we just saved into so the user sees it
-    setOpenFolders(prev => new Set([...prev, newFolder]))
+    setOpenFolders(prev => new Set([...prev, targetId]))
   }
 
   // Folder CRUD
@@ -282,17 +292,23 @@ export function CommentLibraryModal({
                       height="80px"
                       resize="none"
                     />
-                    <View as="div" display="block" margin="x-small 0 0 0">
-                      <SimpleSelect
-                        renderLabel="Save to folder"
-                        value={newFolder}
-                        onChange={(_e, { value }) => setNewFolder(value as string)}
-                      >
-                        {saveTargets.map(f => (
-                          <SimpleSelect.Option key={f.id} id={`nf-${f.id}`} value={f.id}>{f.label}</SimpleSelect.Option>
-                        ))}
-                      </SimpleSelect>
-                    </View>
+                    {saveTargets.length > 0 ? (
+                      <View as="div" display="block" margin="x-small 0 0 0">
+                        <SimpleSelect
+                          renderLabel="Save to folder"
+                          value={saveTargets.some(f => f.id === newFolder) ? newFolder : saveTargets[0].id}
+                          onChange={(_e, { value }) => setNewFolder(value as string)}
+                        >
+                          {saveTargets.map(f => (
+                            <SimpleSelect.Option key={f.id} id={`nf-${f.id}`} value={f.id}>{f.label}</SimpleSelect.Option>
+                          ))}
+                        </SimpleSelect>
+                      </View>
+                    ) : (
+                      <View as="div" display="block" margin="x-small 0 0 0">
+                        <Text size="x-small" color="secondary">Will be saved to Unsorted.</Text>
+                      </View>
+                    )}
                     <View as="div" display="block" margin="small 0 0 0">
                       <Flex gap="x-small" justifyItems="end">
                         <Button size="small" onClick={() => { setAdding(false); setNewText('') }}>Cancel</Button>
