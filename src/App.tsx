@@ -64,7 +64,7 @@ export default function App() {
         </Suspense>
       )
       : <Suspense fallback={loader}><p.component isDark={isDark} onToggleTheme={onToggleTheme} /></Suspense>
-    return <Route key={p.id} path={routePath} element={element} />
+    return <Route key={`${p.id}@${routePath}`} path={routePath} element={element} />
   }
 
   return (
@@ -72,10 +72,17 @@ export default function App() {
       <ScrollbarStyle />
       <Routes>
         {staticPrototypePath ? (
-          // Static single-prototype export — render directly at root, no sub-routes
-          prototypes
-            .filter(p => p.path === staticPrototypePath)
-            .map(p => prototypeRoute(p, '/'))
+          // Static export — mount the active prototype at both `/` and its declared path
+          // so cross-prototype links (e.g., gradebook ↔ workspace) resolve.
+          <>
+            {prototypes
+              .filter(p => p.path === staticPrototypePath)
+              .flatMap(p => [prototypeRoute(p, '/'), prototypeRoute(p, p.path)])}
+            <Route
+              path="/gradebook-workspace-mvp"
+              element={<GradingWorkspaceMVP isDark={isDark} onToggleTheme={onToggleTheme} />}
+            />
+          </>
         ) : (
           <>
             <Route path="/" element={<Home themeKey={themeKey} themeNames={themeNames} onThemeChange={setThemeKey} />} />
