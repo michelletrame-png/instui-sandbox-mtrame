@@ -11,7 +11,7 @@ import { Button, IconButton } from '@instructure/ui-buttons/latest'
 import { TextArea } from '@instructure/ui-text-area/latest'
 import { SimpleSelect } from '@instructure/ui-simple-select/latest'
 import { ScreenReaderContent } from '@instructure/ui-a11y-content'
-import { XInstUIIcon, PlusInstUIIcon, EditInstUIIcon, TrashInstUIIcon, SettingsInstUIIcon, CheckInstUIIcon, ChevronDownInstUIIcon, ChevronRightInstUIIcon } from '@instructure/ui-icons'
+import { XInstUIIcon, PlusInstUIIcon, EditInstUIIcon, TrashInstUIIcon, SettingsInstUIIcon, CheckInstUIIcon, ChevronDownInstUIIcon, ChevronRightInstUIIcon, LibraryInstUIIcon } from '@instructure/ui-icons'
 import { COMMENT_LIB, COMMENT_FOLDERS, type CommentEntry } from './data'
 
 const CUSTOM_KEY     = 'mvp-comment-lib-custom'
@@ -205,6 +205,8 @@ export function CommentLibraryModal({
   }
 
   const saveTargets = effectiveFolders.filter(f => f.id !== UNSORTED_ID)
+  const libraryHasAnything = effectiveFolders.some(f => commentsIn(f.id).length > 0)
+  const showEmptyState = !managing && !adding && !libraryHasAnything
   const SCOPES: Array<{ id: 'all' | 'assignment' | 'course'; label: string }> = [
     { id: 'all',        label: 'All' },
     { id: 'assignment', label: 'This assignment' },
@@ -277,8 +279,26 @@ export function CommentLibraryModal({
           <Flex.Item shouldGrow shouldShrink>
             <div style={{ padding: '20px 20px', height: '100%', overflowY: 'auto', background: containerBg }}>
 
+              {/* Empty state */}
+              {showEmptyState && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '32px 16px' }}>
+                  <View as="div" display="block" margin="0 0 small 0">
+                    <LibraryInstUIIcon size="medium" color="secondary" />
+                  </View>
+                  <Heading level="h4" margin="0 0 x-small 0">Your comment library is empty</Heading>
+                  <View as="div" display="block" margin="0 0 medium 0">
+                    <Text size="small" color="secondary">
+                      Save reusable feedback to grade faster. Comments you add here will appear in this tray.
+                    </Text>
+                  </View>
+                  <Button color="primary" renderIcon={<PlusInstUIIcon />} onClick={() => setAdding(true)}>
+                    Add your first comment
+                  </Button>
+                </div>
+              )}
+
               {/* Add comment trigger / form */}
-              {!managing && (
+              {!managing && !showEmptyState && (
                 adding ? (
                   <div style={{ padding: 12, border: `1px solid ${border}`, borderRadius: 6, marginBottom: 16, background: mutedBg }}>
                     <View as="div" display="block" margin="0 0 small 0">
@@ -328,6 +348,7 @@ export function CommentLibraryModal({
               )}
 
               {/* Folder accordions */}
+              {!showEmptyState && (
               <Flex direction="column" gap="x-small">
                 {visibleFolders.map(f => {
                   const isOpen = openFolders.has(f.id)
@@ -439,6 +460,7 @@ export function CommentLibraryModal({
                   </div>
                 )}
               </Flex>
+              )}
 
               {/* Add folder field — manage mode only, at the bottom */}
               {managing && (
